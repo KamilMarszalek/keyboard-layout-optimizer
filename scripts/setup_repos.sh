@@ -3,7 +3,7 @@ set -euo pipefail
 
 REPO_DIR="keyboard-layout-optimizer"
 GITHUB_URL="https://github.com/KamilMarszalek/keyboard-layout-optimizer.git"
-GITLAB_URL="https://gitlab-stud.elka.pw.edu.pl/kmarsza1/keyboard-layout-optimizer.git"
+GITLAB_URL="git@gitlab-stud.elka.pw.edu.pl:kmarsza1/keyboard-layout-optimizer.git"
 
 
 
