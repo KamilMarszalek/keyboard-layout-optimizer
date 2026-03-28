@@ -64,15 +64,16 @@ commit_msg="$(head -n 1 "$1")"
 commit_msg="${commit_msg%$'\r'}"
 
 if [[ ! "$commit_msg" =~ $pattern ]]; then
-  printf "\n\033[1;31m[INVALID COMMIT MESSAGE]\033[0m\n"
-  printf "--------------------------------\n"
-  printf "\033[1mYour message:\033[0m %s\n" "$commit_msg"
-  printf "\033[1mAllowed types:\033[0m %s\n" "${TYPES[*]}"
-  printf "\033[1mDescription length:\033[0m %s-%s characters\n" "$MIN_LENGTH" "$MAX_LENGTH"
-  printf "\033[1mAccepted format:\033[0m type(scope)!: description\n"
-  printf "\033[1mExamples:\033[0m\n"
-  printf "  feat: add user registration endpoint\n"
-  printf "  fix(auth): handle expired jwt token\n"
-  printf "  refactor(core)!: remove legacy payment flow\n\n"
+  printf '%b\n' "\n\033[1;31m[INVALID COMMIT MESSAGE]\033[0m"
+  printf '%s\n' '--------------------------------'
+  printf '\033[1mYour message:\033[0m %s\n' "$commit_msg"
+  printf '\033[1mAllowed types:\033[0m %s\n' "${TYPES[*]}"
+  printf '\033[1mDescription length:\033[0m %s-%s characters\n' "$MIN_LENGTH" "$MAX_LENGTH"
+  printf '%b\n' '\033[1mAccepted format:\033[0m type(scope)!: description'
+  printf '%b\n' '\033[1mExamples:\033[0m'
+  printf '%s\n' '  feat: add user registration endpoint'
+  printf '%s\n' '  fix(auth): handle expired jwt token'
+  printf '%s\n' '  refactor(core)!: remove legacy payment flow'
+  printf '\n'
   exit 1
 fi
