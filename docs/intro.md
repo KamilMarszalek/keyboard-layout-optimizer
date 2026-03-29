@@ -1,5 +1,10 @@
 # Narzędzie do optymalizacji układu klawiatury
 
+## Skład zespołu
+- Kamil Marszałek
+- Michał Szwejk
+
+
 Projekt polega na zaimplementowaniu narzędzia optymalizującego układ klawiatury pod kątem konkretnej metryki/metryk i danego zbioru tekstu. Rozwiązanie powinno posiadać graficzny interfejs użytkownika, preferowana aplikacja webowa, ale może też być klasyczne desktopowe GUI.
 
 Inspirację można częściowo czerpać z następującej strony: http://patorjk.com/keyboard-layout-analyzer/
