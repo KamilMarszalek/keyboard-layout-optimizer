@@ -4,7 +4,7 @@
 - Kamil Marszałek
 - Michał Szwejk
 
-
+## Treść zadania
 Projekt polega na zaimplementowaniu narzędzia optymalizującego układ klawiatury pod kątem konkretnej metryki/metryk i danego zbioru tekstu. Rozwiązanie powinno posiadać graficzny interfejs użytkownika, preferowana aplikacja webowa, ale może też być klasyczne desktopowe GUI.
 
 Inspirację można częściowo czerpać z następującej strony: http://patorjk.com/keyboard-layout-analyzer/
@@ -22,7 +22,9 @@ Moduł optymalizacyjny powinien zostać zaimplementowany w języku niskopoziomow
 Główna logika optymalizacji układu klawiatury, w tym reprezentacja układu, model geometrii klawiatury, obliczanie metryk kosztu i implementacja metaheurystyki zostanie zaimplementowana w języku Rust. Moduł ten będzie odpowiedzialny za generowanie optymalnych układów klawiatury na podstawie zdefiniowanych metryk i danych wejściowych.
 
 #### Reprezentacja klawiatury (Rust)
-Klawiatura będzie reprezentowana jako permutacja 26 liter alfabetu łacińskiego, cyfr i pozostałych czytelnych znaki ASCII. Palce będą przypisane do poszczególnych klawiszy, zmianom ulegać będą wyłącznie symbole przypisane do klawiszy. Struktura klawiatury pozostanie niezmieniona tj. układ składający się z 4 rzędów, bazujący na QWERTY. Uwzględnione zostaną również znaki alternatywne - te które wymagają użycia drugiego palca (np.  `+`, `{`, `}`, `:`, `"`, `?`) oraz spacje. 
+Klawiatura będzie reprezentowana jako permutacja 26 liter alfabetu łacińskiego przypisanych do konkretnych klawiszy. Palce będą przypisane do poszczególnych klawiszy, zmianom ulegać będą wyłącznie litery przypisane do klawiszy. Fizyczna geometria klawiatury - czyli układ rzędów  i stagger - pozostanie niezmienna.
+
+Obsługę cyfr i znaków specjalnych (np. `+`, `{`, `:`, `"`) potraktujemy jako możliwe rozszerzenie projektu, które może zostać zaimplementowane w późniejszym etapie, jeśli czas na to pozwoli. W pierwszej kolejności skupimy się na optymalizacji układu dla liter alfabetu łacińskiego.
 
 #### Funkcja kosztu (Rust)
 Naszym celem będzie minimalizacja funkcji kosztu, która będzie składać się z następujących metryk ergonomicznych:
@@ -52,6 +54,9 @@ Moduł optymalizacyjny będzie udostępniał swoje funkcjonalności poprzez REST
 - możliwość załadowania własnego układu klawiatury i otrzymania dla niego statystyk
 
 Python będzie poprzez PyO3 integrował się z modułem optymalizacyjnym napisanym w Rust, umożliwiając wywoływanie funkcji optymalizacyjnych bezpośrednio z poziomu kodu Pythona - zastosowane zostanie FFI (Foreign Function Interface) do komunikacji między tymi dwoma językami.
+
+### Transliteracja (Python)
+Tekst wejściowy w dowolnym języku zostanie wcześniej transliterowany do małych liter alfabetu łacińskiego przez moduł Pythona, zatem do modułu optymalizacyjnego w Rust będą trafiały już przetworzone dane, co uprości implementację i pozwoli skupić się na optymalizacji układu klawiatury.
 
 ### 3. Frontend (TypeScript / Vue.js)
 Interfejs użytkownika zostanie zaimplementowany jako aplikacja webowa, wykorzystująca framework Vue.js. Frontend będzie odpowiedzialny za:
