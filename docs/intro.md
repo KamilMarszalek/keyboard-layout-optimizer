@@ -38,25 +38,27 @@ Funkcja kosztu będzie ważona, umożliwiając użytkownikowi dostosowanie wagi 
 
 Można to przedstawić wzorem:
 
-$$Cost = w1 * SFB + w2 * FD - w3 * HRU - w4 * HA + w5 * RJ$$
+$$Cost = w_1 \cdot SFB + w_2 \cdot FD - w_3 \cdot HRU - w_4 \cdot HA + w_5 \cdot RJ$$
 
-gdzie $w1$, $w2$, $w3$, $w4$, $w5$ to wagi przypisane do poszczególnych metryk.
+gdzie $w_1, \ldots, w_5$ to wagi przypisane do poszczególnych metryk. Ujemne wagi dla HRU i HA wynikają z faktu, że chcemy maksymalizować ich wartości, co przekłada się na obniżenie całkowitego kosztu.
 
 
 #### Metaheurystyka (Rust)
 Optymalizacja układu klawiatury zostanie przeprowadzona za pomocą metaheurystyki. Zostanie użyty algorytm symulowanego wyżarzania ze względu na jego skuteczność w rozwiązywaniu problemów kombinatorycznych. Sąsiedztwo będzie definiowane jako permutacja dwóch losowo wybranych klawiszy. Algorytm będzie iteracyjnie generował nowe układy klawiatury, obliczał ich koszty i decydował o ich akceptacji na podstawie różnicy kosztów i aktualnej temperatury. Jeżeli wyniki będą niezadowalające, można rozważyć implementację innych metaheurystyk, takich jak algorytm genetyczny lub inne metody reprezentacji stanu czy generowania sąsiedztwa.
 
 
-### 2. Interfejs REST API (Python FastAPI)
-Moduł optymalizacyjny będzie udostępniał swoje funkcjonalności poprzez REST API, które zostanie zaimplementowane w Pythonie z użyciem frameworka FastAPI. API będzie umożliwiało:
+### 2. Interfejs REST API (Python / FastAPI)
+Moduł optymalizacyjny będzie udostępniał swoje funkcjonalności poprzez REST API, które zostanie zaimplementowane w Pythonie z użyciem frameworka FastAPI. API umożliwi:
 - wysyłanie danych wejściowych (tekst do analizy, wagi metryk) do modułu optymalizacyjnego
 - odbieranie wyników optymalizacji, w tym zaproponowanego układu klawiatury i statystyk
 - możliwość załadowania własnego układu klawiatury i otrzymania dla niego statystyk
+- wczytanie pliku tekstowego z transliteracją i podglądem statystyk. 
 
-Python będzie poprzez PyO3 integrował się z modułem optymalizacyjnym napisanym w Rust, umożliwiając wywoływanie funkcji optymalizacyjnych bezpośrednio z poziomu kodu Pythona - zastosowane zostanie FFI (Foreign Function Interface) do komunikacji między tymi dwoma językami.
+Python integruje się z modułem Rust poprzez PyO3 (FFI), umożliwiając wywoływanie
+funkcji optymalizacyjnych bezpośrednio z kodu Pythona.
 
 ### Transliteracja (Python)
-Tekst wejściowy w dowolnym języku zostanie wcześniej transliterowany do małych liter alfabetu łacińskiego przez moduł Pythona, zatem do modułu optymalizacyjnego w Rust będą trafiały już przetworzone dane, co uprości implementację i pozwoli skupić się na optymalizacji układu klawiatury.
+Tekst wejściowy w dowolnym języku zostanie wcześniej transliterowany do małych liter alfabetu łacińskiego przez moduł Pythona - `anyascii`, zatem do modułu optymalizacyjnego w Rust będą trafiały już przetworzone dane, co uprości implementację i pozwoli skupić się na optymalizacji układu klawiatury.
 
 ### 3. Frontend (TypeScript / Vue.js)
 Interfejs użytkownika zostanie zaimplementowany jako aplikacja webowa, wykorzystująca framework Vue.js. Frontend będzie odpowiedzialny za:
@@ -64,8 +66,10 @@ Interfejs użytkownika zostanie zaimplementowany jako aplikacja webowa, wykorzys
 - ustalenie parametrów optymalizacji, takich jak wagi metryk
 - wyświetlanie wyników optymalizacji, w tym zaproponowanego układu klawiatury i statystyk w postaci wykresów dla poszczególnych składowych funkcji kosztu
 
-
-
-
-
-
+## Narzędzia
+| Warstwa | Narzędzia |
+|---------|-----------|
+| Rust | `cargo`, `rustfmt`, `clippy`, `rayon` |
+| Python | `uv`, `maturin`, `pytest`, `ruff` |
+| Frontend | `npm`, `vitest` |
+| CI / Build | `just`, `GitHub Actions` |
