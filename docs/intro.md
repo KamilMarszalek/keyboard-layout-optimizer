@@ -58,7 +58,7 @@ Python integruje się z modułem Rust poprzez PyO3 (FFI), umożliwiając wywoły
 funkcji optymalizacyjnych bezpośrednio z kodu Pythona.
 
 ### Transliteracja (Python)
-Tekst wejściowy w dowolnym języku zostanie wcześniej transliterowany do małych liter alfabetu łacińskiego przez moduł Pythona - `anyascii`, zatem do modułu optymalizacyjnego w Rust będą trafiały już przetworzone dane, co uprości implementację i pozwoli skupić się na optymalizacji układu klawiatury.
+Tekst wejściowy zapisany w innym alfabecie będzie wcześniej transliterowany do małych liter alfabetu łacińskiego przez moduł Pythona z użyciem biblioteki `anyascii`, zatem do modułu optymalizacyjnego w Rust będą trafiały już przetworzone dane, co uprości implementację i pozwoli skupić się na optymalizacji układu klawiatury.
 
 ### 3. Frontend (TypeScript / Vue.js)
 Interfejs użytkownika zostanie zaimplementowany jako aplikacja webowa, wykorzystująca framework Vue.js. Frontend będzie odpowiedzialny za:
