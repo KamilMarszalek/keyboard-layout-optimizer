@@ -19,7 +19,8 @@ Moduł optymalizacyjny powinien zostać zaimplementowany w języku niskopoziomow
 ## Podział na podproblemy
 
 ### 1. Moduł optymalizacyjny (Rust)
-Główna logika optymalizacji układu klawiatury, w tym reprezentacja układu, model geometrii klawiatury, obliczanie metryk kosztu i implementacja metaheurystyki zostanie zaimplementowana w języku Rust. Moduł ten będzie odpowiedzialny za generowanie optymalnych układów klawiatury na podstawie zdefiniowanych metryk i danych wejściowych.
+Główna logika optymalizacji układu klawiatury, w tym reprezentacja układu, model geometrii klawiatury, transliteracja, obliczanie metryk kosztu i implementacja metaheurystyki zostanie zaimplementowana w języku Rust i skompilowana do WebAssembly przy użyciu `wasm-pack`. Moduł ten będzie odpowiedzialny za generowanie optymalnych układów klawiatury na podstawie zdefiniowanych metryk i danych wejściowych.
+
 
 #### Reprezentacja klawiatury (Rust)
 Klawiatura będzie reprezentowana jako permutacja 26 liter alfabetu łacińskiego przypisanych do konkretnych klawiszy. Palce będą przypisane do poszczególnych klawiszy, zmianom ulegać będą wyłącznie litery przypisane do klawiszy. Fizyczna geometria klawiatury - czyli układ rzędów  i stagger - pozostanie niezmienna.
@@ -46,22 +47,17 @@ gdzie $w_1, \ldots, w_5$ to wagi przypisane do poszczególnych metryk. Ujemne wa
 #### Metaheurystyka (Rust)
 Optymalizacja układu klawiatury zostanie przeprowadzona za pomocą metaheurystyki. Zostanie użyty algorytm symulowanego wyżarzania ze względu na jego skuteczność w rozwiązywaniu problemów kombinatorycznych. Sąsiedztwo będzie definiowane jako permutacja dwóch losowo wybranych klawiszy. Algorytm będzie iteracyjnie generował nowe układy klawiatury, obliczał ich koszty i decydował o ich akceptacji na podstawie różnicy kosztów i aktualnej temperatury. Jeżeli wyniki będą niezadowalające, można rozważyć implementację innych metaheurystyk, takich jak algorytm genetyczny lub inne metody reprezentacji stanu czy generowania sąsiedztwa.
 
+#### Transliteracja (Rust)
+Tekst wejściowy zapisany w innym alfabecie zostanie transliterowany do małych liter
+alfabetu łacińskiego bezpośrednio w module Rust, z użyciem crate `any_ascii`.
+Dzięki temu cały preprocessing i optymalizacja odbywają się po stronie klienta, a do funkcji optymalizacyjnych trafiają już znormalizowane dane (`a`-`z`).
 
-### 2. Interfejs REST API (Python / FastAPI)
-Moduł optymalizacyjny będzie udostępniał swoje funkcjonalności poprzez REST API, które zostanie zaimplementowane w Pythonie z użyciem frameworka FastAPI. API umożliwi:
-- wysyłanie danych wejściowych (tekst do analizy, wagi metryk) do modułu optymalizacyjnego
-- odbieranie wyników optymalizacji, w tym zaproponowanego układu klawiatury i statystyk
-- możliwość załadowania własnego układu klawiatury i otrzymania dla niego statystyk
-- wczytanie pliku tekstowego z transliteracją i podglądem statystyk. 
-
-Python integruje się z modułem Rust poprzez PyO3 (FFI), umożliwiając wywoływanie
-funkcji optymalizacyjnych bezpośrednio z kodu Pythona.
-
-### Transliteracja (Python)
-Tekst wejściowy zapisany w innym alfabecie będzie wcześniej transliterowany do małych liter alfabetu łacińskiego przez moduł Pythona z użyciem biblioteki `anyascii`, zatem do modułu optymalizacyjnego w Rust będą trafiały już przetworzone dane, co uprości implementację i pozwoli skupić się na optymalizacji układu klawiatury.
-
-### 3. Frontend (TypeScript / Vue.js)
-Interfejs użytkownika zostanie zaimplementowany jako aplikacja webowa, wykorzystująca framework Vue.js. Frontend będzie odpowiedzialny za:
+### 2. Frontend (TypeScript / Vue.js)
+Interfejs użytkownika zostanie zaimplementowany jako aplikacja webowa, wykorzystująca framework Vue.js. 
+Moduł Rust skompilowany do WASM ładowany jest bezpośrednio przez TypeScript - komunikacja odbywa się przez interfejs wygenerowany przez `wasm-bindgen`, bez żadnego
+serwera pośredniczącego.
+Frontend będzie odpowiedzialny za:
+- ładowanie i inicjalizację modułu WASM,
 - wizualizację układu klawiatury wraz z mapą ciepła, która będzie kolorować klawisze na podstawie ich użycia
 - ustalenie parametrów optymalizacji, takich jak wagi metryk
 - wyświetlanie wyników optymalizacji, w tym zaproponowanego układu klawiatury i statystyk w postaci wykresów dla poszczególnych składowych funkcji kosztu
@@ -69,7 +65,6 @@ Interfejs użytkownika zostanie zaimplementowany jako aplikacja webowa, wykorzys
 ## Narzędzia
 | Warstwa | Narzędzia |
 |---------|-----------|
-| Rust | `cargo`, `rustfmt`, `clippy`, `rayon` |
-| Python | `uv`, `maturin`, `pytest`, `ruff` |
+| Rust | `cargo`, `rustfmt`, `clippy`, `wasm-pack`, `wasm-bindgen` |
 | Frontend | `npm`, `vitest` |
 | CI / Build | `just`, `GitHub Actions` |
