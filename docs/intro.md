@@ -62,6 +62,7 @@ Frontend będzie odpowiedzialny za:
 - ustalenie parametrów optymalizacji, takich jak wagi metryk
 - wyświetlanie wyników optymalizacji, w tym zaproponowanego układu klawiatury i statystyk w postaci wykresów dla poszczególnych składowych funkcji kosztu
 
+Ponieważ środowisko WASM nie wspiera natywnej wielowątkowości, jeśli zdecydujemy się na zrównoleglenie obliczeń np. będziemy uruchamiać SA z wielu punktów startowych, zostaną one zrealizowane po stronie TypeScript przy użyciu Web Workers.
 ## Narzędzia
 | Warstwa | Narzędzia |
 |---------|-----------|
