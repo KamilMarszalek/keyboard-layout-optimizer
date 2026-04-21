@@ -1,0 +1,49 @@
+# ===== OS / editor =====
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# ===== Logs =====
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===== Environment files =====
+.env
+.env.*
+!.env.example
+
+# ===== Rust =====
+optimizer/target/
+**/target/
+
+# ===== wasm-pack / wasm-bindgen outputs =====
+optimizer/pkg/
+pkg/
+
+# ===== Node / Vue =====
+frontend/node_modules/
+node_modules/
+
+# Build outputs
+frontend/dist/
+frontend/.vite/
+dist/
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+coverage/
+frontend/coverage/
+
+# ===== Misc cache =====
+.cache/
+.tmp/
+temp/
+tmp/
