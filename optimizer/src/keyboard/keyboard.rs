@@ -21,8 +21,8 @@ enum Finger {
 }
 
 struct Coordinates {
-    x: u8,
-    y: u8,
+    x: f32,
+    y: f32,
 }
 
 struct Key {
@@ -39,29 +39,46 @@ struct KeyPress {
 
 struct Keyboard {
     keys: Vec<Key>,
-    key_to_letter: Vec<u8>,
-    // left_shift: Key,
-    // right_shift: Key,
 }
 
-fn row(n: u8, y: u8, refs: &[(Hand, Finger)], row: Row) -> Vec<Key> {
-    (0..n)
-        .map(|x| Key {
-            coords: Coordinates { x: x, y: y },
-            hand: refs[x as usize].0,
-            finger: refs[x as usize].1,
-            row: row,
-        })
-        .collect()
+struct RowSpec<'a> {
+    x_offset: f32,
+    y: f32,
+    refs: &'a [(Hand, Finger)],
+    row: Row,
 }
 
-fn qwerty_keyboard() -> Keyboard {
-    let mut keys = Vec::new();
-    let layout = vec![
-        b'q', b'w', b'e', b'r', b't', b'y', b'u', b'i', b'o', b'p', b'a', b's', b'd', b'f', b'g',
-        b'h', b'j', b'k', b'l', b'z', b'x', b'c', b'v', b'b', b'n', b'm',
-    ];
+struct Layout {
+    mappings: Vec<u8>,
+}
 
+impl Keyboard {
+    pub fn from_geometry(specs: &Vec<RowSpec>) -> Self {
+        let mut keys = Vec::new();
+        for spec in specs {
+            keys.extend(Self::build_row(spec));
+        }
+        Self { keys }
+    }
+
+    fn build_row(spec: &RowSpec) -> Vec<Key> {
+        spec.refs
+            .iter()
+            .enumerate()
+            .map(|(x, &(hand, finger))| Key {
+                coords: Coordinates {
+                    x: x as f32 + spec.x_offset,
+                    y: spec.y,
+                },
+                hand: hand,
+                finger: finger,
+                row: spec.row,
+            })
+            .collect()
+    }
+}
+
+fn standard_keyboard() -> Keyboard {
     let refs = [
         (Hand::Left, Finger::Pinky),
         (Hand::Left, Finger::Ring),
@@ -75,16 +92,26 @@ fn qwerty_keyboard() -> Keyboard {
         (Hand::Right, Finger::Pinky),
     ];
 
-    let top = row(10, 0, &refs, Row::Top); // qwertyuiop
-    let middle = row(9, 1, &refs, Row::Home); // asdfghjkl
-    let bottom = row(7, 2, &refs, Row::Bottom); // zxcvbnm
+    let spec = vec![
+        RowSpec {
+            x_offset: 0.0,
+            y: 0.0,
+            refs: &refs,
+            row: Row::Top,
+        },
+        RowSpec {
+            x_offset: 0.5,
+            y: 1.0,
+            refs: &refs,
+            row: Row::Home,
+        },
+        RowSpec {
+            x_offset: 1.0,
+            y: 2.0,
+            refs: &refs,
+            row: Row::Bottom,
+        },
+    ];
 
-    keys.extend(top);
-    keys.extend(middle);
-    keys.extend(bottom);
-
-    Keyboard {
-        keys: keys,
-        key_to_letter: layout,
-    }
+    Keyboard::from_geometry(&spec)
 }
