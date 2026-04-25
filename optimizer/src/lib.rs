@@ -1,2 +1,2 @@
-pub mod keyboard;
-pub mod text;
+mod keyboard;
+mod text;
