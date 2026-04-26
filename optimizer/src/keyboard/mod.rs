@@ -1,5 +1,5 @@
 pub mod common;
 pub mod geometry;
-pub mod keyboard;
 pub mod layout;
+pub mod model;
 mod modifier;

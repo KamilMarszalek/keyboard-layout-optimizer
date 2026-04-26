@@ -2,11 +2,13 @@ use super::common::KeyIndex;
 use super::geometry::Geometry;
 use super::layout::Layout;
 
+#[allow(dead_code)]
 struct KeyPress {
     letter: KeyIndex,
     shift: bool,
 }
 
+#[allow(dead_code)]
 pub struct Keyboard {
     geometry: Geometry,
     layout: Layout,

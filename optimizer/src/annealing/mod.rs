@@ -1,2 +1,2 @@
-pub mod annealing;
 pub mod cost;
+pub mod sa;
