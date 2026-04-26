@@ -1,6 +1,5 @@
-use crate::keyboard::keyboard::KeyboardGeometry;
-use crate::keyboard::layout::Layout;
+use crate::keyboard::{geometry::Geometry, layout::Layout};
 
 pub trait CostFunction {
-    fn evaluate(&self, layout: &Layout, geometry: &KeyboardGeometry) -> f64;
+    fn evaluate(&self, layout: &Layout, geometry: &Geometry) -> f64;
 }
