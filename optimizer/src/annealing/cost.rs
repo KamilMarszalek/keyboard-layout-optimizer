@@ -1,4 +1,4 @@
-use crate::keyboard::{ common::KEY_COUNT, keyboard::Keyboard};
+use crate::keyboard::{common::KEY_COUNT, keyboard::Keyboard};
 
 #[derive(Clone, Copy, Debug)]
 pub struct MetricWeights {
