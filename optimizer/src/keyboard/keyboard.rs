@@ -9,7 +9,7 @@ struct KeyPress {
     shift: bool,
 }
 
-struct Keyboard {
+pub struct Keyboard {
     geometry: Arc<Geometry>,
     layout: Layout,
 }
