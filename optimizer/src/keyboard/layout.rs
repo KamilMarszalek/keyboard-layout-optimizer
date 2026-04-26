@@ -1,15 +1,19 @@
+use crate::keyboard::common::KeyIndex;
+
 use super::common::{AsciiChar, KEY_COUNT};
 use super::modifier::{Modifier, StandardUSModifier};
 use std::collections::HashMap;
 
-#[derive(Clone, Copy)]
-struct KeySymbol {
-    base: AsciiChar,
-    shifted: AsciiChar,
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct KeySymbol {
+    pub base: AsciiChar,
+    pub shifted: AsciiChar,
 }
 
+#[derive(Clone)]
 pub struct Layout {
-    mappings: [KeySymbol; KEY_COUNT],
+    pub mappings: [KeySymbol; KEY_COUNT],
+    symbol_to_key: [Option<KeyIndex>; 128] // 128 - standard ASCII
 }
 
 impl Layout {
@@ -26,7 +30,13 @@ impl Layout {
             mappings[i].shifted = shifted;
         }
 
-        Ok(Self { mappings })
+        Ok(Self::from_mappings(mappings))
+    }
+
+    fn from_mappings(mappings: [KeySymbol; KEY_COUNT]) -> Self {
+        let mut symbol_to_key = [None; 128];
+        mappings.iter().enumerate().for_each(|(key_idx, symbol)| symbol_to_key[symbol.base as usize] = Some(key_idx));
+        Self {mappings, symbol_to_key}
     }
 
     pub fn standard_us() -> Self {
@@ -54,5 +64,15 @@ impl Layout {
         }
 
         symbols_map == alphabet_map
+    }
+
+    pub fn swap(&self, first: KeyIndex, second: KeyIndex) -> Self {
+        let mut new_mappings = self.mappings;
+        new_mappings.swap(first, second);
+        Self::from_mappings(new_mappings)
+    }
+
+    pub fn key_of(&self, symbol: AsciiChar) -> Option<KeyIndex> {
+        self.symbol_to_key[symbol as usize]
     }
 }
