@@ -36,6 +36,7 @@ impl Layout {
     fn from_mappings(mappings: [KeySymbol; KEY_COUNT]) -> Self {
         let mut symbol_to_key = [None; 128];
         mappings.iter().enumerate().for_each(|(key_idx, symbol)| symbol_to_key[symbol.base as usize] = Some(key_idx));
+        mappings.iter().enumerate().for_each(|(key_idx, symbol)| symbol_to_key[symbol.shifted as usize] = Some(key_idx));
         Self {mappings, symbol_to_key}
     }
 
