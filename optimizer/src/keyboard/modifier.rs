@@ -78,7 +78,7 @@ impl Modifier {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keyboard::{common::KEY_COUNT, modifier};
+    use crate::keyboard::common::KEY_COUNT;
 
     #[test]
     fn shift_supported() {
