@@ -67,10 +67,21 @@ impl Layout {
         symbols_map == alphabet_map
     }
 
-    pub fn swap(&self, first: KeyIndex, second: KeyIndex) -> Self {
-        let mut new_mappings = self.mappings;
-        new_mappings.swap(first, second);
-        Self::from_mappings(new_mappings)
+    pub fn swap(&mut self, first: KeyIndex, second: KeyIndex) {
+        if first == second {
+            return;
+        }
+        let first_symbol = self.mappings[first];
+        let second_symbol = self.mappings[second];
+
+        self.mappings.swap(first, second);
+
+        self.symbol_to_key[first_symbol.base as usize] = Some(second);
+        self.symbol_to_key[first_symbol.shifted as usize] = Some(second);
+        
+        self.symbol_to_key[second_symbol.base as usize] = Some(first);
+        self.symbol_to_key[second_symbol.shifted as usize] = Some(first);
+
     }
 
     pub fn key_of(&self, symbol: KeyIndex) -> Option<KeyIndex> {
