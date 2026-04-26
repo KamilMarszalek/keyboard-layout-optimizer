@@ -1,5 +1,6 @@
 use rand::{Rng, RngExt};
 
+use crate::keyboard::common::KEY_COUNT;
 use crate::keyboard::layout::Layout;
 
 pub struct AnnealingConfig {
@@ -15,20 +16,20 @@ impl Default for AnnealingConfig {
     }
 }
 
-pub struct AnnealingResult {
-    pub best_layout: Layout,
+pub struct AnnealingResult<const N: usize> {
+    pub best_layout: Layout<N>,
     pub best_cost: f64,
     pub cost_history: Vec<f64>,
 }
 
-pub fn simulated_annealing<Func>(
-    initial: Layout,
+pub fn simulated_annealing<const N: usize, Func>(
+    initial: Layout<N>,
     config: &AnnealingConfig,
     rng: &mut impl Rng,
     cost_func: Func,
-) -> AnnealingResult
+) -> AnnealingResult<N>
 where
-    Func: Fn(&Layout) -> f64,
+    Func: Fn(&Layout<N>) -> f64,
 {
     let mut current_layout = initial;
     let mut current_cost = cost_func(&current_layout);
@@ -89,13 +90,13 @@ mod tests {
         }
     }
 
-    fn qwerty_mismatch_cost(layout: &Layout) -> f64 {
+    fn qwerty_mismatch_cost(layout: &Layout<KEY_COUNT>) -> f64 {
         let qwerty = Layout::standard_us();
 
         layout.mappings.iter().zip(qwerty.mappings.iter()).filter(|(a, b)| a.base != b.base).count() as f64
     }
 
-    fn scrambled_layout(rng: &mut impl Rng) -> Layout {
+    fn scrambled_layout(rng: &mut impl Rng) -> Layout<KEY_COUNT> {
         let mut layout = Layout::standard_us();
 
         for _ in 0..10 {

@@ -57,11 +57,11 @@ impl WeightedCost {
         Self { weights, corpus }
     }
 
-    pub fn evaluate(&self, keyboard: &Keyboard) -> f64 {
+    pub fn evaluate<const N: usize>(&self, keyboard: &Keyboard<N>) -> f64 {
         self.evaluate_breakdown(keyboard).weighted_cost(&self.weights)
     }
 
-    pub fn evaluate_breakdown(&self, keyboard: &Keyboard) -> MetricBreakdown {
+    pub fn evaluate_breakdown<const N: usize>(&self, keyboard: &Keyboard<N>) -> MetricBreakdown {
         MetricBreakdown {
             same_finger_bigrams: self.same_finger_bigrams(keyboard),
             finger_distance: self.finger_distance(keyboard),
@@ -71,19 +71,19 @@ impl WeightedCost {
         }
     }
 
-    fn same_finger_bigrams(&self, _keyboard: &Keyboard) -> f64 {
+    fn same_finger_bigrams<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
-    fn finger_distance(&self, _keyboard: &Keyboard) -> f64 {
+    fn finger_distance<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
-    fn home_row_usage(&self, _keyboard: &Keyboard) -> f64 {
+    fn home_row_usage<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
-    fn hand_alternation(&self, _keyboard: &Keyboard) -> f64 {
+    fn hand_alternation<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
-    fn row_jumping(&self, _keyboard: &Keyboard) -> f64 {
+    fn row_jumping<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
 }
