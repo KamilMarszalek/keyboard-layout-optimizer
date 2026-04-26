@@ -93,11 +93,11 @@ impl RowSpec {
 }
 
 #[allow(dead_code)]
-pub struct Geometry {
-    keys: [Key; KEY_COUNT],
+pub struct Geometry<const N: usize> {
+    keys: [Key; N],
 }
 
-impl Geometry {
+impl<const N: usize> Geometry<N> {
     // keys are created from left to right, from top to bottom,
     // specs 'left' and 'right' must preserve the order
     pub fn new<I>(specs: I) -> Result<Self, String>
@@ -105,22 +105,24 @@ impl Geometry {
         I: IntoIterator<Item = RowSpec>,
     {
         let mut total = 0;
-        let mut keys_vec = Vec::with_capacity(KEY_COUNT);
+        let mut keys_vec = Vec::with_capacity(N);
 
         for spec in specs {
             total += spec.size();
             keys_vec.extend(spec.build_row());
         }
 
-        if total != KEY_COUNT {
-            return Err(format!("Specs must define exactly {} keys", KEY_COUNT).to_string());
+        if total != N {
+            return Err(format!("Specs must define exactly {} keys", N).to_string());
         }
 
-        let keys: [Key; KEY_COUNT] = keys_vec.try_into().unwrap();
+        let keys: [Key; N] = keys_vec.try_into().unwrap();
 
         Ok(Self { keys })
     }
+}
 
+impl Geometry<KEY_COUNT> {
     pub fn standard_us() -> Self {
         let specs = [
             RowSpec {

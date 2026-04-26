@@ -1,4 +1,4 @@
-use super::common::KeyIndex;
+use super::common::{KEY_COUNT, KeyIndex};
 use super::geometry::Geometry;
 use super::layout::Layout;
 
@@ -9,16 +9,18 @@ struct KeyPress {
 }
 
 #[allow(dead_code)]
-pub struct Keyboard {
-    geometry: Geometry,
-    layout: Layout,
+pub struct Keyboard<const N: usize> {
+    geometry: Geometry<N>,
+    layout: Layout<N>,
 }
 
-impl Keyboard {
-    pub fn new(geometry: Geometry, layout: Layout) -> Self {
+impl<const N: usize> Keyboard<N> {
+    pub fn new(geometry: Geometry<N>, layout: Layout<N>) -> Self {
         Self { geometry, layout }
     }
+}
 
+impl Keyboard<KEY_COUNT> {
     pub fn standard_us() -> Self {
         let geometry = Geometry::standard_us();
         let layout = Layout::standard_us();
