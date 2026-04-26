@@ -11,7 +11,7 @@ impl fmt::Display for ModifierError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ModifierError::UnsupportedBase(c) => {
-                write!(f, "Symbol {} cannot is not considered as 'base' for this modifier", c)
+                write!(f, "Symbol {} cannot is not considered as 'base' for this modifier", *c as char)
             }
         }
     }
