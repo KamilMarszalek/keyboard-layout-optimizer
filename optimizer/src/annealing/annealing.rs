@@ -39,21 +39,30 @@ where
     let mut cost_history: Vec<f64> = vec![best_cost];
 
     let mut temperature = config.t_start;
+    let len = current_layout.mappings.len();
 
     while temperature > config.t_min {
         for _ in 0..config.iterations_per_temp {
-            let new_layout = generate_new_layout(&current_layout, rng);
-            let new_cost = cost_func(&new_layout);
+            let first = rng.random_range(0..len);
+            let mut second = rng.random_range(0..len);
+
+            while first == second {
+                second = rng.random_range(0..len);
+            }
+            current_layout.swap(first, second);
+
+            let new_cost = cost_func(&current_layout);
             let delta = new_cost - current_cost;
 
             if delta <= 0.0 || should_accept_worse(delta, temperature, rng) {
-                current_layout = new_layout;
                 current_cost = new_cost;
 
                 if new_cost < best_cost {
                     best_layout = current_layout.clone();
                     best_cost = new_cost;
                 }
+            } else {
+                current_layout.swap(first, second); // getting back to previous layout
             }
         }
         cost_history.push(best_cost);
@@ -61,19 +70,6 @@ where
     }
 
     AnnealingResult { best_layout, best_cost, cost_history }
-}
-
-fn generate_new_layout(current_layout: &Layout, rng: &mut impl Rng) -> Layout {
-    let len = current_layout.mappings.len();
-    if len < 2 {
-        return current_layout.clone();
-    }
-    let first = rng.random_range(0..len);
-    let mut second = rng.random_range(0..len);
-    while first == second {
-        second = rng.random_range(0..len);
-    }
-    current_layout.swap(first, second)
 }
 
 fn should_accept_worse(delta: f64, temperature: f64, rng: &mut impl Rng) -> bool {
@@ -110,7 +106,7 @@ mod tests {
                 j = rng.random_range(0..layout.mappings.len());
             }
 
-            layout = layout.swap(i, j);
+            layout.swap(i, j);
         }
 
         layout
