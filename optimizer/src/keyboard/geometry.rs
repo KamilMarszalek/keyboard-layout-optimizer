@@ -48,7 +48,7 @@ struct Key {
     row: Row,
 }
 
-struct RowSpec {
+pub struct RowSpec {
     left: [FingerCount; 4],
     right: [FingerCount; 4],
     x_offset: f32,
@@ -78,7 +78,6 @@ impl RowSpec {
                 finger,
                 row: self.row,
             });
-            base_x += 1.0
         }
 
         keys
@@ -131,7 +130,7 @@ impl Geometry {
             },
             RowSpec {
                 left: [fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: [fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 4)],
+                right: [fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 2)],
                 x_offset: 2.0,
                 y: 2.0,
                 row: Row::Home,
@@ -139,8 +138,8 @@ impl Geometry {
             RowSpec {
                 left: [fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
                 right: [fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 1)],
-                x_offset: 2.0,
-                y: 2.0,
+                x_offset: 2.5,
+                y: 3.0,
                 row: Row::Bottom,
             },
         ];
