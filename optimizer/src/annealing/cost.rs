@@ -1,8 +1,4 @@
-use crate::keyboard::{
-    common::KEY_COUNT,
-    geometry::Geometry,
-    layout::{KeySymbol, Layout},
-};
+use crate::keyboard::{ common::KEY_COUNT, keyboard::Keyboard};
 
 #[derive(Clone, Copy, Debug)]
 pub struct MetricWeights {
@@ -60,33 +56,33 @@ impl WeightedCost {
         Self { weights, corpus }
     }
 
-    pub fn evaluate(&self, layout: &Layout, geometry: &Geometry) -> f64 {
-        self.evaluate_breakdown(layout, geometry).weighted_cost(&self.weights)
+    pub fn evaluate(&self, keyboard: &Keyboard) -> f64 {
+        self.evaluate_breakdown(keyboard).weighted_cost(&self.weights)
     }
 
-    pub fn evaluate_breakdown(&self, layout: &Layout, geometry: &Geometry) -> MetricBreakdown {
+    pub fn evaluate_breakdown(&self, keyboard: &Keyboard) -> MetricBreakdown {
         MetricBreakdown {
-            same_finger_bigrams: self.same_finger_bigrams(layout, geometry),
-            finger_distance: self.finger_distance(layout, geometry),
-            home_row_usage: self.home_row_usage(layout, geometry),
-            hand_alternation: self.hand_alternation(layout, geometry),
-            row_jumping: self.row_jumping(layout, geometry),
+            same_finger_bigrams: self.same_finger_bigrams(keyboard),
+            finger_distance: self.finger_distance(keyboard),
+            home_row_usage: self.home_row_usage(keyboard),
+            hand_alternation: self.hand_alternation(keyboard),
+            row_jumping: self.row_jumping(keyboard),
         }
     }
 
-    fn same_finger_bigrams(&self, layout: &Layout, geometry: &Geometry) -> f64 {
+    fn same_finger_bigrams(&self, keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn finger_distance(&self, layout: &Layout, geometry: &Geometry) -> f64 {
+    fn finger_distance(&self, keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn home_row_usage(&self, layout: &Layout, geometry: &Geometry) -> f64 {
+    fn home_row_usage(&self, keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn hand_alternation(&self, layout: &Layout, geometry: &Geometry) -> f64 {
+    fn hand_alternation(&self, keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn row_jumping(&self, layout: &Layout, geometry: &Geometry) -> f64 {
+    fn row_jumping(&self, keyboard: &Keyboard) -> f64 {
         todo!()
     }
 }
