@@ -1,8 +1,5 @@
-use crate::keyboard::common::{ASCII_COUNT, KeyIndex};
-
-use super::common::{AsciiChar, KEY_COUNT};
-use super::modifier::{Modifier, StandardUSModifier};
-use std::collections::HashMap;
+use super::common::{ASCII_COUNT, AsciiChar, KEY_COUNT, KeyIndex};
+use super::modifier::Modifier;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct KeySymbol {
@@ -17,17 +14,15 @@ pub struct Layout {
 }
 
 impl Layout {
-    pub fn new<T: Modifier>(symbols: &[AsciiChar; KEY_COUNT], modifier: &T) -> Result<Self, String> {
+    pub fn new(symbols: &[AsciiChar; KEY_COUNT], modifier: &Modifier) -> Result<Self, String> {
         if !Self::is_permutation(symbols, modifier.base_symbols()) {
             return Err("Provided symbols do not match modifier's alphabet".to_string());
         }
 
         let mut mappings = [KeySymbol { base: symbols[0], shifted: symbols[0] }; KEY_COUNT];
-
-        for (i, &base) in symbols.iter().enumerate() {
+        for (slot, &base) in mappings.iter_mut().zip(symbols.iter()) {
             let shifted = modifier.shift(base).map_err(|e| e.to_string())?;
-            mappings[i].base = base;
-            mappings[i].shifted = shifted;
+            *slot = KeySymbol { base, shifted }
         }
 
         Ok(Self::from_mappings(mappings))
@@ -43,7 +38,7 @@ impl Layout {
     }
 
     pub fn standard_us() -> Self {
-        let modifier = StandardUSModifier::new();
+        let modifier = Modifier::standard_us();
         #[rustfmt::skip]
         let symbols: [AsciiChar; KEY_COUNT] = [
             b'`', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'0', b'-', b'=',
@@ -55,18 +50,17 @@ impl Layout {
     }
 
     fn is_permutation(symbols: &[AsciiChar], alphabet: &[AsciiChar]) -> bool {
-        let mut symbols_map = HashMap::new();
-        let mut alphabet_map = HashMap::new();
+        let mut counter = [0i32; ASCII_COUNT];
 
         for &symbol in symbols {
-            *symbols_map.entry(symbol).or_insert(0) += 1;
+            counter[symbol as usize] += 1;
         }
 
         for &symbol in alphabet {
-            *alphabet_map.entry(symbol).or_insert(0) += 1;
+            counter[symbol as usize] -= 1;
         }
 
-        symbols_map == alphabet_map
+        counter.iter().all(|c| *c == 0)
     }
 
     pub fn swap(&mut self, first: KeyIndex, second: KeyIndex) {

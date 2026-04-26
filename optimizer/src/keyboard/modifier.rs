@@ -17,36 +17,37 @@ impl fmt::Display for ModifierError {
     }
 }
 
-pub trait Modifier {
-    fn shift(&self, c: AsciiChar) -> Result<AsciiChar, ModifierError>;
-    fn base_symbols(&self) -> &[AsciiChar];
-}
-
-pub struct StandardUSModifier {
+pub struct Modifier {
     encode: HashMap<AsciiChar, AsciiChar>,
     symbols: Vec<AsciiChar>,
 }
 
-impl Modifier for StandardUSModifier {
-    fn shift(&self, c: AsciiChar) -> Result<AsciiChar, ModifierError> {
+impl Modifier {
+    pub fn new<I>(shift_pairs: I) -> Self
+    where
+        I: IntoIterator<Item = (AsciiChar, AsciiChar)>,
+    {
+        let mut encode = HashMap::new();
+        for (a, b) in shift_pairs {
+            encode.insert(a, b);
+        }
+
+        let symbols = encode.keys().copied().collect();
+        Self { encode, symbols }
+    }
+
+    pub fn shift(&self, c: AsciiChar) -> Result<AsciiChar, ModifierError> {
         self.encode.get(&c).copied().ok_or(ModifierError::UnsupportedBase(c))
     }
 
-    fn base_symbols(&self) -> &[AsciiChar] {
+    pub fn base_symbols(&self) -> &[AsciiChar] {
         &self.symbols
     }
-}
 
-impl StandardUSModifier {
-    pub fn new() -> Self {
-        let mut encode = HashMap::new();
+    pub fn standard_us() -> Self {
+        let letter_pairs = (b'a'..=b'z').map(|c| (c, c.to_ascii_uppercase()));
 
-        for c in b'a'..=b'z' {
-            let shifted = c.to_ascii_uppercase();
-            encode.insert(c, shifted);
-        }
-
-        let symbols = [
+        let punctuation_pairs = [
             (b'1', b'!'),
             (b'2', b'@'),
             (b'3', b'#'),
@@ -70,12 +71,6 @@ impl StandardUSModifier {
             (b'`', b'~'),
         ];
 
-        for &(a, b) in &symbols {
-            encode.insert(a, b);
-        }
-
-        let symbols = encode.keys().copied().collect();
-
-        Self { encode, symbols }
+        Self::new(letter_pairs.chain(punctuation_pairs))
     }
 }
