@@ -76,6 +76,6 @@ impl StandardUSModifier {
 
         let symbols = encode.keys().copied().collect();
 
-        Self { encode: encode, symbols: symbols }
+        Self { encode, symbols }
     }
 }
