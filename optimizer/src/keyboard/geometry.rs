@@ -34,12 +34,14 @@ macro_rules! fc {
     };
 }
 
+#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 struct Coordinates {
     x: f32,
     y: f32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug)]
 struct Key {
     coords: Coordinates,
@@ -90,6 +92,7 @@ impl RowSpec {
     }
 }
 
+#[allow(dead_code)]
 pub struct Geometry {
     keys: [Key; KEY_COUNT],
 }

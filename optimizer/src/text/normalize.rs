@@ -1,9 +1,5 @@
 pub fn normalize_text(input: &str) -> String {
-    input
-        .chars()
-        .filter(|c| c.is_ascii_alphabetic())
-        .map(|c| c.to_ascii_lowercase())
-        .collect()
+    input.chars().filter(|c| c.is_ascii_alphabetic()).map(|c| c.to_ascii_lowercase()).collect()
 }
 
 #[cfg(test)]

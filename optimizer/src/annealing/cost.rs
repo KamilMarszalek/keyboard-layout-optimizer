@@ -1,4 +1,4 @@
-use crate::keyboard::{common::KEY_COUNT, keyboard::Keyboard};
+use crate::keyboard::{common::KEY_COUNT, model::Keyboard};
 
 #[derive(Clone, Copy, Debug)]
 pub struct MetricWeights {
@@ -46,6 +46,7 @@ pub struct Corpus {
     pub total_bigrams: usize,
 }
 
+#[allow(dead_code)]
 pub struct WeightedCost {
     weights: MetricWeights,
     corpus: Corpus,
@@ -70,19 +71,19 @@ impl WeightedCost {
         }
     }
 
-    fn same_finger_bigrams(&self, keyboard: &Keyboard) -> f64 {
+    fn same_finger_bigrams(&self, _keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn finger_distance(&self, keyboard: &Keyboard) -> f64 {
+    fn finger_distance(&self, _keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn home_row_usage(&self, keyboard: &Keyboard) -> f64 {
+    fn home_row_usage(&self, _keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn hand_alternation(&self, keyboard: &Keyboard) -> f64 {
+    fn hand_alternation(&self, _keyboard: &Keyboard) -> f64 {
         todo!()
     }
-    fn row_jumping(&self, keyboard: &Keyboard) -> f64 {
+    fn row_jumping(&self, _keyboard: &Keyboard) -> f64 {
         todo!()
     }
 }
