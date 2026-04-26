@@ -8,18 +8,18 @@ pub struct KeySymbol {
 }
 
 #[derive(Clone)]
-pub struct Layout {
-    pub mappings: [KeySymbol; KEY_COUNT],
+pub struct Layout<const N: usize> {
+    pub mappings: [KeySymbol; N],
     symbol_to_key: [Option<KeyIndex>; ASCII_COUNT],
 }
 
-impl Layout {
-    pub fn new(symbols: &[AsciiChar; KEY_COUNT], modifier: &Modifier) -> Result<Self, String> {
+impl<const N: usize> Layout<N> {
+    pub fn new(symbols: &[AsciiChar; N], modifier: &Modifier) -> Result<Self, String> {
         if !Self::is_permutation(symbols, modifier.base_symbols()) {
             return Err("Provided symbols do not match modifier's alphabet".to_string());
         }
 
-        let mut mappings = [KeySymbol { base: symbols[0], shifted: symbols[0] }; KEY_COUNT];
+        let mut mappings = [KeySymbol { base: symbols[0], shifted: symbols[0] }; N];
         for (slot, &base) in mappings.iter_mut().zip(symbols.iter()) {
             let shifted = modifier.shift(base).map_err(|e| e.to_string())?;
             *slot = KeySymbol { base, shifted }
@@ -28,25 +28,13 @@ impl Layout {
         Ok(Self::from_mappings(mappings))
     }
 
-    fn from_mappings(mappings: [KeySymbol; KEY_COUNT]) -> Self {
+    fn from_mappings(mappings: [KeySymbol; N]) -> Self {
         let mut symbol_to_key = [None; ASCII_COUNT];
         for (key_idx, symbol) in mappings.iter().enumerate() {
             symbol_to_key[symbol.base as usize] = Some(key_idx);
             symbol_to_key[symbol.shifted as usize] = Some(key_idx);
         }
         Self { mappings, symbol_to_key }
-    }
-
-    pub fn standard_us() -> Self {
-        let modifier = Modifier::standard_us();
-        #[rustfmt::skip]
-        let symbols: [AsciiChar; KEY_COUNT] = [
-            b'`', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'0', b'-', b'=',
-            b'q', b'w', b'e', b'r', b't', b'y', b'u', b'i', b'o', b'p', b'[', b']', b'\\',
-            b'a', b's', b'd', b'f', b'g', b'h', b'j', b'k', b'l', b';', b'\'',
-            b'z', b'x', b'c', b'v', b'b', b'n', b'm', b',', b'.', b'/',
-        ];
-        Self::new(&symbols, &modifier).unwrap()
     }
 
     fn is_permutation(symbols: &[AsciiChar], alphabet: &[AsciiChar]) -> bool {
@@ -81,5 +69,19 @@ impl Layout {
 
     pub fn key_of(&self, symbol: KeyIndex) -> Option<KeyIndex> {
         self.symbol_to_key[symbol]
+    }
+}
+
+impl Layout<KEY_COUNT> {
+    pub fn standard_us() -> Self {
+        let modifier = Modifier::standard_us();
+        #[rustfmt::skip]
+        let symbols: [AsciiChar; KEY_COUNT] = [
+            b'`', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'0', b'-', b'=',
+            b'q', b'w', b'e', b'r', b't', b'y', b'u', b'i', b'o', b'p', b'[', b']', b'\\',
+            b'a', b's', b'd', b'f', b'g', b'h', b'j', b'k', b'l', b';', b'\'',
+            b'z', b'x', b'c', b'v', b'b', b'n', b'm', b',', b'.', b'/',
+        ];
+        Self::new(&symbols, &modifier).unwrap()
     }
 }
