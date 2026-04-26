@@ -100,14 +100,20 @@ pub struct Geometry {
 impl Geometry {
     // keys are created from left to right, from top to bottom,
     // specs 'left' and 'right' must preserve the order
-    pub fn new(specs: &[RowSpec]) -> Result<Self, String> {
-        if specs.iter().map(|s| s.size()).sum::<usize>() != KEY_COUNT {
-            return Err(format!("Specs must define exactly {} keys", KEY_COUNT).to_string());
+    pub fn new<I>(specs: I) -> Result<Self, String>
+    where
+        I: IntoIterator<Item = RowSpec>,
+    {
+        let mut total = 0;
+        let mut keys_vec = Vec::with_capacity(KEY_COUNT);
+
+        for spec in specs {
+            total += spec.size();
+            keys_vec.extend(spec.build_row());
         }
 
-        let mut keys_vec = Vec::with_capacity(KEY_COUNT);
-        for spec in specs {
-            keys_vec.extend(spec.build_row())
+        if total != KEY_COUNT {
+            return Err(format!("Specs must define exactly {} keys", KEY_COUNT).to_string());
         }
 
         let keys: [Key; KEY_COUNT] = keys_vec.try_into().unwrap();
@@ -147,6 +153,6 @@ impl Geometry {
             },
         ];
 
-        Self::new(&specs).unwrap()
+        Self::new(specs).unwrap()
     }
 }
