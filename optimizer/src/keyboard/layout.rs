@@ -1,4 +1,4 @@
-use crate::keyboard::common::KeyIndex;
+use crate::keyboard::common::{ASCII_COUNT, KeyIndex};
 
 use super::common::{AsciiChar, KEY_COUNT};
 use super::modifier::{Modifier, StandardUSModifier};
@@ -13,7 +13,7 @@ pub struct KeySymbol {
 #[derive(Clone)]
 pub struct Layout {
     pub mappings: [KeySymbol; KEY_COUNT],
-    symbol_to_key: [Option<KeyIndex>; 128] // 128 - standard ASCII
+    symbol_to_key: [Option<KeyIndex>; ASCII_COUNT] 
 }
 
 impl Layout {
@@ -34,7 +34,7 @@ impl Layout {
     }
 
     fn from_mappings(mappings: [KeySymbol; KEY_COUNT]) -> Self {
-        let mut symbol_to_key = [None; 128];
+        let mut symbol_to_key = [None; ASCII_COUNT];
         mappings.iter().enumerate().for_each(|(key_idx, symbol)| symbol_to_key[symbol.base as usize] = Some(key_idx));
         mappings.iter().enumerate().for_each(|(key_idx, symbol)| symbol_to_key[symbol.shifted as usize] = Some(key_idx));
         Self {mappings, symbol_to_key}
@@ -73,7 +73,7 @@ impl Layout {
         Self::from_mappings(new_mappings)
     }
 
-    pub fn key_of(&self, symbol: AsciiChar) -> Option<KeyIndex> {
-        self.symbol_to_key[symbol as usize]
+    pub fn key_of(&self, symbol: KeyIndex) -> Option<KeyIndex> {
+        self.symbol_to_key[symbol]
     }
 }
