@@ -36,34 +36,37 @@ jobs:
       - name: Rust checks
         run: just rust-check
 
-  frontend:
-    name: Frontend — lint, type-check & test
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    frontend:
+      name: Frontend — lint, type-check, test & build
+      runs-on: ubuntu-latest
+      timeout-minutes: 15
 
-    steps:
-      - uses: actions/checkout@v4
+      steps:
+        - uses: actions/checkout@v4
 
-      - name: Install just
-        uses: taiki-e/install-action@just
+        - name: Install just
+          uses: taiki-e/install-action@just
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: wasm32-unknown-unknown
+        - name: Install Rust toolchain
+          uses: dtolnay/rust-toolchain@stable
+          with:
+            targets: wasm32-unknown-unknown
 
-      - name: Install wasm-pack
-        run: cargo install wasm-pack --locked
-        
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
+        - name: Install wasm-pack
+          run: cargo install wasm-pack --locked
 
-      - name: Install frontend dependencies
-        run: just frontend-install
+        - name: Setup Node
+          uses: actions/setup-node@v4
+          with:
+            node-version: 22
+            cache: npm
+            cache-dependency-path: frontend/package-lock.json
 
-      - name: Frontend checks
-        run: just frontend-check
+        - name: Install frontend dependencies
+          run: just frontend-install
+
+        - name: Generate WASM bindings
+          run: just wasm-pack
+
+        - name: Frontend checks
+          run: just frontend-check
