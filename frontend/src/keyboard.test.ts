@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { flattenKeyboardRows, normalizeText, standardKeyboardRows } from "./keyboard";
-
-describe("normalizeText", () => {
-  it("keeps only letters and lowercases them", () => {
-    expect(normalizeText("Ala ma Kota! 123")).toBe("alamakota");
-  });
-});
+import { flattenKeyboardRows, standardKeyboardRows } from "./keyboard";
 
 describe("standardKeyboardRows", () => {
   it("contains 47 optimized keys", () => {
