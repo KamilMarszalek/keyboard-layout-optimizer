@@ -1,6 +1,5 @@
 use rand::{Rng, RngExt};
 
-use crate::keyboard::common::KEY_COUNT;
 use crate::keyboard::layout::Layout;
 
 pub struct AnnealingConfig {
@@ -81,6 +80,7 @@ fn should_accept_worse(delta: f64, temperature: f64, rng: &mut impl Rng) -> bool
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::keyboard::common::KEY_COUNT;
     use rand::rngs::SmallRng;
     use rand::{Rng, RngExt, SeedableRng};
 
