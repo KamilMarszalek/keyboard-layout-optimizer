@@ -10,8 +10,8 @@ struct KeyPress {
 
 #[allow(dead_code)]
 pub struct Keyboard<const N: usize> {
-    geometry: Geometry<N>,
-    layout: Layout<N>,
+    pub geometry: Geometry<N>,
+    pub layout: Layout<N>,
 }
 
 impl<const N: usize> Keyboard<N> {
