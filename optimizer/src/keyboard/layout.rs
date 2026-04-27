@@ -89,7 +89,7 @@ mod tests {
     }
 
     fn test_layout() -> Layout<2> {
-        Layout::new(&[b'a', b'b'], &test_modifier()).unwrap()
+        Layout::new(b"ab", &test_modifier()).unwrap()
     }
 
     #[test]
@@ -102,28 +102,28 @@ mod tests {
     #[test]
     fn layout_new_fails_when_incomplete_symbols() {
         let modifer = test_modifier();
-        let layout = Layout::new(&[b'a'], &modifer);
+        let layout = Layout::new(b"a", &modifer);
         assert_eq!(layout.err().unwrap(), "Provided symbols do not match modifier's base symbols");
     }
 
     #[test]
     fn layout_new_fails_when_too_many_symbols() {
         let modifer = test_modifier();
-        let layout = Layout::new(&[b'a', b'b', b'c'], &modifer);
+        let layout = Layout::new(b"abc", &modifer);
         assert_eq!(layout.err().unwrap(), "Provided symbols do not match modifier's base symbols");
     }
 
     #[test]
     fn layout_new_succeeds() {
         let modifier = test_modifier();
-        let layout = Layout::new(&[b'a', b'b'], &modifier);
+        let layout = Layout::new(b"ab", &modifier);
         assert!(layout.is_ok())
     }
 
     #[test]
     fn layout_new_mappings() {
         let modifier = test_modifier();
-        let layout = Layout::new(&[b'a', b'b'], &modifier).unwrap();
+        let layout = Layout::new(b"ab", &modifier).unwrap();
         for key_symbol in layout.mappings {
             assert!(modifier.base_symbols().contains(&key_symbol.base));
             assert_eq!(key_symbol.shifted, modifier.shift(key_symbol.base).unwrap());
