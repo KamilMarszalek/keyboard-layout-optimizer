@@ -40,6 +40,9 @@ where
 
     let mut temperature = config.t_start;
     let len = current_layout.mappings.len();
+    if len < 2 {
+        return AnnealingResult { best_layout, best_cost, cost_history };
+    }
 
     while temperature > config.t_min {
         for _ in 0..config.iterations_per_temp {
@@ -144,7 +147,7 @@ mod tests {
         let initial = scrambled_layout(42, 10);
         let result = run_sa(initial, &test_config(), 7, qwerty_mismatch_cost);
         let is_non_increasing = result.cost_history.windows(2).all(|w| w[0] >= w[1]);
-        
+
         assert!(is_non_increasing, "cost history should be non-increasing: {:?}", result.cost_history);
     }
 
