@@ -1,6 +1,6 @@
 use super::common::KEY_COUNT;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 enum Row {
     Number,
     Top,
@@ -8,13 +8,13 @@ enum Row {
     Bottom,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 enum Hand {
     Left,
     Right,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
 enum Finger {
     Pinky,
     Ring,
@@ -51,8 +51,8 @@ struct Key {
 }
 
 pub struct RowSpec {
-    left: [FingerCount; 4],
-    right: [FingerCount; 4],
+    left: Vec<FingerCount>,
+    right: Vec<FingerCount>,
     x_offset: f32,
     y: f32,
     row: Row,
@@ -126,29 +126,29 @@ impl Geometry<KEY_COUNT> {
     pub fn standard_us() -> Self {
         let specs = [
             RowSpec {
-                left: [fc!(Finger::Pinky, 2), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: [fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 3)],
+                left: vec![fc!(Finger::Pinky, 2), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
+                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 3)],
                 x_offset: 0.0,
                 y: 0.0,
                 row: Row::Number,
             },
             RowSpec {
-                left: [fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: [fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 4)],
+                left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
+                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 4)],
                 x_offset: 1.5,
                 y: 1.0,
                 row: Row::Top,
             },
             RowSpec {
-                left: [fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: [fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 2)],
+                left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
+                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 2)],
                 x_offset: 2.0,
                 y: 2.0,
                 row: Row::Home,
             },
             RowSpec {
-                left: [fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: [fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 1)],
+                left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
+                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 1)],
                 x_offset: 2.5,
                 y: 3.0,
                 row: Row::Bottom,
@@ -156,5 +156,146 @@ impl Geometry<KEY_COUNT> {
         ];
 
         Self::new(specs).unwrap()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn test_row_spec() -> RowSpec {
+        RowSpec { left: vec![], right: vec![], x_offset: 0.0, y: 0.0, row: Row::Top }
+    }
+
+    #[test]
+    fn spec_total_size() {
+        let spec = RowSpec { left: vec![fc!(Finger::Pinky, 2)], right: vec![fc!(Finger::Pinky, 2)], ..test_row_spec() };
+        assert_eq!(spec.size(), 4);
+    }
+
+    #[test]
+    fn spec_build_row_from_left_to_right() {
+        let spec = RowSpec {
+            left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
+            right: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
+            ..test_row_spec()
+        };
+        let order = [Finger::Pinky, Finger::Ring, Finger::Middle, Finger::Index];
+        let n = order.len();
+        let keys = spec.build_row();
+
+        for (i, key) in keys.iter().enumerate() {
+            let expected_finger = order[i % n];
+            if i < n {
+                assert_eq!(key.hand, Hand::Left);
+            } else {
+                assert_eq!(key.hand, Hand::Right);
+            }
+            assert_eq!(key.finger, expected_finger);
+        }
+    }
+
+    #[test]
+    fn spec_build_row_repeat_finger_count() {
+        let spec = RowSpec { left: vec![fc!(Finger::Pinky, 5)], ..test_row_spec() };
+        let keys = spec.build_row();
+        for key in keys.iter() {
+            assert_eq!(key.finger, Finger::Pinky);
+        }
+    }
+
+    #[test]
+    fn spec_build_row_increasing_x() {
+        let spec = RowSpec {
+            left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
+            right: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
+            ..test_row_spec()
+        };
+        let keys = spec.build_row();
+        for i in 1..keys.len() {
+            assert_eq!(keys[i].coords.x - keys[i - 1].coords.x, 1.0);
+        }
+    }
+
+    #[test]
+    fn spec_build_row_setups_y() {
+        let spec = RowSpec { left: vec![fc!(Finger::Pinky, 5)], y: 1.0, ..test_row_spec() };
+        let keys = spec.build_row();
+        for key in keys.iter() {
+            assert_eq!(key.coords.y, 1.0);
+        }
+    }
+
+    #[test]
+    fn spec_build_row_setups_row() {
+        let spec = RowSpec { left: vec![fc!(Finger::Pinky, 5)], row: Row::Bottom, ..test_row_spec() };
+        let keys = spec.build_row();
+        for key in keys.iter() {
+            assert_eq!(key.row, Row::Bottom);
+        }
+    }
+
+    #[test]
+    fn spec_build_row_setups_x_offset() {
+        let spec = RowSpec { left: vec![fc!(Finger::Pinky, 1)], x_offset: 1.0, ..test_row_spec() };
+        let keys = spec.build_row();
+        assert_eq!(keys[0].coords.x, 1.0);
+    }
+
+    #[test]
+    fn geometry_new_succeeds_when_total_matches_n() {
+        let specs = [
+            RowSpec { left: vec![fc!(Finger::Pinky, 1)], right: vec![fc!(Finger::Index, 1)], ..test_row_spec() },
+            RowSpec { left: vec![fc!(Finger::Ring, 1)], right: vec![fc!(Finger::Middle, 1)], ..test_row_spec() },
+        ];
+        let geometry = Geometry::<4>::new(specs);
+        assert!(geometry.is_ok());
+    }
+
+    #[test]
+    fn geometry_new_fails_when_total_is_less_than_n() {
+        let specs =
+            [RowSpec { left: vec![fc!(Finger::Pinky, 1)], right: vec![fc!(Finger::Index, 1)], ..test_row_spec() }];
+        let geometry = Geometry::<3>::new(specs);
+        assert_eq!(geometry.err().unwrap(), "Specs must define exactly 3 keys");
+    }
+
+    #[test]
+    fn geometry_new_fails_when_total_is_greater_than_n() {
+        let specs =
+            [RowSpec { left: vec![fc!(Finger::Pinky, 2)], right: vec![fc!(Finger::Index, 2)], ..test_row_spec() }];
+        let geometry = Geometry::<3>::new(specs);
+        assert_eq!(geometry.err().unwrap(), "Specs must define exactly 3 keys");
+    }
+
+    #[test]
+    fn geometry_new_preserves_row_order_across_specs() {
+        let specs = [
+            RowSpec { left: vec![fc!(Finger::Pinky, 1)], row: Row::Top, y: 1.0, ..test_row_spec() },
+            RowSpec { left: vec![fc!(Finger::Ring, 1)], row: Row::Home, y: 2.0, ..test_row_spec() },
+        ];
+        let geometry = Geometry::<2>::new(specs).unwrap();
+        assert_eq!(geometry.keys[0].row, Row::Top);
+        assert_eq!(geometry.keys[0].coords.y, 1.0);
+        assert_eq!(geometry.keys[1].row, Row::Home);
+        assert_eq!(geometry.keys[1].coords.y, 2.0);
+    }
+
+    #[test]
+    fn geometry_us_standard_produces_key_count_keys() {
+        let geometry = Geometry::standard_us();
+        assert_eq!(geometry.keys.len(), KEY_COUNT);
+    }
+
+    #[test]
+    fn geometry_standard_us_preserves_row_sizes() {
+        let geometry = Geometry::standard_us();
+
+        let row_size = |row| geometry.keys.iter().filter(|key| key.row == row).count();
+
+        assert_eq!(row_size(Row::Number), 13);
+        assert_eq!(row_size(Row::Top), 13);
+        assert_eq!(row_size(Row::Home), 11);
+        assert_eq!(row_size(Row::Bottom), 10);
     }
 }
