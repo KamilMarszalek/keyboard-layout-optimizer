@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
+import { onMounted, ref } from "vue";
 import init, { normalize_demo, optimizer_demo_message } from "./wasm/optimizer";
 import { standardKeyboardRows } from "./keyboard";
 
@@ -27,7 +27,7 @@ onMounted(() => {
     <p>{{ wasmMessage }}</p>
 
     <label for="input-text">Input text</label>
-    <textarea id="input-text" v-model="input" />
+    <textarea id="input-text" v-model="input"></textarea>
 
     <button type="button" @click="runWasmDemo">
       Normalize with WASM
