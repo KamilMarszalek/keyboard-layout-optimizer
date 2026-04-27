@@ -85,7 +85,7 @@ mod tests {
     use super::*;
     use crate::keyboard::common::KEY_COUNT;
     use rand::rngs::SmallRng;
-    use rand::{Rng, RngExt, SeedableRng};
+    use rand::{RngExt, SeedableRng};
 
     type TestLayout = Layout<KEY_COUNT>;
 
@@ -190,7 +190,7 @@ mod tests {
     #[test]
     fn improving_swap_is_kept() {
         let initial = Layout::standard_us();
-        let initial_mappings = initial.mappings.clone();
+        let initial_mappings = initial.mappings;
         let config = config(1.0, 0.5, 0.1, 1);
         let cost = |layout: &TestLayout| {
             if layout.mappings == initial_mappings { 1.0 } else { 0.0 }
