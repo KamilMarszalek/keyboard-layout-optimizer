@@ -60,7 +60,7 @@ pub struct RowSpec {
 
 impl RowSpec {
     fn build_row(&self) -> Vec<Key> {
-        let mut keys = Vec::with_capacity(self.left.len() + self.right.len());
+        let mut keys = Vec::with_capacity(self.size());
         let mut base_x = 0.0;
 
         for (i, &finger) in self.left.iter().flat_map(|fc| std::iter::repeat_n(&fc.finger, fc.count)).enumerate() {
