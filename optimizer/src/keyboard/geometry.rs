@@ -43,7 +43,7 @@ struct Coordinates {
 
 #[allow(dead_code)]
 #[derive(Debug)]
-struct Key {
+pub struct Key {
     coords: Coordinates,
     hand: Hand,
     finger: Finger,
@@ -94,7 +94,7 @@ impl RowSpec {
 
 #[allow(dead_code)]
 pub struct Geometry<const N: usize> {
-    keys: [Key; N],
+    pub keys: [Key; N],
 }
 
 impl<const N: usize> Geometry<N> {
