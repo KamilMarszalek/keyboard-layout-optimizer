@@ -9,8 +9,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn normalize_text_keeps_only_ascii_letters_and_lowercases() {
-        let result = normalize_text("Ąłą ma Kota! 123");
-        assert_eq!(result, "AlamaKota!123");
+    fn normalize_text_transliterates_non_ascii_characters() {
+        let result = normalize_text("Ąłą");
+        assert_eq!(result, "Ala");
+    }
+
+    #[test]
+    fn normalize_text_preserves_case_digits_and_punctuation_but_removes_spaces() {
+        let result = normalize_text("ma Kota! 123");
+        assert_eq!(result, "maKota!123");
     }
 }
