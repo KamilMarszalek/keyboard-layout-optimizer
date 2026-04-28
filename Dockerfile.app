@@ -28,7 +28,7 @@ RUN just wasm-pack
 RUN just frontend-build
 
 
-FROM nginx:1.27-alpine AS runtime
+FROM nginx:stable-alpine AS runtime
 
 RUN apk upgrade --no-cache
 
