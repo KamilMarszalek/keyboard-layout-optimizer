@@ -62,7 +62,7 @@ frontend-check: frontend-lint frontend-type-check frontend-test frontend-build
 
 # ---------- All ----------
 
-check: rust-check frontend-check
+check: rust-check wasm-pack frontend-check
 
 test: rust-test frontend-test
 
@@ -73,3 +73,14 @@ setup: wasm-target frontend-install
 clean:
     cd optimizer && cargo clean
     rm -rf frontend/dist frontend/src/wasm
+
+docker-check:
+    docker build -f Dockerfile.check -t keyboard-layout-optimizer-check .
+    docker run --rm keyboard-layout-optimizer-check
+
+docker-run:
+    docker build -f Dockerfile.app -t keyboard-layout-optimizer-app .
+    docker run --rm -p 8080:80 keyboard-layout-optimizer-app
+
+docker-clean:
+    docker rmi keyboard-layout-optimizer-check keyboard-layout-optimizer-app
