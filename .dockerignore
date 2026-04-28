@@ -1,0 +1,10 @@
+.git
+.gitignore
+
+optimizer/target
+frontend/node_modules
+frontend/dist
+frontend/src/wasm
+
+.DS_Store
+*.log
