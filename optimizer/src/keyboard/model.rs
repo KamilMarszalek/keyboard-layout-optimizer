@@ -8,7 +8,6 @@ struct KeyPress {
     shift: bool,
 }
 
-#[allow(dead_code)]
 pub struct Keyboard<const N: usize> {
     pub geometry: Geometry<N>,
     pub layout: Layout<N>,
