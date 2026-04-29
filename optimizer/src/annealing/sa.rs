@@ -2,6 +2,13 @@ use rand::{Rng, RngExt};
 
 use crate::keyboard::layout::Layout;
 
+/// Configuration parameters for the simulated annealing algorithm.
+///
+/// The algorithm starts at `t_start` and repeatedly multiplies the temperature
+/// by `alpha` until it reaches `t_min`. For each temperature level it performs
+/// `iterations_per_temp` random neighbor evaluations.
+/// Larger values of `iterations_per_temp` and slower cooling schedules
+/// usually increase solution quality, but also increase runtime.
 pub struct AnnealingConfig {
     pub t_start: f64,
     pub t_min: f64,
@@ -15,6 +22,10 @@ impl Default for AnnealingConfig {
     }
 }
 
+/// Result produced by simulated annealing.
+///
+/// The result contains the `best_layout` found during the search, its cost - `best_cost`,
+/// and the history of the best cost after each temperature level - `cost_history`.
 pub struct AnnealingResult<const N: usize> {
     pub best_layout: Layout<N>,
     pub best_cost: f64,
