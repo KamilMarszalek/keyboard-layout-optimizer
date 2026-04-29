@@ -92,14 +92,21 @@ impl RowSpec {
     }
 }
 
-#[allow(dead_code)]
+/// Physical description of a keyboard with `N` keys.
+///
+/// Each key stores its row, hand, finger assignment, and approximate 2D position. `Geometry` does
+/// not define which symbols appear on those keys; it only describes the keyboard's physical
+/// structure. Keys are ordered from left to right within a row, and from top to bottom across rows.
 pub struct Geometry<const N: usize> {
     pub keys: [Key; N],
 }
 
 impl<const N: usize> Geometry<N> {
-    // keys are created from left to right, from top to bottom,
-    // specs 'left' and 'right' must preserve the order
+    // Build a geometry keyboard from ordered row specifications.
+    //
+    /// Each `RowSpec` expands into a contiguous row of keys. The resulting key array preserves the
+    /// order of the provided rows, and the order of keys implied by each row's `left` and `right`
+    /// finger definitions.
     pub fn new<I>(specs: I) -> Result<Self, String>
     where
         I: IntoIterator<Item = RowSpec>,
@@ -123,6 +130,8 @@ impl<const N: usize> Geometry<N> {
 }
 
 impl Geometry<KEY_COUNT> {
+    // Builds US ANSI-like geometry, containing `KEY_COUNT` keys that store visible ASCII symbols
+    // ordered in 4 rows.
     pub fn standard_us() -> Self {
         let specs = [
             RowSpec {
