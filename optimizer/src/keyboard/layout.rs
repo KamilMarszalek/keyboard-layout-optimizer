@@ -8,12 +8,19 @@ pub struct KeySymbol {
 }
 
 #[derive(Clone)]
+/// Layout maps physical key positions to base and shifted symbols.
 pub struct Layout<const N: usize> {
     pub mappings: [KeySymbol; N],
     symbol_to_key: [Option<KeyIndex>; ASCII_COUNT],
 }
 
 impl<const N: usize> Layout<N> {
+    /// Builds a keyboard layout from base symbols and a modifier mapping.
+    ///
+    /// The provided `symbols` must match `modifier.base_symbols()`.
+    /// For each key, the layout stores both the base symbol and the symbol
+    /// produced by applying the modifier. It also builds a reverse lookup for
+    /// both forms.
     pub fn new(symbols: &[AsciiChar; N], modifier: &Modifier) -> Result<Self, String> {
         if !Self::is_permutation(symbols, modifier.base_symbols()) {
             return Err("Provided symbols do not match modifier's base symbols".to_string());
@@ -31,6 +38,10 @@ impl<const N: usize> Layout<N> {
         Ok(Self { mappings, symbol_to_key })
     }
 
+    /// Swaps two key positions in the layout.
+    ///
+    /// This updates both the forward key mappings and the reverse symbol lookup.
+    /// Passing the same index twice is a no-op.
     pub fn swap(&mut self, first: KeyIndex, second: KeyIndex) {
         if first == second {
             return;
@@ -67,6 +78,7 @@ impl<const N: usize> Layout<N> {
 }
 
 impl Layout<KEY_COUNT> {
+    /// Returns the standard US ANSI-like symbol arrangement for the main alphanumeric keys.
     pub fn standard_us() -> Self {
         let modifier = Modifier::standard_us();
         #[rustfmt::skip]

@@ -17,12 +17,18 @@ impl fmt::Display for ModifierError {
     }
 }
 
+/// Maps base symbols to their modified forms.
+///
+/// A `Modifier` defines the printable symbol produced when a modifier such as Shift is applied to
+/// a base key symbol (`a` -> `A`, `1` -> `!`). This type only stores forward mappings from base to
+/// modified symbols.
 pub struct Modifier {
     encode: HashMap<AsciiChar, AsciiChar>,
     symbols: Vec<AsciiChar>,
 }
 
 impl Modifier {
+    // Builds a modifier from `(base, shifted)` symbol pairs.
     pub fn new<I>(shift_pairs: I) -> Self
     where
         I: IntoIterator<Item = (AsciiChar, AsciiChar)>,
@@ -40,10 +46,15 @@ impl Modifier {
         self.encode.get(&c).copied().ok_or(ModifierError::UnsupportedBase(c))
     }
 
+    /// Returns the base symbols supported by this modifier.
+    /// These symbols define the alphabet that a compatible `Layout` must contain.
     pub fn base_symbols(&self) -> &[AsciiChar] {
         &self.symbols
     }
 
+    /// Returns the standard US Shift mapping for the main printable keyboard symbols.
+    /// This includes lowercase Latin letters, digits, and punctuation used by the
+    /// main alphanumeric section of a US keyboard layout.
     pub fn standard_us() -> Self {
         let letter_pairs = (b'a'..=b'z').map(|c| (c, c.to_ascii_uppercase()));
 
