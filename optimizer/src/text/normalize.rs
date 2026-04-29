@@ -1,5 +1,9 @@
 use any_ascii::any_ascii;
 
+/// Normalizes `input` text
+///
+/// by transliterating non-ASCII characters to their ASCII equivalents
+/// and removing non-graphical characters.
 pub fn normalize_text(input: &str) -> String {
     any_ascii(input).chars().filter(|c| c.is_ascii_graphic()).collect()
 }
