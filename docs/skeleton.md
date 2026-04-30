@@ -60,6 +60,7 @@ Aplikacja będzie dostępna pod adresem:
 http://localhost:8080
 ```
 
+Możliwe jest wprowadzenie tekstu w polu "Input text". Po wciśnięciu "Normalize with WASM" tekst zostanie przetworzony przez moduł WebAssembly. Wynikowy tekst zostanie pozbawiony spacji oraz znaków narodowych.
 ## Sprawdzenie projektu w środowisku Docker
 ```bash
 just docker-check
