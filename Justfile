@@ -76,7 +76,7 @@ clean:
 
 docker-check:
     docker build -f Dockerfile.check -t keyboard-layout-optimizer-check .
-    docker run --rm keyboard-layout-optimizer-check
+    docker run --rm --privileged keyboard-layout-optimizer-check
 
 docker-run:
     docker build -f Dockerfile.app -t keyboard-layout-optimizer-app .
