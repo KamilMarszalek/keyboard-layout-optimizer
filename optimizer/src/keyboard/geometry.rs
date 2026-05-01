@@ -45,6 +45,8 @@ impl Finger {
     const COUNT: usize = 4;
 }
 
+const N_FINGERS: usize = Hand::COUNT * Finger::COUNT;
+
 #[derive(Clone, Copy, Debug)]
 struct FingerCount {
     finger: Finger,
@@ -133,7 +135,7 @@ impl RowSpec {
 /// structure. Keys are ordered from left to right within a row, and from top to bottom across rows.
 pub struct Geometry<const N: usize> {
     keys: [Key; N],
-    default_placement: [KeyIndex; Hand::COUNT * Finger::COUNT],
+    default_placement: [KeyIndex; N_FINGERS],
 }
 
 impl<const N: usize> Geometry<N> {
@@ -171,10 +173,8 @@ impl<const N: usize> Geometry<N> {
     fn extract_default_placements(
         keys: &[Key; N],
         n_fingers: usize,
-    ) -> Result<[KeyIndex; Hand::COUNT * Finger::COUNT], String> {
-        const N_FINGERS: usize = Hand::COUNT * Finger::COUNT;
+    ) -> Result<[KeyIndex; N_FINGERS], String> {
         let mut default_placement: [KeyIndex; N_FINGERS] = [usize::MAX; N_FINGERS];
-
         for (i, key) in keys.iter().enumerate().filter(|(_, key)| key.is_default_placement) {
             let slot = key.hand as usize * Finger::COUNT + key.finger as usize;
             if default_placement[slot] != usize::MAX {
@@ -429,6 +429,32 @@ mod tests {
         }];
         let geometry = Geometry::<3>::new(specs);
         assert_eq!(geometry.err().unwrap(), "Specs must define exactly 3 keys");
+    }
+
+    #[test]
+    fn geometry_new_fails_when_finger_is_not_assigned_once() {
+        let specs = [
+            RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() },
+            RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() },
+        ];
+        let geometry = Geometry::<2>::new(specs);
+        assert_eq!(
+            geometry.err().unwrap(),
+            format!("{}-{} has been already assigned to key", Hand::Left, Finger::Pinky),
+        );
+    }
+
+    #[test]
+    fn geometry_new_fails_when_finger_has_no_default_placement() {
+        let specs = [RowSpec {
+            left: vec![fc!(Finger::Pinky, 1, 0), fc!(Finger::Ring, 1)],
+            ..test_row_spec()
+        }];
+        let geometry = Geometry::<2>::new(specs);
+        assert_eq!(
+            geometry.err().unwrap(),
+            format!("Only {} of {} possible key-finger assignments filled", 1, 2),
+        );
     }
 
     #[test]
