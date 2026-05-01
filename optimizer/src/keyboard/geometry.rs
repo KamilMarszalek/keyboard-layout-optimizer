@@ -135,7 +135,7 @@ impl RowSpec {
 /// structure. Keys are ordered from left to right within a row, and from top to bottom across rows.
 pub struct Geometry<const N: usize> {
     keys: [Key; N],
-    default_placement: [KeyIndex; N_FINGERS],
+    default_placement: [Option<KeyIndex>; N_FINGERS],
 }
 
 impl<const N: usize> Geometry<N> {
@@ -150,8 +150,10 @@ impl<const N: usize> Geometry<N> {
     {
         let collected: Vec<RowSpec> = specs.into_iter().collect();
         let n_fingers = collected.iter().flat_map(|f| f.used_fingers()).unique().count();
+
         let keys = Self::build_keys(&collected)?;
         let default_placement = Self::extract_default_placements(&keys, n_fingers)?;
+
         Ok(Self { keys, default_placement })
     }
 
@@ -173,20 +175,20 @@ impl<const N: usize> Geometry<N> {
     fn extract_default_placements(
         keys: &[Key; N],
         n_fingers: usize,
-    ) -> Result<[KeyIndex; N_FINGERS], String> {
-        let mut default_placement: [KeyIndex; N_FINGERS] = [usize::MAX; N_FINGERS];
+    ) -> Result<[Option<KeyIndex>; N_FINGERS], String> {
+        let mut default_placement: [Option<KeyIndex>; N_FINGERS] = [None; N_FINGERS];
         for (i, key) in keys.iter().enumerate().filter(|(_, key)| key.is_default_placement) {
             let slot = key.hand as usize * Finger::COUNT + key.finger as usize;
-            if default_placement[slot] != usize::MAX {
+            if default_placement[slot] != None {
                 return Err(format!(
                     "{}-{} has been already assigned to key",
                     key.hand, key.finger
                 ));
             }
-            default_placement[slot] = i;
+            default_placement[slot] = Some(i);
         }
 
-        let filled = default_placement.iter().filter(|&k| *k != usize::MAX).count();
+        let filled = default_placement.iter().filter(|&k| *k != None).count();
         let needed = std::cmp::min(n_fingers, N);
         match filled == needed {
             true => Ok(default_placement),
@@ -196,9 +198,12 @@ impl<const N: usize> Geometry<N> {
         }
     }
 
-    pub fn home_key(&self, hand: Hand, finger: Finger) -> &Key {
+    pub fn home_key(&self, hand: Hand, finger: Finger) -> Option<&Key> {
         let i = hand as usize * Finger::COUNT + finger as usize;
-        &self.keys[self.default_placement[i] as usize]
+        match self.default_placement[i] {
+            Some(i) => Some(&self.keys[i]),
+            None => None,
+        }
     }
 }
 
@@ -489,22 +494,37 @@ mod tests {
         }];
         let geometry = Geometry::<2>::new(specs).unwrap();
 
-        let left_pinky_home = geometry.home_key(Hand::Left, Finger::Pinky);
-        assert_eq!(left_pinky_home.hand, Hand::Left);
-        assert_eq!(left_pinky_home.finger, Finger::Pinky);
-        assert_eq!(left_pinky_home.coords.x, 0.0);
+        let left_home = geometry.home_key(Hand::Left, Finger::Pinky).unwrap();
+        assert_eq!(left_home.hand, Hand::Left);
+        assert_eq!(left_home.finger, Finger::Pinky);
+        assert_eq!(left_home.coords.x, 0.0);
 
-        let right_pinky_home = geometry.home_key(Hand::Right, Finger::Index);
-        assert_eq!(right_pinky_home.hand, Hand::Right);
-        assert_eq!(right_pinky_home.finger, Finger::Index);
-        assert_eq!(right_pinky_home.coords.x, 1.0);
+        let right_home = geometry.home_key(Hand::Right, Finger::Index).unwrap();
+        assert_eq!(right_home.hand, Hand::Right);
+        assert_eq!(right_home.finger, Finger::Index);
+        assert_eq!(right_home.coords.x, 1.0);
+    }
+
+    #[test]
+    fn geometry_new_assigns_none_within_not_defined_hand() {
+        let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
+        let geometry = Geometry::<1>::new(specs).unwrap();
+        assert!(geometry.home_key(Hand::Right, Finger::Pinky).is_none());
+    }
+
+    #[test]
+    fn geometry_new_assigns_none_within_not_defined_finger() {
+        let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
+        let geometry = Geometry::<1>::new(specs).unwrap();
+        assert!(geometry.home_key(Hand::Left, Finger::Index).is_none());
     }
 
     #[test]
     fn geometry_new_assigns_default_placement_at_correct_index_within_finger() {
         let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 3, 2)], ..test_row_spec() }];
         let geometry = Geometry::<3>::new(specs).unwrap();
-        assert_eq!(geometry.home_key(Hand::Left, Finger::Pinky).coords.x, 2.0);
+        let home_key = geometry.home_key(Hand::Left, Finger::Pinky).unwrap();
+        assert_eq!(home_key.coords.x, 2.0);
     }
 
     #[test]
