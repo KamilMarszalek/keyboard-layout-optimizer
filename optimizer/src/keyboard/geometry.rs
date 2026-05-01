@@ -1,4 +1,5 @@
 use core::fmt;
+use itertools::Itertools;
 
 use super::common::{KEY_COUNT, KeyIndex};
 
@@ -10,7 +11,7 @@ pub enum Row {
     Bottom,
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum Hand {
     Left,
     Right,
@@ -26,7 +27,7 @@ impl Hand {
     const COUNT: usize = 2;
 }
 
-#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum Finger {
     Pinky,
     Ring,
@@ -117,6 +118,12 @@ impl RowSpec {
         let right_size = self.right.iter().map(|fc| fc.count).sum::<usize>();
         left_size + right_size
     }
+
+    fn used_fingers(&self) -> Vec<(Hand, Finger)> {
+        let left = self.left.iter().map(|fc| (Hand::Left, fc.finger));
+        let right = self.right.iter().map(|fc| (Hand::Right, fc.finger));
+        left.chain(right).collect()
+    }
 }
 
 /// Physical description of a keyboard with `N` keys.
@@ -139,15 +146,14 @@ impl<const N: usize> Geometry<N> {
     where
         I: IntoIterator<Item = RowSpec>,
     {
-        let keys = Self::build_keys(specs)?;
-        let default_placement = Self::extract_default_placements(&keys)?;
+        let collected: Vec<RowSpec> = specs.into_iter().collect();
+        let n_fingers = collected.iter().flat_map(|f| f.used_fingers()).unique().count();
+        let keys = Self::build_keys(&collected)?;
+        let default_placement = Self::extract_default_placements(&keys, n_fingers)?;
         Ok(Self { keys, default_placement })
     }
 
-    fn build_keys<I>(specs: I) -> Result<[Key; N], String>
-    where
-        I: IntoIterator<Item = RowSpec>,
-    {
+    fn build_keys(specs: &Vec<RowSpec>) -> Result<[Key; N], String> {
         let mut total = 0;
         let mut keys_vec = Vec::with_capacity(N);
 
@@ -164,6 +170,7 @@ impl<const N: usize> Geometry<N> {
 
     fn extract_default_placements(
         keys: &[Key; N],
+        n_fingers: usize,
     ) -> Result<[KeyIndex; Hand::COUNT * Finger::COUNT], String> {
         const N_FINGERS: usize = Hand::COUNT * Finger::COUNT;
         let mut default_placement: [KeyIndex; N_FINGERS] = [usize::MAX; N_FINGERS];
@@ -180,7 +187,7 @@ impl<const N: usize> Geometry<N> {
         }
 
         let filled = default_placement.iter().filter(|&k| *k != usize::MAX).count();
-        let needed = std::cmp::min(N_FINGERS, N);
+        let needed = std::cmp::min(n_fingers, N);
         match filled == needed {
             true => Ok(default_placement),
             false => {
