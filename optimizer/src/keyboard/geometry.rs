@@ -1,7 +1,9 @@
-use super::common::KEY_COUNT;
+use core::fmt;
+
+use super::common::{KEY_COUNT, KeyIndex};
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-enum Row {
+pub enum Row {
     Number,
     Top,
     Home,
@@ -9,34 +11,59 @@ enum Row {
 }
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-enum Hand {
+pub enum Hand {
     Left,
     Right,
 }
 
+impl fmt::Display for Hand {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Hand {
+    const COUNT: usize = 2;
+}
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-enum Finger {
+pub enum Finger {
     Pinky,
     Ring,
     Middle,
     Index,
 }
 
+impl fmt::Display for Finger {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl Finger {
+    const COUNT: usize = 4;
+}
+
 #[derive(Clone, Copy, Debug)]
 struct FingerCount {
     finger: Finger,
     count: usize,
+    home_at: Option<usize>,
 }
 
 macro_rules! fc {
     ( $finger:expr, $count:expr ) => {
-        FingerCount { finger: $finger, count: $count }
+        FingerCount { finger: $finger, count: $count, home_at: None }
+    };
+
+    ( $finger:expr, $count:expr, $home_at:expr ) => {
+        FingerCount { finger: $finger, count: $count, home_at: Some($home_at) }
     };
 }
 
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
-struct Coordinates {
+pub struct Coordinates {
     x: f32,
     y: f32,
 }
@@ -48,6 +75,7 @@ pub struct Key {
     hand: Hand,
     finger: Finger,
     row: Row,
+    is_default_placement: bool,
 }
 
 pub struct RowSpec {
@@ -61,26 +89,25 @@ pub struct RowSpec {
 impl RowSpec {
     fn build_row(&self) -> Vec<Key> {
         let mut keys = Vec::with_capacity(self.size());
-        let mut base_x = 0.0;
+        let mut x = self.x_offset;
 
-        for (i, &finger) in self.left.iter().flat_map(|fc| std::iter::repeat_n(&fc.finger, fc.count)).enumerate() {
-            keys.push(Key {
-                coords: Coordinates { x: i as f32 + self.x_offset, y: self.y },
-                hand: Hand::Left,
-                finger,
-                row: self.row,
-            });
-            base_x += 1.0;
-        }
+        let mut push_side = |keys: &mut Vec<Key>, side: &Vec<FingerCount>, hand: Hand| {
+            for fc in side {
+                for j in 0..fc.count {
+                    keys.push(Key {
+                        coords: Coordinates { x: x, y: self.y },
+                        hand: hand,
+                        finger: fc.finger,
+                        row: self.row,
+                        is_default_placement: fc.home_at == Some(j),
+                    });
+                    x += 1.0;
+                }
+            }
+        };
 
-        for (i, &finger) in self.right.iter().flat_map(|fc| std::iter::repeat_n(&fc.finger, fc.count)).enumerate() {
-            keys.push(Key {
-                coords: Coordinates { x: base_x + i as f32 + self.x_offset, y: self.y },
-                hand: Hand::Right,
-                finger,
-                row: self.row,
-            });
-        }
+        push_side(&mut keys, &self.left, Hand::Left);
+        push_side(&mut keys, &self.right, Hand::Right);
 
         keys
     }
@@ -98,7 +125,8 @@ impl RowSpec {
 /// not define which symbols appear on those keys; it only describes the keyboard's physical
 /// structure. Keys are ordered from left to right within a row, and from top to bottom across rows.
 pub struct Geometry<const N: usize> {
-    pub keys: [Key; N],
+    keys: [Key; N],
+    default_placement: [KeyIndex; Hand::COUNT * Finger::COUNT],
 }
 
 impl<const N: usize> Geometry<N> {
@@ -107,7 +135,16 @@ impl<const N: usize> Geometry<N> {
     /// Each `RowSpec` expands into a contiguous row of keys. The resulting key array preserves the
     /// order of the provided rows, and the order of keys implied by each row's `left` and `right`
     /// finger definitions.
-    pub fn new<I>(specs: I) -> Result<Self, String>
+    fn new<I>(specs: I) -> Result<Self, String>
+    where
+        I: IntoIterator<Item = RowSpec>,
+    {
+        let keys = Self::build_keys(specs)?;
+        let default_placement = Self::extract_default_placements(&keys)?;
+        Ok(Self { keys, default_placement })
+    }
+
+    fn build_keys<I>(specs: I) -> Result<[Key; N], String>
     where
         I: IntoIterator<Item = RowSpec>,
     {
@@ -119,13 +156,42 @@ impl<const N: usize> Geometry<N> {
             keys_vec.extend(spec.build_row());
         }
 
-        if total != N {
-            return Err(format!("Specs must define exactly {} keys", N).to_string());
+        match total == N {
+            true => Ok(keys_vec.try_into().unwrap()),
+            false => Err(format!("Specs must define exactly {} keys", N)),
+        }
+    }
+
+    fn extract_default_placements(
+        keys: &[Key; N],
+    ) -> Result<[KeyIndex; Hand::COUNT * Finger::COUNT], String> {
+        const N_FINGERS: usize = Hand::COUNT * Finger::COUNT;
+        let mut default_placement: [KeyIndex; N_FINGERS] = [usize::MAX; N_FINGERS];
+
+        for (i, key) in keys.iter().enumerate().filter(|(_, key)| key.is_default_placement) {
+            let slot = key.hand as usize * Finger::COUNT + key.finger as usize;
+            if default_placement[slot] != usize::MAX {
+                return Err(format!(
+                    "{}-{} has been already assigned to key",
+                    key.hand, key.finger
+                ));
+            }
+            default_placement[slot] = i;
         }
 
-        let keys: [Key; N] = keys_vec.try_into().unwrap();
+        let filled = default_placement.iter().filter(|&k| *k != usize::MAX).count();
+        let needed = std::cmp::min(N_FINGERS, N);
+        match filled == needed {
+            true => Ok(default_placement),
+            false => {
+                Err(format!("Only {} of {} possible key-finger assignments filled", filled, needed))
+            }
+        }
+    }
 
-        Ok(Self { keys })
+    pub fn home_key(&self, hand: Hand, finger: Finger) -> &Key {
+        let i = hand as usize * Finger::COUNT + finger as usize;
+        &self.keys[self.default_placement[i] as usize]
     }
 }
 
@@ -135,29 +201,69 @@ impl Geometry<KEY_COUNT> {
     pub fn standard_us() -> Self {
         let specs = [
             RowSpec {
-                left: vec![fc!(Finger::Pinky, 2), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 3)],
+                left: vec![
+                    fc!(Finger::Pinky, 2),
+                    fc!(Finger::Ring, 1),
+                    fc!(Finger::Middle, 1),
+                    fc!(Finger::Index, 2),
+                ],
+                right: vec![
+                    fc!(Finger::Index, 2),
+                    fc!(Finger::Middle, 1),
+                    fc!(Finger::Ring, 1),
+                    fc!(Finger::Pinky, 3),
+                ],
                 x_offset: 0.0,
                 y: 0.0,
                 row: Row::Number,
             },
             RowSpec {
-                left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 4)],
+                left: vec![
+                    fc!(Finger::Pinky, 1),
+                    fc!(Finger::Ring, 1),
+                    fc!(Finger::Middle, 1),
+                    fc!(Finger::Index, 2),
+                ],
+                right: vec![
+                    fc!(Finger::Index, 2),
+                    fc!(Finger::Middle, 1),
+                    fc!(Finger::Ring, 1),
+                    fc!(Finger::Pinky, 4),
+                ],
                 x_offset: 1.5,
                 y: 1.0,
                 row: Row::Top,
             },
             RowSpec {
-                left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 2)],
+                left: vec![
+                    fc!(Finger::Pinky, 1, 0),
+                    fc!(Finger::Ring, 1, 0),
+                    fc!(Finger::Middle, 1, 0),
+                    fc!(Finger::Index, 2, 0),
+                ],
+                right: vec![
+                    fc!(Finger::Index, 2, 1),
+                    fc!(Finger::Middle, 1, 0),
+                    fc!(Finger::Ring, 1, 0),
+                    fc!(Finger::Pinky, 2, 0),
+                ],
                 x_offset: 2.0,
                 y: 2.0,
                 row: Row::Home,
             },
             RowSpec {
-                left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 2)],
-                right: vec![fc!(Finger::Index, 2), fc!(Finger::Middle, 1), fc!(Finger::Ring, 1), fc!(Finger::Pinky, 1)],
+                left: vec![
+                    fc!(Finger::Pinky, 1),
+                    fc!(Finger::Ring, 1),
+                    fc!(Finger::Middle, 1),
+                    fc!(Finger::Index, 2),
+                ],
+                right: vec![
+                    fc!(Finger::Index, 2),
+                    fc!(Finger::Middle, 1),
+                    fc!(Finger::Ring, 1),
+                    fc!(Finger::Pinky, 1),
+                ],
                 x_offset: 2.5,
                 y: 3.0,
                 row: Row::Bottom,
@@ -178,15 +284,29 @@ mod tests {
 
     #[test]
     fn spec_total_size() {
-        let spec = RowSpec { left: vec![fc!(Finger::Pinky, 2)], right: vec![fc!(Finger::Pinky, 2)], ..test_row_spec() };
+        let spec = RowSpec {
+            left: vec![fc!(Finger::Pinky, 2)],
+            right: vec![fc!(Finger::Pinky, 2)],
+            ..test_row_spec()
+        };
         assert_eq!(spec.size(), 4);
     }
 
     #[test]
     fn spec_build_row_from_left_to_right() {
         let spec = RowSpec {
-            left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
-            right: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
+            left: vec![
+                fc!(Finger::Pinky, 1),
+                fc!(Finger::Ring, 1),
+                fc!(Finger::Middle, 1),
+                fc!(Finger::Index, 1),
+            ],
+            right: vec![
+                fc!(Finger::Pinky, 1),
+                fc!(Finger::Ring, 1),
+                fc!(Finger::Middle, 1),
+                fc!(Finger::Index, 1),
+            ],
             ..test_row_spec()
         };
         let order = [Finger::Pinky, Finger::Ring, Finger::Middle, Finger::Index];
@@ -216,8 +336,18 @@ mod tests {
     #[test]
     fn spec_build_row_increasing_x() {
         let spec = RowSpec {
-            left: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
-            right: vec![fc!(Finger::Pinky, 1), fc!(Finger::Ring, 1), fc!(Finger::Middle, 1), fc!(Finger::Index, 1)],
+            left: vec![
+                fc!(Finger::Pinky, 1),
+                fc!(Finger::Ring, 1),
+                fc!(Finger::Middle, 1),
+                fc!(Finger::Index, 1),
+            ],
+            right: vec![
+                fc!(Finger::Pinky, 1),
+                fc!(Finger::Ring, 1),
+                fc!(Finger::Middle, 1),
+                fc!(Finger::Index, 1),
+            ],
             ..test_row_spec()
         };
         let keys = spec.build_row();
@@ -237,7 +367,8 @@ mod tests {
 
     #[test]
     fn spec_build_row_setups_row() {
-        let spec = RowSpec { left: vec![fc!(Finger::Pinky, 5)], row: Row::Bottom, ..test_row_spec() };
+        let spec =
+            RowSpec { left: vec![fc!(Finger::Pinky, 5)], row: Row::Bottom, ..test_row_spec() };
         let keys = spec.build_row();
         for key in keys.iter() {
             assert_eq!(key.row, Row::Bottom);
@@ -254,8 +385,18 @@ mod tests {
     #[test]
     fn geometry_new_succeeds_when_total_matches_n() {
         let specs = [
-            RowSpec { left: vec![fc!(Finger::Pinky, 1)], right: vec![fc!(Finger::Index, 1)], ..test_row_spec() },
-            RowSpec { left: vec![fc!(Finger::Ring, 1)], right: vec![fc!(Finger::Middle, 1)], ..test_row_spec() },
+            RowSpec {
+                left: vec![fc!(Finger::Pinky, 1, 0)],
+                right: vec![fc!(Finger::Index, 1, 0)],
+                row: Row::Top,
+                ..test_row_spec()
+            },
+            RowSpec {
+                left: vec![fc!(Finger::Ring, 1, 0)],
+                right: vec![fc!(Finger::Middle, 1, 0)],
+                row: Row::Home,
+                ..test_row_spec()
+            },
         ];
         let geometry = Geometry::<4>::new(specs);
         assert!(geometry.is_ok());
@@ -263,16 +404,22 @@ mod tests {
 
     #[test]
     fn geometry_new_fails_when_total_is_less_than_n() {
-        let specs =
-            [RowSpec { left: vec![fc!(Finger::Pinky, 1)], right: vec![fc!(Finger::Index, 1)], ..test_row_spec() }];
+        let specs = [RowSpec {
+            left: vec![fc!(Finger::Pinky, 1, 0)],
+            right: vec![fc!(Finger::Index, 1, 0)],
+            ..test_row_spec()
+        }];
         let geometry = Geometry::<3>::new(specs);
         assert_eq!(geometry.err().unwrap(), "Specs must define exactly 3 keys");
     }
 
     #[test]
     fn geometry_new_fails_when_total_is_greater_than_n() {
-        let specs =
-            [RowSpec { left: vec![fc!(Finger::Pinky, 2)], right: vec![fc!(Finger::Index, 2)], ..test_row_spec() }];
+        let specs = [RowSpec {
+            left: vec![fc!(Finger::Pinky, 2)],
+            right: vec![fc!(Finger::Index, 2)],
+            ..test_row_spec()
+        }];
         let geometry = Geometry::<3>::new(specs);
         assert_eq!(geometry.err().unwrap(), "Specs must define exactly 3 keys");
     }
@@ -280,8 +427,18 @@ mod tests {
     #[test]
     fn geometry_new_preserves_row_order_across_specs() {
         let specs = [
-            RowSpec { left: vec![fc!(Finger::Pinky, 1)], row: Row::Top, y: 1.0, ..test_row_spec() },
-            RowSpec { left: vec![fc!(Finger::Ring, 1)], row: Row::Home, y: 2.0, ..test_row_spec() },
+            RowSpec {
+                left: vec![fc!(Finger::Pinky, 1, 0)],
+                row: Row::Top,
+                y: 1.0,
+                ..test_row_spec()
+            },
+            RowSpec {
+                left: vec![fc!(Finger::Ring, 1, 0)],
+                row: Row::Home,
+                y: 2.0,
+                ..test_row_spec()
+            },
         ];
         let geometry = Geometry::<2>::new(specs).unwrap();
         assert_eq!(geometry.keys[0].row, Row::Top);
@@ -291,7 +448,7 @@ mod tests {
     }
 
     #[test]
-    fn geometry_us_standard_produces_key_count_keys() {
+    fn geometry_standard_us_produces_key_count_keys() {
         let geometry = Geometry::standard_us();
         assert_eq!(geometry.keys.len(), KEY_COUNT);
     }
