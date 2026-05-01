@@ -127,7 +127,8 @@ mod tests {
 
     fn us_mismatch_cost<const N: usize>(layout: &Layout<N>) -> f64 {
         let qwerty = Layout::standard_us();
-        layout.mappings_iter().zip(qwerty.mappings_iter()).filter(|(a, b)| a.base != b.base).count() as f64
+        layout.mappings_iter().zip(qwerty.mappings_iter()).filter(|(a, b)| a.base != b.base).count()
+            as f64
     }
 
     fn scramble_layout<const N: usize>(layout: &mut Layout<N>, seed: u64, swaps: usize) {
@@ -165,7 +166,11 @@ mod tests {
         let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
         let is_non_increasing = result.cost_history.windows(2).all(|w| w[0] >= w[1]);
 
-        assert!(is_non_increasing, "cost history should be non-increasing: {:?}", result.cost_history);
+        assert!(
+            is_non_increasing,
+            "cost history should be non-increasing: {:?}",
+            result.cost_history
+        );
     }
 
     #[test]
@@ -200,7 +205,8 @@ mod tests {
 
     #[test]
     fn cost_history_has_expected_length() {
-        let config = AnnealingConfig { t_start: 1.0, t_min: 0.25, alpha: 0.5, iterations_per_temp: 1 };
+        let config =
+            AnnealingConfig { t_start: 1.0, t_min: 0.25, alpha: 0.5, iterations_per_temp: 1 };
         let result = run_sa(Layout::standard_us(), &config, 0, us_mismatch_cost);
 
         assert_eq!(result.cost_history.len(), 3);
@@ -210,7 +216,8 @@ mod tests {
     fn improving_swap_is_kept() {
         let initial = Layout::standard_us();
         let snapshot = initial.clone();
-        let config = AnnealingConfig { t_start: 1.0, t_min: 0.5, alpha: 0.1, iterations_per_temp: 1 };
+        let config =
+            AnnealingConfig { t_start: 1.0, t_min: 0.5, alpha: 0.1, iterations_per_temp: 1 };
         let cost = |layout: &Layout<_>| if *layout == snapshot { 1.0 } else { 0.0 };
         let result = run_sa(initial, &config, 123, cost);
 

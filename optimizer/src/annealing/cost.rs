@@ -49,7 +49,8 @@ impl MetricBreakdown {
     /// `home_row_usage` and `hand_alternation` are subtracted because larger
     /// values are considered better.
     pub fn weighted_cost(&self, weigts: &MetricWeights) -> f64 {
-        weigts.same_finger_bigrams * self.same_finger_bigrams + weigts.finger_distance * self.finger_distance
+        weigts.same_finger_bigrams * self.same_finger_bigrams
+            + weigts.finger_distance * self.finger_distance
             - weigts.home_row_usage * self.home_row_usage
             - weigts.hand_alternation * self.hand_alternation
             + weigts.row_jumping * self.row_jumping
