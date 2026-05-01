@@ -121,10 +121,10 @@ impl RowSpec {
         left_size + right_size
     }
 
-    fn used_fingers(&self) -> Vec<(Hand, Finger)> {
+    fn used_fingers(&self) -> impl IntoIterator<Item = (Hand, Finger)> {
         let left = self.left.iter().map(|fc| (Hand::Left, fc.finger));
         let right = self.right.iter().map(|fc| (Hand::Right, fc.finger));
-        left.chain(right).collect()
+        left.chain(right)
     }
 }
 
@@ -286,7 +286,7 @@ mod tests {
     use super::*;
 
     fn test_row_spec() -> RowSpec {
-        RowSpec { left: vec![], right: vec![], x_offset: 0.0, y: 0.0, row: Row::Top }
+        RowSpec { left: vec![], right: vec![], x_offset: 0.0, y: 0.0, row: Row::Home }
     }
 
     #[test]
@@ -478,6 +478,33 @@ mod tests {
         assert_eq!(geometry.keys[0].coords.y, 1.0);
         assert_eq!(geometry.keys[1].row, Row::Home);
         assert_eq!(geometry.keys[1].coords.y, 2.0);
+    }
+
+    #[test]
+    fn geometry_new_assigns_default_placement_to_correct_finger() {
+        let specs = [RowSpec {
+            left: vec![fc!(Finger::Pinky, 1, 0)],
+            right: vec![fc!(Finger::Index, 1, 0)],
+            ..test_row_spec()
+        }];
+        let geometry = Geometry::<2>::new(specs).unwrap();
+
+        let left_pinky_home = geometry.home_key(Hand::Left, Finger::Pinky);
+        assert_eq!(left_pinky_home.hand, Hand::Left);
+        assert_eq!(left_pinky_home.finger, Finger::Pinky);
+        assert_eq!(left_pinky_home.coords.x, 0.0);
+
+        let right_pinky_home = geometry.home_key(Hand::Right, Finger::Index);
+        assert_eq!(right_pinky_home.hand, Hand::Right);
+        assert_eq!(right_pinky_home.finger, Finger::Index);
+        assert_eq!(right_pinky_home.coords.x, 1.0);
+    }
+
+    #[test]
+    fn geometry_new_assigns_default_placement_at_correct_index_within_finger() {
+        let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 3, 2)], ..test_row_spec() }];
+        let geometry = Geometry::<3>::new(specs).unwrap();
+        assert_eq!(geometry.home_key(Hand::Left, Finger::Pinky).coords.x, 2.0);
     }
 
     #[test]
