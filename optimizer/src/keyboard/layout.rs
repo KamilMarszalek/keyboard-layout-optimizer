@@ -25,8 +25,10 @@ impl<const N: usize> Layout<N> {
             return Err("Provided symbols do not match modifier's base symbols".to_string());
         }
 
-        let mappings: [KeySymbol; N] =
-            std::array::from_fn(|i| KeySymbol { base: symbols[i], shifted: modifier.shift(symbols[i]).unwrap() });
+        let mappings: [KeySymbol; N] = std::array::from_fn(|i| KeySymbol {
+            base: symbols[i],
+            shifted: modifier.shift(symbols[i]).unwrap(),
+        });
 
         let mut symbol_to_key = [None; ASCII_COUNT];
         for (key_idx, symbol) in mappings.iter().enumerate() {
@@ -219,7 +221,8 @@ mod tests {
         let layout = Layout::standard_us();
         let modifier = Modifier::standard_us();
 
-        let mut layout_symbols: Vec<AsciiChar> = layout.mappings.iter().map(|mapping| mapping.base).collect();
+        let mut layout_symbols: Vec<AsciiChar> =
+            layout.mappings.iter().map(|mapping| mapping.base).collect();
         let mut modifier_symbols = modifier.base_symbols().to_vec();
         layout_symbols.sort();
         modifier_symbols.sort();
