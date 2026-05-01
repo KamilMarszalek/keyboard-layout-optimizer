@@ -62,18 +62,17 @@ where
     let mut cost_history: Vec<f64> = vec![best_cost];
 
     let mut temperature = config.t_start;
-    let len = current_layout.mappings.len();
-    if len < 2 {
+    if N < 2 {
         return AnnealingResult { best_layout, best_cost, cost_history };
     }
 
     while temperature > config.t_min {
         for _ in 0..config.iterations_per_temp {
-            let first = rng.random_range(0..len);
-            let mut second = rng.random_range(0..len);
+            let first = rng.random_range(0..N);
+            let mut second = rng.random_range(0..N);
 
             while first == second {
-                second = rng.random_range(0..len);
+                second = rng.random_range(0..N);
             }
             current_layout.swap(first, second);
 
@@ -106,56 +105,50 @@ fn should_accept_worse(delta: f64, temperature: f64, rng: &mut impl Rng) -> bool
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keyboard::common::KEY_COUNT;
     use rand::rngs::SmallRng;
     use rand::{RngExt, SeedableRng};
-
-    type TestLayout = Layout<KEY_COUNT>;
 
     fn test_config() -> AnnealingConfig {
         AnnealingConfig { t_start: 1.0, t_min: 1e-2, alpha: 0.9, iterations_per_temp: 10 }
     }
 
-    fn config(t_start: f64, t_min: f64, alpha: f64, iterations_per_temp: usize) -> AnnealingConfig {
-        AnnealingConfig { t_start, t_min, alpha, iterations_per_temp }
-    }
-
-    fn run_sa<F>(initial: TestLayout, config: &AnnealingConfig, seed: u64, cost_func: F) -> AnnealingResult<KEY_COUNT>
+    fn run_sa<const N: usize, F>(
+        initial: Layout<N>,
+        config: &AnnealingConfig,
+        seed: u64,
+        cost_func: F,
+    ) -> AnnealingResult<N>
     where
-        F: Fn(&TestLayout) -> f64,
+        F: Fn(&Layout<N>) -> f64,
     {
         let mut rng = SmallRng::seed_from_u64(seed);
         simulated_annealing(initial, config, &mut rng, cost_func)
     }
 
-    fn qwerty_mismatch_cost(layout: &TestLayout) -> f64 {
+    fn us_mismatch_cost<const N: usize>(layout: &Layout<N>) -> f64 {
         let qwerty = Layout::standard_us();
-        layout.mappings.iter().zip(qwerty.mappings.iter()).filter(|(a, b)| a.base != b.base).count() as f64
+        layout.mappings_iter().zip(qwerty.mappings_iter()).filter(|(a, b)| a.base != b.base).count() as f64
     }
 
-    fn scrambled_layout(seed: u64, swaps: usize) -> TestLayout {
+    fn scramble_layout<const N: usize>(layout: &mut Layout<N>, seed: u64, swaps: usize) {
         let mut rng = SmallRng::seed_from_u64(seed);
-        let mut layout = Layout::standard_us();
-
         for _ in 0..swaps {
-            let len = layout.mappings.len();
-            let first = rng.random_range(0..len);
-            let mut second = rng.random_range(0..len);
+            let first = rng.random_range(0..N);
+            let mut second = rng.random_range(0..N);
             while first == second {
-                second = rng.random_range(0..len);
+                second = rng.random_range(0..N);
             }
 
             layout.swap(first, second);
         }
-
-        layout
     }
 
     #[test]
     fn sa_best_cost_is_not_worse_than_initial_cost() {
-        let initial = scrambled_layout(42, 10);
-        let initial_cost = qwerty_mismatch_cost(&initial);
-        let result = run_sa(initial, &test_config(), 7, qwerty_mismatch_cost);
+        let mut layout = Layout::standard_us();
+        scramble_layout(&mut layout, 42, 10);
+        let initial_cost = us_mismatch_cost(&layout);
+        let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
 
         assert!(
             result.best_cost <= initial_cost,
@@ -167,8 +160,9 @@ mod tests {
 
     #[test]
     fn cost_history_is_non_increasing() {
-        let initial = scrambled_layout(42, 10);
-        let result = run_sa(initial, &test_config(), 7, qwerty_mismatch_cost);
+        let mut layout = Layout::standard_us();
+        scramble_layout(&mut layout, 42, 10);
+        let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
         let is_non_increasing = result.cost_history.windows(2).all(|w| w[0] >= w[1]);
 
         assert!(is_non_increasing, "cost history should be non-increasing: {:?}", result.cost_history);
@@ -177,35 +171,37 @@ mod tests {
     #[test]
     fn same_seed_gives_same_result() {
         let config = test_config();
-        let result_a = run_sa(Layout::standard_us(), &config, 7, qwerty_mismatch_cost);
-        let result_b = run_sa(Layout::standard_us(), &config, 7, qwerty_mismatch_cost);
+        let result_a = run_sa(Layout::standard_us(), &config, 7, us_mismatch_cost);
+        let result_b = run_sa(Layout::standard_us(), &config, 7, us_mismatch_cost);
 
         assert_eq!(result_a.best_cost, result_b.best_cost);
-        assert_eq!(result_a.best_layout.mappings, result_b.best_layout.mappings);
+        assert_eq!(result_a.best_layout, result_b.best_layout);
         assert_eq!(result_a.cost_history, result_b.cost_history);
     }
 
     #[test]
     fn best_cost_matches_best_layout() {
-        let initial = scrambled_layout(42, 10);
-        let result = run_sa(initial, &test_config(), 7, qwerty_mismatch_cost);
+        let mut layout = Layout::standard_us();
+        scramble_layout(&mut layout, 42, 10);
+        let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
 
-        assert_eq!(result.best_cost, qwerty_mismatch_cost(&result.best_layout));
+        assert_eq!(result.best_cost, us_mismatch_cost(&result.best_layout));
     }
 
     #[test]
     fn cost_history_starts_with_initial_cost() {
-        let initial = scrambled_layout(42, 10);
-        let initial_cost = qwerty_mismatch_cost(&initial);
-        let result = run_sa(initial, &test_config(), 7, qwerty_mismatch_cost);
+        let mut layout = Layout::standard_us();
+        scramble_layout(&mut layout, 42, 10);
+        let initial_cost = us_mismatch_cost(&layout);
+        let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
 
         assert_eq!(result.cost_history.first().copied(), Some(initial_cost));
     }
 
     #[test]
     fn cost_history_has_expected_length() {
-        let config = config(1.0, 0.25, 0.5, 1);
-        let result = run_sa(Layout::standard_us(), &config, 0, qwerty_mismatch_cost);
+        let config = AnnealingConfig { t_start: 1.0, t_min: 0.25, alpha: 0.5, iterations_per_temp: 1 };
+        let result = run_sa(Layout::standard_us(), &config, 0, us_mismatch_cost);
 
         assert_eq!(result.cost_history.len(), 3);
     }
@@ -213,15 +209,13 @@ mod tests {
     #[test]
     fn improving_swap_is_kept() {
         let initial = Layout::standard_us();
-        let initial_mappings = initial.mappings;
-        let config = config(1.0, 0.5, 0.1, 1);
-        let cost = |layout: &TestLayout| {
-            if layout.mappings == initial_mappings { 1.0 } else { 0.0 }
-        };
+        let snapshot = initial.clone();
+        let config = AnnealingConfig { t_start: 1.0, t_min: 0.5, alpha: 0.1, iterations_per_temp: 1 };
+        let cost = |layout: &Layout<_>| if *layout == snapshot { 1.0 } else { 0.0 };
         let result = run_sa(initial, &config, 123, cost);
 
         assert_eq!(result.best_cost, 0.0);
-        assert_ne!(result.best_layout.mappings, initial_mappings);
+        assert_ne!(result.best_layout, snapshot);
     }
 
     #[test]
