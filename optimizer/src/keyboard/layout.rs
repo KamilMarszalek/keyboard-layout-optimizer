@@ -7,10 +7,9 @@ pub struct KeySymbol {
     pub shifted: AsciiChar,
 }
 
-#[derive(Clone)]
-/// Layout maps physical key positions to base and shifted symbols.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Layout<const N: usize> {
-    pub mappings: [KeySymbol; N],
+    mappings: [KeySymbol; N],
     symbol_to_key: [Option<KeyIndex>; ASCII_COUNT],
 }
 
@@ -60,6 +59,10 @@ impl<const N: usize> Layout<N> {
 
     pub fn key_of(&self, symbol: AsciiChar) -> Option<KeyIndex> {
         self.symbol_to_key[symbol as usize]
+    }
+
+    pub fn mappings_iter(&self) -> impl Iterator<Item = &KeySymbol> {
+        self.mappings.iter()
     }
 
     fn is_permutation(symbols: &[AsciiChar], alphabet: &[AsciiChar]) -> bool {

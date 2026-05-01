@@ -1,4 +1,4 @@
-use crate::keyboard::{common::KEY_COUNT, model::Keyboard};
+use crate::keyboard::model::Keyboard;
 
 /// Weights assigned to individual ergonomic metrics.
 ///
@@ -60,9 +60,9 @@ impl MetricBreakdown {
 ///
 /// This type is a skeleton for the final metric implementation and may be
 /// refined once text preprocessing and modifier handling are finalized.
-pub struct Corpus {
-    pub unigrams: [usize; KEY_COUNT],
-    pub bigrams: [[usize; KEY_COUNT]; KEY_COUNT],
+pub struct Corpus<const N: usize> {
+    pub unigrams: [usize; N],
+    pub bigrams: [[usize; N]; N],
     pub total_chars: usize,
     pub total_bigrams: usize,
 }
@@ -76,21 +76,21 @@ pub struct Corpus {
 /// The individual metric implementations are currently placeholders and will
 /// be completed in the next project milestone.
 #[allow(dead_code)]
-pub struct WeightedCost {
+pub struct WeightedCost<const N: usize> {
     weights: MetricWeights,
-    corpus: Corpus,
+    corpus: Corpus<N>,
 }
 
-impl WeightedCost {
+impl<const N: usize> WeightedCost<N> {
     /// Creates a new weighted cost function from metric weights and corpus statistics.
-    pub fn new(weights: MetricWeights, corpus: Corpus) -> Self {
+    pub fn new(weights: MetricWeights, corpus: Corpus<N>) -> Self {
         Self { weights, corpus }
     }
 
     /// Evaluates the weighted cost of a keyboard.
     ///
     /// Lower values are considered better by optimization algorithms.
-    pub fn evaluate<const N: usize>(&self, keyboard: &Keyboard<N>) -> f64 {
+    pub fn evaluate(&self, keyboard: &Keyboard<N>) -> f64 {
         self.evaluate_breakdown(keyboard).weighted_cost(&self.weights)
     }
 
@@ -98,7 +98,7 @@ impl WeightedCost {
     ///
     /// This method returns individual metric components before they are
     /// combined into a single scalar cost.
-    pub fn evaluate_breakdown<const N: usize>(&self, keyboard: &Keyboard<N>) -> MetricBreakdown {
+    pub fn evaluate_breakdown(&self, keyboard: &Keyboard<N>) -> MetricBreakdown {
         MetricBreakdown {
             same_finger_bigrams: self.same_finger_bigrams(keyboard),
             finger_distance: self.finger_distance(keyboard),
@@ -109,23 +109,23 @@ impl WeightedCost {
     }
 
     /// Computes the same-finger bigrams metric.
-    fn same_finger_bigrams<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
+    fn same_finger_bigrams(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
     /// Computes the finger distance metric.
-    fn finger_distance<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
+    fn finger_distance(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
     /// Computes the home-row usage metric.
-    fn home_row_usage<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
+    fn home_row_usage(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
     /// Computes the hand alternation metric.
-    fn hand_alternation<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
+    fn hand_alternation(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
     /// Computes the row jumping metric.
-    fn row_jumping<const N: usize>(&self, _keyboard: &Keyboard<N>) -> f64 {
+    fn row_jumping(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
 }

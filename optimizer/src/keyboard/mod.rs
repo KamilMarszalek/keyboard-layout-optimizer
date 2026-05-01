@@ -3,8 +3,9 @@
 //! This module defines the full keyboard model used by the optimizer by
 //! pairing physical key geometry with a symbol layout.
 
-pub mod common;
+mod common;
+mod modifier;
+
 pub mod geometry;
 pub mod layout;
 pub mod model;
-mod modifier;
