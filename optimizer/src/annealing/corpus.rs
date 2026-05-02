@@ -114,6 +114,14 @@ pub fn supported_presses_from_modifier<const P: usize>(
         .try_into()
         .map_err(|_| "Failed to convert supported key presses to fixed-size array".to_string())
 }
+
+pub fn map_normalized_text_to_key_presses(
+    normalized: &str,
+    modifier: &Modifier,
+) -> impl Iterator<Item = Option<KeyPress>> {
+    normalized.bytes().map(|c| modifier.key_press_of(c))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -252,5 +260,38 @@ mod tests {
         let result = supported_presses_from_modifier::<3>(&modifier);
 
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn map_normalized_text_to_key_presses_maps_supported_symbols() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]);
+
+        let result: Vec<_> = map_normalized_text_to_key_presses("aA1!", &modifier).collect();
+
+        assert_eq!(
+            result,
+            vec![
+                Some(KeyPress { base: b'a', shifted: false }),
+                Some(KeyPress { base: b'a', shifted: true }),
+                Some(KeyPress { base: b'1', shifted: false }),
+                Some(KeyPress { base: b'1', shifted: true }),
+            ]
+        );
+    }
+
+    #[test]
+    fn map_normalized_text_to_key_presses_returns_none_for_unsupported_symbols() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]);
+
+        let result: Vec<_> = map_normalized_text_to_key_presses("a b", &modifier).collect();
+
+        assert_eq!(
+            result,
+            vec![
+                Some(KeyPress { base: b'a', shifted: false }),
+                None,
+                Some(KeyPress { base: b'b', shifted: false }),
+            ]
+        );
     }
 }
