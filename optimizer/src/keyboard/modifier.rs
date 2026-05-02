@@ -41,7 +41,9 @@ impl Modifier {
         let mut encode = HashMap::new();
         let mut decode = HashMap::new();
         for (base, shift) in shift_pairs {
-            symbols.push(base);
+            if !encode.contains_key(&base) {
+                symbols.push(base);
+            }
             encode.insert(base, shift);
             decode.insert(shift, KeyPress { base, shifted: true });
             decode.insert(base, KeyPress { base, shifted: false });
@@ -169,5 +171,14 @@ mod tests {
         let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!'), (b'/', b'?')]);
 
         assert_eq!(modifier.base_symbols(), [b'a', b'1', b'/']);
+    }
+
+    #[test]
+    fn base_symbols_deduplicate_duplicate_bases() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'a', b'@')]);
+
+        assert_eq!(modifier.base_symbols(), [b'a']);
+        assert_eq!(modifier.shift(b'a').unwrap(), b'@');
+        assert_eq!(modifier.key_press_of(b'@'), Some(KeyPress { base: b'a', shifted: true }));
     }
 }
