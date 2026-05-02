@@ -84,3 +84,118 @@ impl<const P: usize> Corpus<P> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn press(base: u8, shifted: bool) -> KeyPress {
+        KeyPress { base, shifted }
+    }
+
+    #[test]
+    fn empty_input_creates_empty_corpus() {
+        let supported = [press(b'a', false), press(b'b', false)];
+
+        let corpus = Corpus::from_key_presses(supported, []).unwrap();
+
+        assert_eq!(corpus.presses, supported);
+        assert_eq!(corpus.unigrams, [0, 0]);
+        assert_eq!(corpus.bigrams, [[0, 0], [0, 0]]);
+        assert_eq!(corpus.total_chars, 0);
+        assert_eq!(corpus.total_bigrams, 0);
+    }
+
+    #[test]
+    fn single_press_counts_unigram_without_bigram() {
+        let corpus = Corpus::from_key_presses(
+            [press(b'a', false), press(b'b', false)],
+            [Some(press(b'b', false))],
+        )
+        .unwrap();
+
+        assert_eq!(corpus.unigrams, [0, 1]);
+        assert_eq!(corpus.bigrams, [[0, 0], [0, 0]]);
+        assert_eq!(corpus.total_chars, 1);
+        assert_eq!(corpus.total_bigrams, 0);
+    }
+
+    #[test]
+    fn counts_bigrams() {
+        let a = press(b'a', false);
+        let b = press(b'b', false);
+        let corpus = Corpus::from_key_presses([a, b], [Some(a), Some(b), Some(a)]).unwrap();
+
+        assert_eq!(corpus.unigrams, [2, 1]);
+        assert_eq!(corpus.bigrams, [[0, 1], [1, 0]]);
+        assert_eq!(corpus.total_chars, 3);
+        assert_eq!(corpus.total_bigrams, 2);
+    }
+
+    #[test]
+    fn none_prevents_bigram_across_separator() {
+        let a = press(b'a', false);
+        let b = press(b'b', false);
+        let corpus = Corpus::from_key_presses([a, b], [Some(a), None, Some(b)]).unwrap();
+
+        assert_eq!(corpus.unigrams, [1, 1]);
+        assert_eq!(corpus.bigrams, [[0, 0], [0, 0]]);
+        assert_eq!(corpus.total_chars, 2);
+        assert_eq!(corpus.total_bigrams, 0);
+    }
+
+    #[test]
+    fn duplicate_supported_press_returns_error() {
+        let duplicated = press(b'a', false);
+
+        let result = Corpus::from_key_presses([duplicated, duplicated], []);
+
+        assert!(matches!(
+            result,
+            Err(CorpusError::DuplicateSupportedKeyPress(found)) if found == duplicated
+        ));
+    }
+
+    #[test]
+    fn unsupported_input_press_returns_error() {
+        let unsupported = press(b'c', true);
+
+        let result =
+            Corpus::from_key_presses([press(b'a', false), press(b'b', false)], [Some(unsupported)]);
+
+        assert!(matches!(
+            result,
+            Err(CorpusError::UnsupportedKeyPress(found)) if found == unsupported
+        ));
+    }
+
+    #[test]
+    fn index_of_returns_expected_index() {
+        let unshifted_a = press(b'a', false);
+        let shifted_a = press(b'a', true);
+        let shifted_b = press(b'b', true);
+        let corpus = Corpus::from_key_presses([unshifted_a, shifted_a, shifted_b], []).unwrap();
+
+        assert_eq!(corpus.index_of(unshifted_a), Some(0));
+        assert_eq!(corpus.index_of(shifted_a), Some(1));
+        assert_eq!(corpus.index_of(shifted_b), Some(2));
+        assert_eq!(corpus.index_of(press(b'b', false)), None);
+    }
+
+    #[test]
+    fn shifted_and_unshifted_presses_are_counted_separately() {
+        let unshifted_a = press(b'a', false);
+        let shifted_a = press(b'a', true);
+
+        let corpus = Corpus::from_key_presses(
+            [unshifted_a, shifted_a],
+            [Some(unshifted_a), Some(shifted_a)],
+        )
+        .unwrap();
+
+        assert_eq!(corpus.unigrams, [1, 1]);
+        assert_eq!(corpus.bigrams, [[0, 1], [0, 0]]);
+        assert_eq!(corpus.total_chars, 2);
+        assert_eq!(corpus.total_bigrams, 1);
+    }
+}
