@@ -102,7 +102,7 @@ mod tests {
     use super::*;
 
     fn test_modifier() -> Modifier {
-        Modifier::new([(b'a', b'A'), (b'b', b'B')])
+        Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap()
     }
 
     fn test_layout() -> Layout<2> {

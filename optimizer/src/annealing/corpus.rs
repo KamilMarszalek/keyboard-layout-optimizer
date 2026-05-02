@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn supported_presses_from_modifier_builds_base_and_shifted_presses_in_order() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
 
         let result = supported_presses_from_modifier::<4>(&modifier).unwrap();
 
@@ -243,7 +243,7 @@ mod tests {
 
     #[test]
     fn supported_presses_from_modifier_returns_error_for_wrong_size() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
 
         let result = supported_presses_from_modifier::<3>(&modifier);
 
@@ -255,7 +255,7 @@ mod tests {
 
     #[test]
     fn map_normalized_text_to_key_presses_maps_supported_symbols() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
 
         let result: Vec<_> = map_normalized_text_to_key_presses("aA1!", &modifier).collect();
 
@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn map_normalized_text_to_key_presses_returns_none_for_unsupported_symbols() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap();
 
         let result: Vec<_> = map_normalized_text_to_key_presses("a b", &modifier).collect();
 

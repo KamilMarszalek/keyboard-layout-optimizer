@@ -2,18 +2,30 @@ use crate::keyboard::model::KeyPress;
 
 use super::common::AsciiChar;
 use core::fmt;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum ModifierError {
     UnsupportedBase(AsciiChar),
+    DuplicateBase(AsciiChar),
+    DuplicateShifted(AsciiChar),
+    AmbiguousSymbol(AsciiChar),
 }
 
 impl fmt::Display for ModifierError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ModifierError::UnsupportedBase(c) => {
-                write!(f, "Symbol {} is not considered as 'base' for this modifier", *c as char)
+                write!(f, "Symbol {} is not a base symbol for this modifier", *c as char)
+            }
+            ModifierError::DuplicateBase(c) => {
+                write!(f, "Symbol {} is already used as a base symbol", *c as char)
+            }
+            ModifierError::DuplicateShifted(c) => {
+                write!(f, "Symbol {} is already used as a shifted symbol", *c as char)
+            }
+            ModifierError::AmbiguousSymbol(c) => {
+                write!(f, "Symbol {} cannot be used as both a base and shifted symbol", *c as char)
             }
         }
     }
@@ -33,22 +45,41 @@ pub struct Modifier {
 
 impl Modifier {
     /// Builds a modifier from `(base, shifted)` symbol pairs.
-    pub fn new<I>(shift_pairs: I) -> Self
+    pub fn new<I>(shift_pairs: I) -> Result<Self, ModifierError>
     where
         I: IntoIterator<Item = (AsciiChar, AsciiChar)>,
     {
         let mut symbols = Vec::new();
         let mut encode = HashMap::new();
         let mut decode = HashMap::new();
+        let mut bases = HashSet::new();
+        let mut shifted = HashSet::new();
         for (base, shift) in shift_pairs {
-            if !encode.contains_key(&base) {
-                symbols.push(base);
+            if bases.contains(&base) {
+                return Err(ModifierError::DuplicateBase(base));
             }
+            if shifted.contains(&shift) {
+                return Err(ModifierError::DuplicateShifted(shift));
+            }
+            if base == shift {
+                return Err(ModifierError::AmbiguousSymbol(base));
+            }
+            if shifted.contains(&base) {
+                return Err(ModifierError::AmbiguousSymbol(base));
+            }
+            if bases.contains(&shift) {
+                return Err(ModifierError::AmbiguousSymbol(shift));
+            }
+
+            bases.insert(base);
+            shifted.insert(shift);
+            symbols.push(base);
             encode.insert(base, shift);
-            decode.insert(shift, KeyPress { base, shifted: true });
             decode.insert(base, KeyPress { base, shifted: false });
+            decode.insert(shift, KeyPress { base, shifted: true });
         }
-        Self { encode, decode, symbols }
+
+        Ok(Self { encode, decode, symbols })
     }
 
     pub fn shift(&self, c: AsciiChar) -> Result<AsciiChar, ModifierError> {
@@ -92,6 +123,7 @@ impl Modifier {
         ];
 
         Self::new(letter_pairs.chain(punctuation_pairs))
+            .expect("standard US modifier mapping is valid")
     }
 
     /// Converts an input symbol to a logical key press.
@@ -110,7 +142,8 @@ mod tests {
 
     #[test]
     fn shift_supported() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'z', b'Z'), (b'1', b'!'), (b'/', b'?')]);
+        let modifier =
+            Modifier::new([(b'a', b'A'), (b'z', b'Z'), (b'1', b'!'), (b'/', b'?')]).unwrap();
         assert_eq!(modifier.shift(b'a').unwrap(), b'A');
         assert_eq!(modifier.shift(b'z').unwrap(), b'Z');
         assert_eq!(modifier.shift(b'1').unwrap(), b'!');
@@ -119,14 +152,14 @@ mod tests {
 
     #[test]
     fn shift_unsupported() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
         assert!(matches!(modifier.shift(b'B'), Err(ModifierError::UnsupportedBase(b'B'))));
         assert!(matches!(modifier.shift(b'/'), Err(ModifierError::UnsupportedBase(b'/'))));
     }
 
     #[test]
     fn base_symbols() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
         let mut symbols: Vec<AsciiChar> = modifier.base_symbols().to_vec();
         symbols.sort();
         assert_eq!(symbols, [b'1', b'a']);
@@ -168,17 +201,36 @@ mod tests {
 
     #[test]
     fn base_symbols_preserve_input_order() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!'), (b'/', b'?')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!'), (b'/', b'?')]).unwrap();
 
         assert_eq!(modifier.base_symbols(), [b'a', b'1', b'/']);
     }
 
     #[test]
-    fn base_symbols_deduplicate_duplicate_bases() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'a', b'@')]);
+    fn modifier_new_returns_error_for_duplicate_base() {
+        let result = Modifier::new([(b'a', b'A'), (b'a', b'@')]);
 
-        assert_eq!(modifier.base_symbols(), [b'a']);
-        assert_eq!(modifier.shift(b'a').unwrap(), b'@');
-        assert_eq!(modifier.key_press_of(b'@'), Some(KeyPress { base: b'a', shifted: true }));
+        assert!(matches!(result, Err(ModifierError::DuplicateBase(b'a'))));
+    }
+
+    #[test]
+    fn modifier_new_returns_error_for_duplicate_shifted_symbol() {
+        let result = Modifier::new([(b'a', b'!'), (b'1', b'!')]);
+
+        assert!(matches!(result, Err(ModifierError::DuplicateShifted(b'!'))));
+    }
+
+    #[test]
+    fn modifier_new_returns_error_when_symbol_is_base_and_shifted() {
+        let result = Modifier::new([(b'a', b'A'), (b'A', b'!')]);
+
+        assert!(matches!(result, Err(ModifierError::AmbiguousSymbol(b'A'))));
+    }
+
+    #[test]
+    fn modifier_new_returns_error_when_base_matches_shifted_symbol() {
+        let result = Modifier::new([(b'a', b'a')]);
+
+        assert!(matches!(result, Err(ModifierError::AmbiguousSymbol(b'a'))));
     }
 }
