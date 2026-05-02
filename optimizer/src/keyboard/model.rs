@@ -1,11 +1,13 @@
-use super::common::{KEY_COUNT, KeyIndex};
+use crate::keyboard::common::AsciiChar;
+
+use super::common::KEY_COUNT;
 use super::geometry::Geometry;
 use super::layout::Layout;
 
-#[allow(dead_code)]
-struct KeyPress {
-    letter: KeyIndex,
-    shift: bool,
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct KeyPress {
+    pub base: AsciiChar,
+    pub shifted: bool,
 }
 
 /// Combines a keyboard's physical geometry with its symbol layout.
