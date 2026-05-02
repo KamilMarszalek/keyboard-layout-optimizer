@@ -4,7 +4,7 @@
 //! pairing physical key geometry with a symbol layout.
 
 mod common;
-mod modifier;
+pub mod modifier;
 
 pub mod geometry;
 pub mod layout;
