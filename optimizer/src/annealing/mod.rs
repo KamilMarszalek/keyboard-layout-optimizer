@@ -4,5 +4,6 @@
 //! The main algorithm currently implemented is simulated annealing, which
 //! searches over keyboard layout permutations by swapping pairs of keys.
 
+pub mod corpus;
 pub mod cost;
 pub mod sa;

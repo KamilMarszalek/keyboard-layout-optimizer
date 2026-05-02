@@ -1,4 +1,4 @@
-use crate::keyboard::model::Keyboard;
+use crate::{annealing::corpus::Corpus, keyboard::model::Keyboard};
 
 /// Weights assigned to individual ergonomic metrics.
 ///
@@ -55,17 +55,6 @@ impl MetricBreakdown {
             - weigts.hand_alternation * self.hand_alternation
             + weigts.row_jumping * self.row_jumping
     }
-}
-
-/// Preprocessed text statistics used by the cost function.
-///
-/// This type is a skeleton for the final metric implementation and may be
-/// refined once text preprocessing and modifier handling are finalized.
-pub struct Corpus<const N: usize> {
-    pub unigrams: [usize; N],
-    pub bigrams: [[usize; N]; N],
-    pub total_chars: usize,
-    pub total_bigrams: usize,
 }
 
 /// Weighted ergonomic cost function.
