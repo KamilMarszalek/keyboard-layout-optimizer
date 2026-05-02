@@ -48,12 +48,12 @@ impl MetricBreakdown {
     ///
     /// `home_row_usage` and `hand_alternation` are subtracted because larger
     /// values are considered better.
-    pub fn weighted_cost(&self, weigts: &MetricWeights) -> f64 {
-        weigts.same_finger_bigrams * self.same_finger_bigrams
-            + weigts.finger_distance * self.finger_distance
-            - weigts.home_row_usage * self.home_row_usage
-            - weigts.hand_alternation * self.hand_alternation
-            + weigts.row_jumping * self.row_jumping
+    pub fn weighted_cost(&self, weights: &MetricWeights) -> f64 {
+        weights.same_finger_bigrams * self.same_finger_bigrams
+            + weights.finger_distance * self.finger_distance
+            - weights.home_row_usage * self.home_row_usage
+            - weights.hand_alternation * self.hand_alternation
+            + weights.row_jumping * self.row_jumping
     }
 }
 
@@ -66,14 +66,14 @@ impl MetricBreakdown {
 /// The individual metric implementations are currently placeholders and will
 /// be completed in the next project milestone.
 #[allow(dead_code)]
-pub struct WeightedCost<const N: usize> {
+pub struct WeightedCost<const N: usize, const P: usize> {
     weights: MetricWeights,
-    corpus: Corpus<N>,
+    corpus: Corpus<P>,
 }
 
-impl<const N: usize> WeightedCost<N> {
+impl<const N: usize, const P: usize> WeightedCost<N, P> {
     /// Creates a new weighted cost function from metric weights and corpus statistics.
-    pub fn new(weights: MetricWeights, corpus: Corpus<N>) -> Self {
+    pub fn new(weights: MetricWeights, corpus: Corpus<P>) -> Self {
         Self { weights, corpus }
     }
 
