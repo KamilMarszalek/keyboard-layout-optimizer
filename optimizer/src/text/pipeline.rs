@@ -6,25 +6,12 @@ use crate::{
     text::normalize::normalize_text,
 };
 
-#[derive(Debug)]
-pub enum BuildCorpusError {
-    SupportedPresses(String),
-    Corpus(CorpusError),
-}
-
-impl From<CorpusError> for BuildCorpusError {
-    fn from(error: CorpusError) -> Self {
-        Self::Corpus(error)
-    }
-}
-
 pub fn build_corpus_from_text<const P: usize>(
     input: &str,
     modifier: &Modifier,
-) -> Result<Corpus<P>, BuildCorpusError> {
+) -> Result<Corpus<P>, CorpusError> {
     let normalized_input = normalize_text(input);
-    let supported =
-        supported_presses_from_modifier(modifier).map_err(BuildCorpusError::SupportedPresses)?;
+    let supported = supported_presses_from_modifier(modifier)?;
     let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
 
     let corpus = Corpus::from_key_presses(supported, presses)?;
