@@ -29,7 +29,7 @@ mod tests {
 
     #[test]
     fn build_corpus_from_text_normalizes_and_counts_supported_key_presses() {
-        let modifier = Modifier::new([(b'a', b'A')]);
+        let modifier = Modifier::new([(b'a', b'A')]).unwrap();
 
         let corpus = build_corpus_from_text::<2>("Ą a!", &modifier).unwrap();
 
@@ -46,7 +46,7 @@ mod tests {
 
     #[test]
     fn build_corpus_from_text_unsupported_normalized_symbol_resets_bigram_chain() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]);
+        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap();
 
         let corpus = build_corpus_from_text::<4>("a.b", &modifier).unwrap();
 
@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn build_corpus_from_text_returns_error_for_wrong_supported_press_count() {
-        let modifier = Modifier::new([(b'a', b'A')]);
+        let modifier = Modifier::new([(b'a', b'A')]).unwrap();
 
         let result = build_corpus_from_text::<1>("a", &modifier);
 
