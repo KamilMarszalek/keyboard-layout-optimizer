@@ -19,6 +19,10 @@ pub struct Corpus<const P: usize> {
 pub enum CorpusError {
     UnsupportedKeyPress(KeyPress),
     DuplicateSupportedKeyPress(KeyPress),
+    InvalidSupportedPressCount { expected: usize, actual: usize },
+    MissingBaseKeyPress { base: u8 },
+    MissingShiftedKeyPress { base: u8, shifted: u8 },
+    MissingShiftMapping { base: u8 },
 }
 
 impl<const P: usize> Corpus<P> {
@@ -75,32 +79,28 @@ impl<const P: usize> Corpus<P> {
 
 pub fn supported_presses_from_modifier<const P: usize>(
     modifier: &Modifier,
-) -> Result<[KeyPress; P], String> {
+) -> Result<[KeyPress; P], CorpusError> {
     let mut key_presses = Vec::new();
 
     for &base in modifier.base_symbols() {
-        let base_press = modifier
-            .key_press_of(base)
-            .ok_or_else(|| format!("Base symbol '{}' is not supported", base as char))?;
+        let base_press =
+            modifier.key_press_of(base).ok_or(CorpusError::MissingBaseKeyPress { base })?;
 
         key_presses.push(base_press);
 
-        let shifted = modifier.shift(base).map_err(|err| err.to_string())?;
+        let shifted =
+            modifier.shift(base).map_err(|_| CorpusError::MissingShiftMapping { base })?;
 
         let shifted_press = modifier
             .key_press_of(shifted)
-            .ok_or_else(|| format!("Shifted symbol '{}' is not supported", shifted as char))?;
+            .ok_or(CorpusError::MissingShiftedKeyPress { base, shifted })?;
 
         key_presses.push(shifted_press);
     }
 
-    if key_presses.len() != P {
-        return Err(format!("Expected {P} supported key presses, but got {}", key_presses.len()));
-    }
-
-    key_presses
-        .try_into()
-        .map_err(|_| "Failed to convert supported key presses to fixed-size array".to_string())
+    key_presses.try_into().map_err(|key_presses: Vec<KeyPress>| {
+        CorpusError::InvalidSupportedPressCount { expected: P, actual: key_presses.len() }
+    })
 }
 
 pub fn map_normalized_text_to_key_presses(
@@ -247,7 +247,10 @@ mod tests {
 
         let result = supported_presses_from_modifier::<3>(&modifier);
 
-        assert!(result.is_err());
+        assert!(matches!(
+            result,
+            Err(CorpusError::InvalidSupportedPressCount { expected: 3, actual: 4 })
+        ));
     }
 
     #[test]
