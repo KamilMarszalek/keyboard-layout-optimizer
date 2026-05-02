@@ -23,18 +23,6 @@ pub enum CorpusError {
 
 impl<const P: usize> Corpus<P> {
     /// Builds a corpus from a sequence of logical key presses.
-    ///
-    /// `supported_presses` defines the index space used by `unigrams` and `bigrams`.
-    /// Each `Some(KeyPress)` in `input_presses` is counted as a character occurrence.
-    /// `None` values are treated as separators: they are not counted and they reset
-    /// the previous key press, so no bigram is created across them.
-    ///
-    /// # Errors
-    ///
-    /// Returns [`CorpusError::DuplicateSupportedKeyPress`] if `supported_presses`
-    /// contains duplicates.
-    /// Returns [`CorpusError::UnsupportedKeyPress`] if the input contains a key press
-    /// that is not present in `supported_presses`.
     pub fn from_key_presses<I>(
         supported_presses: [KeyPress; P],
         input_presses: I,
