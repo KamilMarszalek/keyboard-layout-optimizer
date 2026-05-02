@@ -19,14 +19,15 @@ impl fmt::Display for ModifierError {
     }
 }
 
-/// Maps base symbols to their modified forms.
+/// Maps base symbols to shifted symbols and input symbols to logical key presses.
 ///
-/// A `Modifier` defines the printable symbol produced when a modifier such as Shift is applied to
-/// a base key symbol (`a` -> `A`, `1` -> `!`). This type only stores forward mappings from base to
-/// modified symbols.
+/// A `Modifier` defines the printable symbol produced when a modifier such as Shift
+/// is applied to a base key symbol (`a` -> `A`, `1` -> `!`). It also supports
+/// reverse lookup from an input symbol to a [`KeyPress`], preserving whether Shift
+/// is required.
 pub struct Modifier {
     encode: HashMap<AsciiChar, AsciiChar>,
-    decode: HashMap<AsciiChar, AsciiChar>,
+    decode: HashMap<AsciiChar, KeyPress>,
     symbols: Vec<AsciiChar>,
 }
 
@@ -40,7 +41,8 @@ impl Modifier {
         let mut decode = HashMap::new();
         for (a, b) in shift_pairs {
             encode.insert(a, b);
-            decode.insert(b, a);
+            decode.insert(b, KeyPress { base: a, shifted: true });
+            decode.insert(a, KeyPress { base: a, shifted: false });
         }
 
         let symbols = encode.keys().copied().collect();
@@ -90,12 +92,12 @@ impl Modifier {
         Self::new(letter_pairs.chain(punctuation_pairs))
     }
 
+    /// Converts an input symbol to a logical key press.
+    ///
+    /// Base symbols are returned with `shifted=false`, while shifted symbols are
+    /// mapped back to their base symbol with `shifted` set to true
     pub fn key_press_of(&self, symbol: AsciiChar) -> Option<KeyPress> {
-        match (self.base_symbols().contains(&symbol), self.decode.get(&symbol)) {
-            (true, None) => Some(KeyPress { base: symbol, shifted: false }),
-            (false, Some(base)) => Some(KeyPress { base: *base, shifted: true }),
-            (_, _) => None,
-        }
+        self.decode.get(&symbol).copied()
     }
 }
 
@@ -135,5 +137,30 @@ mod tests {
         for &symbol in modifier.base_symbols().iter() {
             modifier.shift(symbol).unwrap();
         }
+    }
+
+    #[test]
+    fn key_press() {
+        let modifier = Modifier::standard_us();
+
+        let cases = [
+            (b'a', KeyPress { base: b'a', shifted: false }),
+            (b'A', KeyPress { base: b'a', shifted: true }),
+            (b'1', KeyPress { base: b'1', shifted: false }),
+            (b'!', KeyPress { base: b'1', shifted: true }),
+            (b'/', KeyPress { base: b'/', shifted: false }),
+            (b'?', KeyPress { base: b'/', shifted: true }),
+        ];
+
+        for (symbol, expected) in cases {
+            assert_eq!(modifier.key_press_of(symbol), Some(expected));
+        }
+    }
+
+    #[test]
+    fn key_press_of_unsupported_symbol_returns_none() {
+        let modifier = Modifier::standard_us();
+
+        assert_eq!(modifier.key_press_of(b' '), None);
     }
 }
