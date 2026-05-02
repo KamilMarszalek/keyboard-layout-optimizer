@@ -4,3 +4,4 @@
 //! is passed to the keyboard layout optimizer.
 
 pub mod normalize;
+pub mod pipeline;
