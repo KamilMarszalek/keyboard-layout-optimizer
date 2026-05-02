@@ -1,3 +1,5 @@
+use crate::keyboard::model::KeyPress;
+
 use super::common::AsciiChar;
 use core::fmt;
 use std::collections::HashMap;
@@ -24,6 +26,7 @@ impl fmt::Display for ModifierError {
 /// modified symbols.
 pub struct Modifier {
     encode: HashMap<AsciiChar, AsciiChar>,
+    decode: HashMap<AsciiChar, AsciiChar>,
     symbols: Vec<AsciiChar>,
 }
 
@@ -34,12 +37,14 @@ impl Modifier {
         I: IntoIterator<Item = (AsciiChar, AsciiChar)>,
     {
         let mut encode = HashMap::new();
+        let mut decode = HashMap::new();
         for (a, b) in shift_pairs {
             encode.insert(a, b);
+            decode.insert(b, a);
         }
 
         let symbols = encode.keys().copied().collect();
-        Self { encode, symbols }
+        Self { encode, decode, symbols }
     }
 
     pub fn shift(&self, c: AsciiChar) -> Result<AsciiChar, ModifierError> {
@@ -83,6 +88,14 @@ impl Modifier {
         ];
 
         Self::new(letter_pairs.chain(punctuation_pairs))
+    }
+
+    pub fn key_press_of(&self, symbol: AsciiChar) -> Option<KeyPress> {
+        match (self.base_symbols().contains(&symbol), self.decode.get(&symbol)) {
+            (true, None) => Some(KeyPress { base: symbol, shifted: false }),
+            (false, Some(base)) => Some(KeyPress { base: *base, shifted: true }),
+            (_, _) => None,
+        }
     }
 }
 
