@@ -1,4 +1,7 @@
-use crate::keyboard::model::KeyPress;
+use crate::{
+    keyboard::{model::KeyPress, modifier::Modifier},
+    text::{normalize::normalize_text, pipeline::map_normalized_text_to_key_presses},
+};
 
 /// Preprocessed key press statistics used by the cost function.
 ///
@@ -26,6 +29,15 @@ pub enum CorpusError {
 }
 
 impl<const P: usize> Corpus<P> {
+    /// Builds a corpus from text input and modifier
+    pub fn build_corpus_from_text(input: &str, modifier: &Modifier) -> Result<Self, CorpusError> {
+        let normalized_input = normalize_text(input);
+        let supported = modifier.supported_presses_from_modifier();
+        let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
+
+        let corpus = Corpus::from_key_presses(supported, presses)?;
+        Ok(corpus)
+    }
     /// Builds a corpus from a sequence of logical key presses.
     pub fn from_key_presses<I>(
         supported_presses: [KeyPress; P],
