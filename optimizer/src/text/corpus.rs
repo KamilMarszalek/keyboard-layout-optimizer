@@ -1,5 +1,8 @@
 use crate::{
-    keyboard::{model::KeyPress, modifier::Modifier},
+    keyboard::{
+        model::KeyPress,
+        modifier::{Modifier, SupportedPressesError},
+    },
     text::{normalize::normalize_text, pipeline::map_normalized_text_to_key_presses},
 };
 
@@ -22,17 +25,14 @@ pub struct Corpus<const P: usize> {
 pub enum CorpusError {
     UnsupportedKeyPress(KeyPress),
     DuplicateSupportedKeyPress(KeyPress),
-    InvalidSupportedPressCount { expected: usize, actual: usize },
-    MissingBaseKeyPress { base: u8 },
-    MissingShiftedKeyPress { base: u8, shifted: u8 },
-    MissingShiftMapping { base: u8 },
+    SupportedPresses(SupportedPressesError),
 }
 
 impl<const P: usize> Corpus<P> {
     /// Builds a corpus from text input and modifier
     pub fn build_corpus_from_text(input: &str, modifier: &Modifier) -> Result<Self, CorpusError> {
         let normalized_input = normalize_text(input);
-        let supported = modifier.supported_presses()?;
+        let supported = modifier.supported_presses().map_err(CorpusError::SupportedPresses)?;
         let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
         Corpus::from_key_presses(supported, presses)
     }
