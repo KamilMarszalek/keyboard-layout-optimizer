@@ -2,7 +2,7 @@ use crate::keyboard::model::KeyPress;
 
 use super::common::AsciiChar;
 use core::fmt;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ModifierError {
@@ -52,27 +52,23 @@ impl Modifier {
         let mut symbols = Vec::new();
         let mut encode = HashMap::new();
         let mut decode = HashMap::new();
-        let mut bases = HashSet::new();
-        let mut shifted = HashSet::new();
         for (base, shift) in shift_pairs {
-            if bases.contains(&base) {
+            if encode.contains_key(&base) {
                 return Err(ModifierError::DuplicateBase(base));
             }
-            if shifted.contains(&shift) {
+            if decode.contains_key(&shift) {
                 return Err(ModifierError::DuplicateShifted(shift));
             }
             if base == shift {
                 return Err(ModifierError::AmbiguousSymbol(base));
             }
-            if shifted.contains(&base) {
+            if decode.contains_key(&base) {
                 return Err(ModifierError::AmbiguousSymbol(base));
             }
-            if bases.contains(&shift) {
+            if encode.contains_key(&shift) {
                 return Err(ModifierError::AmbiguousSymbol(shift));
             }
 
-            bases.insert(base);
-            shifted.insert(shift);
             symbols.push(base);
             encode.insert(base, shift);
             decode.insert(base, KeyPress { base, shifted: false });
