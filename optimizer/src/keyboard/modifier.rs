@@ -284,4 +284,16 @@ mod tests {
             ])
         );
     }
+
+    #[test]
+    fn supported_presses_returns_error_for_wrong_size() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
+
+        let result = modifier.supported_presses::<3>();
+
+        assert!(matches!(
+            result,
+            Err(SupportedPressesError::InvalidSupportedPressCount { expected: 3, actual: 4 })
+        ));
+    }
 }

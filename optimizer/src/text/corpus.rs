@@ -200,4 +200,19 @@ mod tests {
         assert_eq!(corpus.total_chars, 2);
         assert_eq!(corpus.total_bigrams, 1);
     }
+
+    #[test]
+    fn build_corpus_from_text_wraps_supported_presses_error() {
+        let modifier = Modifier::new([(b'a', b'A')]).unwrap();
+
+        let result = Corpus::<1>::build_corpus_from_text("a", &modifier);
+
+        assert!(matches!(
+            result,
+            Err(CorpusError::SupportedPresses(SupportedPressesError::InvalidSupportedPressCount {
+                expected: 1,
+                actual: 2
+            }))
+        ));
+    }
 }
