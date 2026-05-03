@@ -2,7 +2,7 @@ use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub fn normalize_demo(input: &str) -> String {
-    crate::text::normalize::normalize_text(input)
+    crate::text::pipeline::normalize_text(input)
 }
 
 #[wasm_bindgen]
