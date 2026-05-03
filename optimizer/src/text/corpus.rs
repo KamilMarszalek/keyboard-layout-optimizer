@@ -3,7 +3,7 @@ use crate::{
         model::KeyPress,
         modifier::{Modifier, SupportedPressesError},
     },
-    text::{normalize::normalize_text, pipeline::map_normalized_text_to_key_presses},
+    text::pipeline::{map_normalized_text_to_key_presses, normalize_text},
 };
 
 /// Preprocessed key press statistics used by the cost function.
@@ -30,7 +30,7 @@ pub enum CorpusError {
 
 impl<const P: usize> Corpus<P> {
     /// Builds a corpus from text input and modifier
-    pub fn build_corpus_from_text(input: &str, modifier: &Modifier) -> Result<Self, CorpusError> {
+    pub fn from_text(input: &str, modifier: &Modifier) -> Result<Self, CorpusError> {
         let normalized_input = normalize_text(input);
         let supported = modifier.supported_presses().map_err(CorpusError::SupportedPresses)?;
         let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
@@ -202,10 +202,10 @@ mod tests {
     }
 
     #[test]
-    fn build_corpus_from_text_wraps_supported_presses_error() {
+    fn from_text_wraps_supported_presses_error() {
         let modifier = Modifier::new([(b'a', b'A')]).unwrap();
 
-        let result = Corpus::<1>::build_corpus_from_text("a", &modifier);
+        let result = Corpus::<1>::from_text("a", &modifier);
 
         assert!(matches!(
             result,
@@ -214,5 +214,34 @@ mod tests {
                 actual: 2
             }))
         ));
+    }
+
+    #[test]
+    fn from_text_normalizes_and_counts_supported_key_presses() {
+        let modifier = Modifier::new([(b'a', b'A')]).unwrap();
+
+        let corpus = Corpus::<2>::from_text("Ą a!", &modifier).unwrap();
+
+        assert_eq!(corpus.total_chars, 2);
+        assert_eq!(corpus.total_bigrams, 1);
+        assert_eq!(corpus.unigrams[corpus.index_of(press(b'a', false)).unwrap()], 1);
+        assert_eq!(corpus.unigrams[corpus.index_of(press(b'a', true)).unwrap()], 1);
+        assert_eq!(
+            corpus.bigrams[corpus.index_of(press(b'a', true)).unwrap()]
+                [corpus.index_of(press(b'a', false)).unwrap()],
+            1
+        );
+    }
+
+    #[test]
+    fn build_corpus_from_text_unsupported_normalized_symbol_resets_bigram_chain() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap();
+
+        let corpus = Corpus::<4>::from_text("a.b", &modifier).unwrap();
+
+        assert_eq!(corpus.total_chars, 2);
+        assert_eq!(corpus.total_bigrams, 0);
+        assert_eq!(corpus.unigrams[corpus.index_of(press(b'a', false)).unwrap()], 1);
+        assert_eq!(corpus.unigrams[corpus.index_of(press(b'b', false)).unwrap()], 1);
     }
 }
