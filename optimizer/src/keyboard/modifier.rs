@@ -52,7 +52,7 @@ pub struct Modifier {
 
 impl Modifier {
     /// Builds a modifier from `(base, shifted)` symbol pairs.
-    pub fn new<I>(shift_pairs: I) -> Result<Self, ModifierError>
+    pub(crate) fn new<I>(shift_pairs: I) -> Result<Self, ModifierError>
     where
         I: IntoIterator<Item = (AsciiChar, AsciiChar)>,
     {
