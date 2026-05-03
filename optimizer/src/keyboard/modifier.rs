@@ -1,4 +1,4 @@
-use crate::{keyboard::model::KeyPress, text::corpus::CorpusError};
+use crate::keyboard::model::KeyPress;
 
 use super::common::AsciiChar;
 use core::fmt;
@@ -12,6 +12,13 @@ pub enum ModifierError {
     AmbiguousSymbol(AsciiChar),
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SupportedPressesError {
+    InvalidSupportedPressCount { expected: usize, actual: usize },
+    MissingBaseKeyPress { base: u8 },
+    MissingShiftMapping { base: u8 },
+    MissingShiftedKeyPress { base: u8, shifted: u8 },
+}
 impl fmt::Display for ModifierError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -130,27 +137,34 @@ impl Modifier {
         self.decode.get(&symbol).copied()
     }
 
-    pub fn supported_presses<const P: usize>(&self) -> Result<[KeyPress; P], CorpusError> {
+    pub fn supported_presses<const P: usize>(
+        &self,
+    ) -> Result<[KeyPress; P], SupportedPressesError> {
         let mut key_presses = Vec::new();
 
         for &base in self.base_symbols() {
-            let base_press =
-                self.key_press_of(base).ok_or(CorpusError::MissingBaseKeyPress { base })?;
+            let base_press = self
+                .key_press_of(base)
+                .ok_or(SupportedPressesError::MissingBaseKeyPress { base })?;
 
             key_presses.push(base_press);
 
-            let shifted =
-                self.shift(base).map_err(|_| CorpusError::MissingShiftMapping { base })?;
+            let shifted = self
+                .shift(base)
+                .map_err(|_| SupportedPressesError::MissingShiftMapping { base })?;
 
             let shifted_press = self
                 .key_press_of(shifted)
-                .ok_or(CorpusError::MissingShiftedKeyPress { base, shifted })?;
+                .ok_or(SupportedPressesError::MissingShiftedKeyPress { base, shifted })?;
 
             key_presses.push(shifted_press);
         }
 
         key_presses.try_into().map_err(|key_presses: Vec<KeyPress>| {
-            CorpusError::InvalidSupportedPressCount { expected: P, actual: key_presses.len() }
+            SupportedPressesError::InvalidSupportedPressCount {
+                expected: P,
+                actual: key_presses.len(),
+            }
         })
     }
 }
