@@ -6,6 +6,8 @@ use crate::{
     text::pipeline::{map_normalized_text_to_key_presses, normalize_text},
 };
 
+const STANDARD_US_PRESS_COUNT: usize = 94;
+
 /// Preprocessed key press statistics used by the cost function.
 ///
 /// `presses[i]` describes the logical key press represented by index `i`.
@@ -84,6 +86,13 @@ impl<const P: usize> Corpus<P> {
             }
         }
         Ok(())
+    }
+}
+
+impl Corpus<STANDARD_US_PRESS_COUNT> {
+    pub fn from_text_standard_us(input: &str) -> Result<Self, CorpusError> {
+        let modifier = Modifier::standard_us();
+        Self::from_text(input, &modifier)
     }
 }
 
@@ -199,6 +208,49 @@ mod tests {
         assert_eq!(corpus.bigrams, [[0, 1], [0, 0]]);
         assert_eq!(corpus.total_chars, 2);
         assert_eq!(corpus.total_bigrams, 1);
+    }
+
+    #[test]
+    fn from_text_standard_us_empty_input_creates_empty_standard_us_corpus() {
+        let corpus = Corpus::from_text_standard_us("").unwrap();
+
+        assert_eq!(corpus.presses.len(), STANDARD_US_PRESS_COUNT);
+        assert_eq!(corpus.total_chars, 0);
+        assert_eq!(corpus.total_bigrams, 0);
+        assert!(corpus.unigrams.iter().all(|&count| count == 0));
+        assert!(corpus.bigrams.iter().flatten().all(|&count| count == 0));
+    }
+
+    #[test]
+    fn from_text_standard_us_counts_base_and_shifted_presses() {
+        let corpus = Corpus::from_text_standard_us("aA!").unwrap();
+        let unshifted_a = corpus.index_of(press(b'a', false)).unwrap();
+        let shifted_a = corpus.index_of(press(b'a', true)).unwrap();
+        let shifted_1 = corpus.index_of(press(b'1', true)).unwrap();
+
+        assert_eq!(corpus.total_chars, 3);
+        assert_eq!(corpus.total_bigrams, 2);
+        assert_eq!(corpus.unigrams[unshifted_a], 1);
+        assert_eq!(corpus.unigrams[shifted_a], 1);
+        assert_eq!(corpus.unigrams[shifted_1], 1);
+        assert_eq!(corpus.bigrams[unshifted_a][shifted_a], 1);
+        assert_eq!(corpus.bigrams[shifted_a][shifted_1], 1);
+    }
+
+    #[test]
+    fn from_text_standard_us_normalizes_text_before_counting() {
+        let corpus = Corpus::from_text_standard_us("Ą a!").unwrap();
+        let shifted_a = corpus.index_of(press(b'a', true)).unwrap();
+        let unshifted_a = corpus.index_of(press(b'a', false)).unwrap();
+        let shifted_1 = corpus.index_of(press(b'1', true)).unwrap();
+
+        assert_eq!(corpus.total_chars, 3);
+        assert_eq!(corpus.total_bigrams, 2);
+        assert_eq!(corpus.unigrams[shifted_a], 1);
+        assert_eq!(corpus.unigrams[unshifted_a], 1);
+        assert_eq!(corpus.unigrams[shifted_1], 1);
+        assert_eq!(corpus.bigrams[shifted_a][unshifted_a], 1);
+        assert_eq!(corpus.bigrams[unshifted_a][shifted_1], 1);
     }
 
     #[test]
