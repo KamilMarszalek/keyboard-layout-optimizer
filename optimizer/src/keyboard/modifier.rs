@@ -1,8 +1,10 @@
-use crate::keyboard::model::KeyPress;
+use crate::keyboard::{common::KEY_COUNT, model::KeyPress};
 
 use super::common::AsciiChar;
 use core::fmt;
 use std::collections::HashMap;
+
+pub const STANDARD_US_PRESS_COUNT: usize = 2 * KEY_COUNT;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ModifierError {
