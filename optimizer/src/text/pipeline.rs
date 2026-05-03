@@ -1,22 +1,4 @@
-use crate::{
-    keyboard::{model::KeyPress, modifier::Modifier},
-    text::{
-        corpus::{Corpus, CorpusError},
-        normalize::normalize_text,
-    },
-};
-
-pub fn build_corpus_from_text<const P: usize>(
-    input: &str,
-    modifier: &Modifier,
-) -> Result<Corpus<P>, CorpusError> {
-    let normalized_input = normalize_text(input);
-    let supported = modifier.supported_presses_from_modifier();
-    let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
-
-    let corpus = Corpus::from_key_presses(supported, presses)?;
-    Ok(corpus)
-}
+use crate::keyboard::{model::KeyPress, modifier::Modifier};
 
 pub fn map_normalized_text_to_key_presses(
     normalized: &str,
@@ -28,7 +10,7 @@ pub fn map_normalized_text_to_key_presses(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keyboard::model::KeyPress;
+    use crate::{keyboard::model::KeyPress, text::corpus::Corpus};
 
     fn press(base: u8, shifted: bool) -> KeyPress {
         KeyPress { base, shifted }
@@ -38,7 +20,7 @@ mod tests {
     fn build_corpus_from_text_normalizes_and_counts_supported_key_presses() {
         let modifier = Modifier::new([(b'a', b'A')]).unwrap();
 
-        let corpus = build_corpus_from_text::<2>("Ą a!", &modifier).unwrap();
+        let corpus = Corpus::<2>::build_corpus_from_text("Ą a!", &modifier).unwrap();
 
         assert_eq!(corpus.total_chars, 2);
         assert_eq!(corpus.total_bigrams, 1);
@@ -55,7 +37,7 @@ mod tests {
     fn build_corpus_from_text_unsupported_normalized_symbol_resets_bigram_chain() {
         let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap();
 
-        let corpus = build_corpus_from_text::<4>("a.b", &modifier).unwrap();
+        let corpus = Corpus::<4>::build_corpus_from_text("a.b", &modifier).unwrap();
 
         assert_eq!(corpus.total_chars, 2);
         assert_eq!(corpus.total_bigrams, 0);
