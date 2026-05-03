@@ -1,4 +1,4 @@
-use crate::keyboard::{model::KeyPress, modifier::Modifier};
+use crate::keyboard::model::KeyPress;
 
 /// Preprocessed key press statistics used by the cost function.
 ///
@@ -75,39 +75,6 @@ impl<const P: usize> Corpus<P> {
         }
         Ok(())
     }
-}
-
-pub fn supported_presses_from_modifier<const P: usize>(
-    modifier: &Modifier,
-) -> Result<[KeyPress; P], CorpusError> {
-    let mut key_presses = Vec::new();
-
-    for &base in modifier.base_symbols() {
-        let base_press =
-            modifier.key_press_of(base).ok_or(CorpusError::MissingBaseKeyPress { base })?;
-
-        key_presses.push(base_press);
-
-        let shifted =
-            modifier.shift(base).map_err(|_| CorpusError::MissingShiftMapping { base })?;
-
-        let shifted_press = modifier
-            .key_press_of(shifted)
-            .ok_or(CorpusError::MissingShiftedKeyPress { base, shifted })?;
-
-        key_presses.push(shifted_press);
-    }
-
-    key_presses.try_into().map_err(|key_presses: Vec<KeyPress>| {
-        CorpusError::InvalidSupportedPressCount { expected: P, actual: key_presses.len() }
-    })
-}
-
-pub fn map_normalized_text_to_key_presses(
-    normalized: &str,
-    modifier: &Modifier,
-) -> impl Iterator<Item = Option<KeyPress>> {
-    normalized.bytes().map(|c| modifier.key_press_of(c))
 }
 
 #[cfg(test)]
@@ -222,67 +189,5 @@ mod tests {
         assert_eq!(corpus.bigrams, [[0, 1], [0, 0]]);
         assert_eq!(corpus.total_chars, 2);
         assert_eq!(corpus.total_bigrams, 1);
-    }
-
-    #[test]
-    fn supported_presses_from_modifier_builds_base_and_shifted_presses_in_order() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
-
-        let result = supported_presses_from_modifier::<4>(&modifier).unwrap();
-
-        assert_eq!(
-            result,
-            [
-                KeyPress { base: b'a', shifted: false },
-                KeyPress { base: b'a', shifted: true },
-                KeyPress { base: b'1', shifted: false },
-                KeyPress { base: b'1', shifted: true },
-            ]
-        );
-    }
-
-    #[test]
-    fn supported_presses_from_modifier_returns_error_for_wrong_size() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
-
-        let result = supported_presses_from_modifier::<3>(&modifier);
-
-        assert!(matches!(
-            result,
-            Err(CorpusError::InvalidSupportedPressCount { expected: 3, actual: 4 })
-        ));
-    }
-
-    #[test]
-    fn map_normalized_text_to_key_presses_maps_supported_symbols() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
-
-        let result: Vec<_> = map_normalized_text_to_key_presses("aA1!", &modifier).collect();
-
-        assert_eq!(
-            result,
-            vec![
-                Some(KeyPress { base: b'a', shifted: false }),
-                Some(KeyPress { base: b'a', shifted: true }),
-                Some(KeyPress { base: b'1', shifted: false }),
-                Some(KeyPress { base: b'1', shifted: true }),
-            ]
-        );
-    }
-
-    #[test]
-    fn map_normalized_text_to_key_presses_returns_none_for_unsupported_symbols() {
-        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap();
-
-        let result: Vec<_> = map_normalized_text_to_key_presses("a b", &modifier).collect();
-
-        assert_eq!(
-            result,
-            vec![
-                Some(KeyPress { base: b'a', shifted: false }),
-                None,
-                Some(KeyPress { base: b'b', shifted: false }),
-            ]
-        );
     }
 }

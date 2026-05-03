@@ -1,4 +1,4 @@
-use crate::{annealing::corpus::Corpus, keyboard::model::Keyboard};
+use crate::{keyboard::model::Keyboard, text::corpus::Corpus};
 
 /// Weights assigned to individual ergonomic metrics.
 ///
