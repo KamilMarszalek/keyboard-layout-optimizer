@@ -32,11 +32,9 @@ impl<const P: usize> Corpus<P> {
     /// Builds a corpus from text input and modifier
     pub fn build_corpus_from_text(input: &str, modifier: &Modifier) -> Result<Self, CorpusError> {
         let normalized_input = normalize_text(input);
-        let supported = modifier.supported_presses_from_modifier();
+        let supported = modifier.supported_presses()?;
         let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
-
-        let corpus = Corpus::from_key_presses(supported, presses)?;
-        Ok(corpus)
+        Corpus::from_key_presses(supported, presses)
     }
     /// Builds a corpus from a sequence of logical key presses.
     pub fn from_key_presses<I>(
