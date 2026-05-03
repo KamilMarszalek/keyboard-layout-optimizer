@@ -129,6 +129,30 @@ impl Modifier {
     pub fn key_press_of(&self, symbol: AsciiChar) -> Option<KeyPress> {
         self.decode.get(&symbol).copied()
     }
+
+    pub fn supported_presses_from_modifier<const P: usize>(&self) -> [KeyPress; P] {
+        let mut key_presses = Vec::new();
+
+        for &base in self.base_symbols() {
+            let base_press = self
+                .key_press_of(base)
+                .expect("in supported_presses_from_modifier base symbol should be decodable");
+
+            key_presses.push(base_press);
+
+            let shifted = self
+                .shift(base)
+                .expect("in supported_presses_from_modifier UnsupportedBase should not happen");
+
+            let shifted_press = self
+                .key_press_of(shifted)
+                .expect("in supported_presses_from_modifier shifted symbol should be decodable");
+
+            key_presses.push(shifted_press);
+        }
+
+        key_presses.try_into().expect("invalid key presses count")
+    }
 }
 
 #[cfg(test)]
@@ -228,5 +252,22 @@ mod tests {
         let result = Modifier::new([(b'a', b'a')]);
 
         assert!(matches!(result, Err(ModifierError::AmbiguousSymbol(b'a'))));
+    }
+
+    #[test]
+    fn supported_presses_from_modifier_builds_base_and_shifted_presses_in_order() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
+
+        let result = modifier.supported_presses_from_modifier::<4>();
+
+        assert_eq!(
+            result,
+            [
+                KeyPress { base: b'a', shifted: false },
+                KeyPress { base: b'a', shifted: true },
+                KeyPress { base: b'1', shifted: false },
+                KeyPress { base: b'1', shifted: true },
+            ]
+        );
     }
 }

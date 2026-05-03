@@ -1,9 +1,9 @@
 use crate::{
-    annealing::corpus::{
-        Corpus, CorpusError, map_normalized_text_to_key_presses, supported_presses_from_modifier,
+    keyboard::{model::KeyPress, modifier::Modifier},
+    text::{
+        corpus::{Corpus, CorpusError},
+        normalize::normalize_text,
     },
-    keyboard::modifier::Modifier,
-    text::normalize::normalize_text,
 };
 
 pub fn build_corpus_from_text<const P: usize>(
@@ -11,11 +11,18 @@ pub fn build_corpus_from_text<const P: usize>(
     modifier: &Modifier,
 ) -> Result<Corpus<P>, CorpusError> {
     let normalized_input = normalize_text(input);
-    let supported = supported_presses_from_modifier(modifier)?;
+    let supported = modifier.supported_presses_from_modifier();
     let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
 
     let corpus = Corpus::from_key_presses(supported, presses)?;
     Ok(corpus)
+}
+
+pub fn map_normalized_text_to_key_presses(
+    normalized: &str,
+    modifier: &Modifier,
+) -> impl Iterator<Item = Option<KeyPress>> {
+    normalized.bytes().map(|c| modifier.key_press_of(c))
 }
 
 #[cfg(test)]
@@ -57,14 +64,35 @@ mod tests {
     }
 
     #[test]
-    fn build_corpus_from_text_returns_error_for_wrong_supported_press_count() {
-        let modifier = Modifier::new([(b'a', b'A')]).unwrap();
+    fn map_normalized_text_to_key_presses_maps_supported_symbols() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
 
-        let result = build_corpus_from_text::<1>("a", &modifier);
+        let result: Vec<_> = map_normalized_text_to_key_presses("aA1!", &modifier).collect();
 
-        assert!(matches!(
+        assert_eq!(
             result,
-            Err(CorpusError::InvalidSupportedPressCount { expected: 1, actual: 2 })
-        ));
+            vec![
+                Some(KeyPress { base: b'a', shifted: false }),
+                Some(KeyPress { base: b'a', shifted: true }),
+                Some(KeyPress { base: b'1', shifted: false }),
+                Some(KeyPress { base: b'1', shifted: true }),
+            ]
+        );
+    }
+
+    #[test]
+    fn map_normalized_text_to_key_presses_returns_none_for_unsupported_symbols() {
+        let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap();
+
+        let result: Vec<_> = map_normalized_text_to_key_presses("a b", &modifier).collect();
+
+        assert_eq!(
+            result,
+            vec![
+                Some(KeyPress { base: b'a', shifted: false }),
+                None,
+                Some(KeyPress { base: b'b', shifted: false }),
+            ]
+        );
     }
 }
