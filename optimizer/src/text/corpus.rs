@@ -16,7 +16,7 @@ const STANDARD_US_PRESS_COUNT: usize = 94;
 ///
 /// `None` values in the input sequence reset the bigram chain and are not counted.
 pub struct Corpus<const P: usize> {
-    pub presses: [KeyPress; P],
+    pub supported_presses: [KeyPress; P],
     pub unigrams: [usize; P],
     pub bigrams: [[usize; P]; P],
     pub total_chars: usize,
@@ -39,21 +39,14 @@ impl<const P: usize> Corpus<P> {
         Corpus::from_key_presses(supported, presses)
     }
     /// Builds a corpus from a sequence of logical key presses.
-    pub fn from_key_presses<I>(
+    fn from_key_presses<I>(
         supported_presses: [KeyPress; P],
         input_presses: I,
     ) -> Result<Self, CorpusError>
     where
         I: IntoIterator<Item = Option<KeyPress>>,
     {
-        Self::validate_unique_presses(&supported_presses)?;
-        let mut result = Self {
-            presses: supported_presses,
-            unigrams: [0; P],
-            bigrams: [[0; P]; P],
-            total_chars: 0,
-            total_bigrams: 0,
-        };
+        let mut result = Self::empty_with_supported_presses(supported_presses)?;
         let mut previous: Option<usize> = None;
         for maybe_press in input_presses {
             let Some(press) = maybe_press else {
@@ -74,7 +67,7 @@ impl<const P: usize> Corpus<P> {
     }
 
     pub fn index_of(&self, press: KeyPress) -> Option<usize> {
-        self.presses.iter().position(|&p| p == press)
+        self.supported_presses.iter().position(|&p| p == press)
     }
 
     fn validate_unique_presses(presses: &[KeyPress; P]) -> Result<(), CorpusError> {
@@ -87,12 +80,30 @@ impl<const P: usize> Corpus<P> {
         }
         Ok(())
     }
+
+    fn empty_with_supported_presses(supported_presses: [KeyPress; P]) -> Result<Self, CorpusError> {
+        Self::validate_unique_presses(&supported_presses)?;
+
+        Ok(Self {
+            supported_presses,
+            unigrams: [0; P],
+            bigrams: [[0; P]; P],
+            total_chars: 0,
+            total_bigrams: 0,
+        })
+    }
 }
 
 impl Corpus<STANDARD_US_PRESS_COUNT> {
     pub fn from_text_standard_us(input: &str) -> Result<Self, CorpusError> {
         let modifier = Modifier::standard_us();
         Self::from_text(input, &modifier)
+    }
+}
+
+impl Default for Corpus<STANDARD_US_PRESS_COUNT> {
+    fn default() -> Self {
+        Self::from_text_standard_us("").expect("standard us modifier should be valid")
     }
 }
 
@@ -110,7 +121,7 @@ mod tests {
 
         let corpus = Corpus::from_key_presses(supported, []).unwrap();
 
-        assert_eq!(corpus.presses, supported);
+        assert_eq!(corpus.supported_presses, supported);
         assert_eq!(corpus.unigrams, [0, 0]);
         assert_eq!(corpus.bigrams, [[0, 0], [0, 0]]);
         assert_eq!(corpus.total_chars, 0);
@@ -214,7 +225,7 @@ mod tests {
     fn from_text_standard_us_empty_input_creates_empty_standard_us_corpus() {
         let corpus = Corpus::from_text_standard_us("").unwrap();
 
-        assert_eq!(corpus.presses.len(), STANDARD_US_PRESS_COUNT);
+        assert_eq!(corpus.supported_presses.len(), STANDARD_US_PRESS_COUNT);
         assert_eq!(corpus.total_chars, 0);
         assert_eq!(corpus.total_bigrams, 0);
         assert!(corpus.unigrams.iter().all(|&count| count == 0));
