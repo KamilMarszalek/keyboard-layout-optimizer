@@ -581,4 +581,26 @@ mod tests {
             (0..=46).map(|x| matches!(x, 26..=36)).collect::<Vec<_>>()
         );
     }
+
+    #[test]
+    fn hand_finger_of_key_returns_assignment_for_valid_index() {
+        let specs = [RowSpec {
+            left: vec![fc!(Finger::Pinky, 1, 0), fc!(Finger::Ring, 1, 0)],
+            right: vec![fc!(Finger::Index, 1, 0)],
+            ..test_row_spec()
+        }];
+        let geometry = Geometry::<3>::new(specs).unwrap();
+
+        assert_eq!(geometry.hand_finger_of_key(0), Some((Hand::Left, Finger::Pinky)));
+        assert_eq!(geometry.hand_finger_of_key(1), Some((Hand::Left, Finger::Ring)));
+        assert_eq!(geometry.hand_finger_of_key(2), Some((Hand::Right, Finger::Index)));
+    }
+
+    #[test]
+    fn hand_finger_of_key_returns_none_for_invalid_index() {
+        let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
+        let geometry = Geometry::<1>::new(specs).unwrap();
+
+        assert_eq!(geometry.hand_finger_of_key(1), None);
+    }
 }
