@@ -116,9 +116,10 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
                 self.corpus.index_of(KeyPress { base: symbol.base, shifted: false }),
                 self.corpus.index_of(KeyPress { base: symbol.base, shifted: true }),
             ];
-            indices.iter().for_each(|idx| match idx {
-                Some(i) => home_row_total += i,
-                None => (),
+            indices.iter().for_each(|idx| {
+                if let Some(i) = idx {
+                    home_row_total += i
+                }
             });
         }
         home_row_total as f64 / self.corpus.total_chars as f64
