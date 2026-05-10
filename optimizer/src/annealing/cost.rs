@@ -1,4 +1,3 @@
-use crate::keyboard::model::KeyPress;
 use crate::{keyboard::model::Keyboard, text::corpus::Corpus};
 
 /// Weights assigned to individual ergonomic metrics.
@@ -109,24 +108,24 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
     }
     /// Computes the home-row usage metric.
     fn home_row_usage(&self, keyboard: &Keyboard<N>) -> f64 {
-        let mut home_row_total = 0;
-        for idx in keyboard.geometry.get_home_row_indices() {
-            let symbol = keyboard.layout.key_symbol_at(idx);
-            let indices = [
-                self.corpus.index_of(KeyPress { base: symbol.base, shifted: false }),
-                self.corpus.index_of(KeyPress { base: symbol.base, shifted: true }),
-            ];
-            indices.iter().for_each(|idx| {
-                if let Some(i) = idx {
-                    home_row_total += self.corpus.unigrams[*i];
-                }
-            });
+        if self.corpus.total_chars == 0 {
+            return 0.0;
         }
-        match self.corpus.total_chars {
-            0 => 0.0,
-            _ => home_row_total as f64 / self.corpus.total_chars as f64,
-        }
+
+        let home_row_total: usize = self
+            .corpus
+            .supported_presses
+            .iter()
+            .zip(self.corpus.unigrams.iter())
+            .filter_map(|(press, count)| {
+                let key_idx = keyboard.layout.key_of(press.base)?;
+                keyboard.geometry.is_home_row_key(key_idx).then_some(*count)
+            })
+            .sum();
+
+        home_row_total as f64 / self.corpus.total_chars as f64
     }
+
     /// Computes the hand alternation metric.
     fn hand_alternation(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
