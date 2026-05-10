@@ -225,6 +225,15 @@ impl<const N: usize> Geometry<N> {
             None => None,
         }
     }
+
+    pub fn get_home_row_indices(&self) -> Vec<usize> {
+        self.keys
+            .iter()
+            .enumerate()
+            .filter(|(_, x)| x.row == Row::Home)
+            .map(|(ind, _)| ind)
+            .collect()
+    }
 }
 
 impl Geometry<KEY_COUNT> {
@@ -563,5 +572,12 @@ mod tests {
         assert_eq!(row_size(Row::Top), 13);
         assert_eq!(row_size(Row::Home), 11);
         assert_eq!(row_size(Row::Bottom), 10);
+    }
+
+    #[test]
+    fn geometry_home_row_indices() {
+        let geometry = Geometry::standard_us();
+        let indices = geometry.get_home_row_indices();
+        assert_eq!(indices, (26..=36).collect::<Vec<usize>>());
     }
 }
