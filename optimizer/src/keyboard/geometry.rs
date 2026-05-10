@@ -226,13 +226,8 @@ impl<const N: usize> Geometry<N> {
         }
     }
 
-    pub fn get_home_row_indices(&self) -> Vec<usize> {
-        self.keys
-            .iter()
-            .enumerate()
-            .filter(|(_, x)| x.row == Row::Home)
-            .map(|(ind, _)| ind)
-            .collect()
+    pub fn is_home_row_key(&self, idx: usize) -> bool {
+        self.keys.get(idx).is_some_and(|key| key.row == Row::Home)
     }
 }
 
@@ -575,9 +570,11 @@ mod tests {
     }
 
     #[test]
-    fn geometry_home_row_indices() {
+    fn geometry_is_home_row() {
         let geometry = Geometry::standard_us();
-        let indices = geometry.get_home_row_indices();
-        assert_eq!(indices, (26..=36).collect::<Vec<usize>>());
+        assert_eq!(
+            (0..=46).map(|x| geometry.is_home_row_key(x)).collect::<Vec<_>>(),
+            (0..=46).map(|x| matches!(x, 26..=36)).collect::<Vec<_>>()
+        );
     }
 }
