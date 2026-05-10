@@ -80,6 +80,10 @@ impl<const N: usize> Layout<N> {
 
         counter.iter().all(|c| *c == 0)
     }
+
+    pub fn key_symbol_at(&self, idx: usize) -> KeySymbol {
+        self.mappings[idx]
+    }
 }
 
 impl Layout<KEY_COUNT> {
