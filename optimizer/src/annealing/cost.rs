@@ -152,7 +152,8 @@ mod tests {
     #[test]
     fn home_row_usage_counts_base_and_shifted_home_row_presses() {
         let keyboard = Keyboard::standard_us();
-        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aAqQ"));
+        let cost =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aAqQ"));
 
         assert_eq!(cost.home_row_usage(&keyboard), 0.5);
     }
@@ -160,8 +161,10 @@ mod tests {
     #[test]
     fn home_row_usage_returns_one_when_all_presses_are_on_home_row() {
         let keyboard = Keyboard::standard_us();
-        let cost =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("asdfjkl;ASDFJKL:"));
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            Corpus::from_text_standard_us("asdfjkl;ASDFJKL:"),
+        );
 
         assert_eq!(cost.home_row_usage(&keyboard), 1.0);
     }
