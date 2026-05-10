@@ -233,4 +233,15 @@ mod tests {
 
         assert_eq!(layout_symbols, modifier_symbols);
     }
+
+    #[test]
+    fn layout_key_symbol_at() {
+        let layout = Layout::standard_us();
+        let first_key_symbol = layout.key_symbol_at(1);
+        assert_eq!(first_key_symbol.base, b'1');
+        assert_eq!(first_key_symbol.shifted, b'!');
+        let thirteenth_key_symbol = layout.key_symbol_at(13);
+        assert_eq!(thirteenth_key_symbol.base, b'q');
+        assert_eq!(thirteenth_key_symbol.shifted, b'Q');
+    }
 }
