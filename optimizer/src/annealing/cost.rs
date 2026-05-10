@@ -1,4 +1,10 @@
-use crate::{keyboard::model::Keyboard, text::corpus::Corpus};
+use crate::{
+    keyboard::{
+        geometry::{Finger, Hand},
+        model::Keyboard,
+    },
+    text::corpus::Corpus,
+};
 
 /// Weights assigned to individual ergonomic metrics.
 ///
@@ -99,9 +105,43 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
     }
 
     /// Computes the same-finger bigrams metric.
-    fn same_finger_bigrams(&self, _keyboard: &Keyboard<N>) -> f64 {
-        todo!()
+    fn same_finger_bigrams(&self, keyboard: &Keyboard<N>) -> f64 {
+        if self.corpus.total_bigrams == 0 {
+            return 0.0;
+        }
+
+        let press_fingers = self.press_fingers(keyboard);
+        let same_finger_total: usize = self
+            .corpus
+            .bigrams
+            .iter()
+            .enumerate()
+            .map(|(prev_idx, current_counts)| {
+                let Some(prev_finger) = press_fingers[prev_idx] else {
+                    return 0;
+                };
+
+                current_counts
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(curr_idx, &count)| {
+                        (press_fingers[curr_idx] == Some(prev_finger)).then_some(count)
+                    })
+                    .sum::<usize>()
+            })
+            .sum();
+
+        same_finger_total as f64 / self.corpus.total_bigrams as f64
     }
+
+    fn press_fingers(&self, keyboard: &Keyboard<N>) -> [Option<(Hand, Finger)>; P] {
+        std::array::from_fn(|idx| {
+            let press = self.corpus.supported_presses[idx];
+            let key_idx = keyboard.layout.key_of(press.base)?;
+            keyboard.geometry.hand_finger_of_key(key_idx)
+        })
+    }
+
     /// Computes the finger distance metric.
     fn finger_distance(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
@@ -179,5 +219,46 @@ mod tests {
         let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aA"));
 
         assert_eq!(cost.home_row_usage(&keyboard), 0.0);
+    }
+    #[test]
+    fn same_finger_bigrams_returns_zero_for_empty_corpus() {
+        let keyboard = Keyboard::standard_us();
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(""));
+
+        assert_eq!(cost.same_finger_bigrams(&keyboard), 0.0);
+    }
+    #[test]
+    fn same_finger_bigrams_counts_repeated_same_key() {
+        let keyboard = Keyboard::standard_us();
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aa"));
+
+        assert_eq!(cost.same_finger_bigrams(&keyboard), 1.0);
+    }
+    #[test]
+    fn same_finger_bigrams_counts_shifted_and_unshifted_same_key() {
+        let keyboard = Keyboard::standard_us();
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aA"));
+
+        assert_eq!(cost.same_finger_bigrams(&keyboard), 1.0);
+    }
+    #[test]
+    fn same_finger_bigrams_returns_zero_for_different_fingers() {
+        let keyboard = Keyboard::standard_us();
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("af"));
+
+        assert_eq!(cost.same_finger_bigrams(&keyboard), 0.0);
+    }
+
+    #[test]
+    fn same_finger_bigrams_uses_current_layout_after_swap() {
+        let mut keyboard = Keyboard::standard_us();
+
+        let s_key = keyboard.layout.key_of(b's').unwrap();
+        let q_key = keyboard.layout.key_of(b'q').unwrap();
+        keyboard.layout.swap(s_key, q_key);
+
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("as"));
+
+        assert_eq!(cost.same_finger_bigrams(&keyboard), 1.0);
     }
 }
