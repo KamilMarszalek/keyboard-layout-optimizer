@@ -118,11 +118,14 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
             ];
             indices.iter().for_each(|idx| {
                 if let Some(i) = idx {
-                    home_row_total += i
+                    home_row_total += self.corpus.unigrams[*i];
                 }
             });
         }
-        home_row_total as f64 / self.corpus.total_chars as f64
+        match self.corpus.total_chars {
+            0 => 0.0,
+            _ => home_row_total as f64 / self.corpus.total_chars as f64,
+        }
     }
     /// Computes the hand alternation metric.
     fn hand_alternation(&self, _keyboard: &Keyboard<N>) -> f64 {
@@ -131,5 +134,35 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
     /// Computes the row jumping metric.
     fn row_jumping(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn home_row_usage_returns_zero_for_empty_corpus() {
+        let keyboard = Keyboard::standard_us();
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(""));
+
+        assert_eq!(cost.home_row_usage(&keyboard), 0.0);
+    }
+
+    #[test]
+    fn home_row_usage_counts_base_and_shifted_home_row_presses() {
+        let keyboard = Keyboard::standard_us();
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aAqQ"));
+
+        assert_eq!(cost.home_row_usage(&keyboard), 0.5);
+    }
+
+    #[test]
+    fn home_row_usage_returns_one_when_all_presses_are_on_home_row() {
+        let keyboard = Keyboard::standard_us();
+        let cost =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("asdfjkl;ASDFJKL:"));
+
+        assert_eq!(cost.home_row_usage(&keyboard), 1.0);
     }
 }
