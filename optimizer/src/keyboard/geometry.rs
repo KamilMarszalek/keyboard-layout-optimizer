@@ -229,6 +229,10 @@ impl<const N: usize> Geometry<N> {
     pub fn is_home_row_key(&self, idx: usize) -> bool {
         self.keys.get(idx).is_some_and(|key| key.row == Row::Home)
     }
+
+    pub fn hand_finger_of_key(&self, idx: KeyIndex) -> Option<(Hand, Finger)> {
+        self.keys.get(idx).map(|key| (key.hand, key.finger))
+    }
 }
 
 impl Geometry<KEY_COUNT> {
