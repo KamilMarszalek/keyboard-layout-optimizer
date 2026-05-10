@@ -167,4 +167,17 @@ mod tests {
 
         assert_eq!(cost.home_row_usage(&keyboard), 1.0);
     }
+
+    #[test]
+    fn home_row_usage_uses_current_layout_after_swap() {
+        let mut keyboard = Keyboard::standard_us();
+
+        let a_key = keyboard.layout.key_of(b'a').unwrap();
+        let q_key = keyboard.layout.key_of(b'q').unwrap();
+        keyboard.layout.swap(a_key, q_key);
+
+        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aA"));
+
+        assert_eq!(cost.home_row_usage(&keyboard), 0.0);
+    }
 }
