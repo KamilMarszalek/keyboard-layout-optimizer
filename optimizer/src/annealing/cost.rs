@@ -1,8 +1,5 @@
 use crate::{
-    keyboard::{
-        geometry::{Finger, Hand},
-        model::Keyboard,
-    },
+    keyboard::{geometry::FingerAssignment, model::Keyboard},
     text::corpus::Corpus,
 };
 
@@ -126,11 +123,11 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
         same_finger_total as f64 / self.corpus.total_bigrams as f64
     }
 
-    fn press_fingers(&self, keyboard: &Keyboard<N>) -> [Option<(Hand, Finger)>; P] {
+    fn press_fingers(&self, keyboard: &Keyboard<N>) -> [Option<FingerAssignment>; P] {
         std::array::from_fn(|idx| {
             let press = self.corpus.supported_presses[idx];
             let key_idx = keyboard.layout.key_of(press.base)?;
-            keyboard.geometry.hand_finger_of_key(key_idx)
+            keyboard.geometry.finger_assignment_of_key(key_idx)
         })
     }
 
