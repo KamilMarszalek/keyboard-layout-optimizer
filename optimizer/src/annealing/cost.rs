@@ -220,33 +220,25 @@ mod tests {
 
         assert_eq!(cost.home_row_usage(&keyboard), 0.0);
     }
-    #[test]
-    fn same_finger_bigrams_returns_zero_for_empty_corpus() {
-        let keyboard = Keyboard::standard_us();
-        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(""));
+    use rstest::rstest;
 
-        assert_eq!(cost.same_finger_bigrams(&keyboard), 0.0);
-    }
-    #[test]
-    fn same_finger_bigrams_counts_repeated_same_key() {
+    #[rstest]
+    #[case::empty_corpus("", 0.0)]
+    #[case::repeated_same_key("aa", 1.0)]
+    #[case::shifted_and_unshifted_same_key("aA", 1.0)]
+    #[case::different_fingers("af", 0.0)]
+    #[case::mixed_bigrams("aqs", 0.5)]
+    fn same_finger_bigrams_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let keyboard = Keyboard::standard_us();
-        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aa"));
+        let cost =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
 
-        assert_eq!(cost.same_finger_bigrams(&keyboard), 1.0);
-    }
-    #[test]
-    fn same_finger_bigrams_counts_shifted_and_unshifted_same_key() {
-        let keyboard = Keyboard::standard_us();
-        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aA"));
+        let actual = cost.same_finger_bigrams(&keyboard);
 
-        assert_eq!(cost.same_finger_bigrams(&keyboard), 1.0);
-    }
-    #[test]
-    fn same_finger_bigrams_returns_zero_for_different_fingers() {
-        let keyboard = Keyboard::standard_us();
-        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("af"));
-
-        assert_eq!(cost.same_finger_bigrams(&keyboard), 0.0);
+        assert!(
+            (actual - expected).abs() < 1e-12,
+            "input {input:?}: expected {expected}, got {actual}"
+        );
     }
 
     #[test]
