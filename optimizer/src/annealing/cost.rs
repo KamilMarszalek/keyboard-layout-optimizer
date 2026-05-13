@@ -179,33 +179,23 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
-    #[test]
-    fn home_row_usage_returns_zero_for_empty_corpus() {
-        let keyboard = Keyboard::standard_us();
-        let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(""));
-
-        assert_eq!(cost.home_row_usage(&keyboard), 0.0);
-    }
-
-    #[test]
-    fn home_row_usage_counts_base_and_shifted_home_row_presses() {
+    #[rstest]
+    #[case::empty_corpus("", 0.0)]
+    #[case::base_and_shifted_home_row_presses("aAqQ", 0.5)]
+    #[case::all_presses_on_home_row("asdfjkl;ASDFJKL:", 1.0)]
+    fn home_row_usage_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let keyboard = Keyboard::standard_us();
         let cost =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("aAqQ"));
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
 
-        assert_eq!(cost.home_row_usage(&keyboard), 0.5);
-    }
+        let actual = cost.home_row_usage(&keyboard);
 
-    #[test]
-    fn home_row_usage_returns_one_when_all_presses_are_on_home_row() {
-        let keyboard = Keyboard::standard_us();
-        let cost = WeightedCost::new(
-            MetricWeights::default(),
-            Corpus::from_text_standard_us("asdfjkl;ASDFJKL:"),
+        assert!(
+            (actual - expected).abs() < 1e-12,
+            "input {input:?}: expected {expected}, got {actual}"
         );
-
-        assert_eq!(cost.home_row_usage(&keyboard), 1.0);
     }
 
     #[test]
@@ -220,7 +210,6 @@ mod tests {
 
         assert_eq!(cost.home_row_usage(&keyboard), 0.0);
     }
-    use rstest::rstest;
 
     #[rstest]
     #[case::empty_corpus("", 0.0)]
