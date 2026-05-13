@@ -111,25 +111,17 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
         }
 
         let press_fingers = self.press_fingers(keyboard);
-        let same_finger_total: usize = self
-            .corpus
-            .bigrams
-            .iter()
-            .enumerate()
-            .map(|(prev_idx, current_counts)| {
-                let Some(prev_finger) = press_fingers[prev_idx] else {
-                    return 0;
-                };
-
-                current_counts
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(curr_idx, &count)| {
-                        (press_fingers[curr_idx] == Some(prev_finger)).then_some(count)
-                    })
-                    .sum::<usize>()
-            })
-            .sum();
+        let mut same_finger_total = 0;
+        for (prev_idx, current_counts) in self.corpus.bigrams.iter().enumerate() {
+            let Some(prev_finger) = press_fingers[prev_idx] else {
+                continue;
+            };
+            for (curr_idx, &count) in current_counts.iter().enumerate() {
+                if press_fingers[curr_idx] == Some(prev_finger) {
+                    same_finger_total += count;
+                }
+            }
+        }
 
         same_finger_total as f64 / self.corpus.total_bigrams as f64
     }
