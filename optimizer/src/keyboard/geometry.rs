@@ -65,6 +65,28 @@ impl Finger {
     const COUNT: usize = 4;
 }
 
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
+pub struct FingerAssignment {
+    pub hand: Hand,
+    pub finger: Finger,
+}
+
+impl FingerAssignment {
+    pub const fn new(hand: Hand, finger: Finger) -> Self {
+        Self { hand, finger }
+    }
+
+    fn index(self) -> usize {
+        self.hand.index() * Finger::COUNT + self.finger.index()
+    }
+}
+
+impl fmt::Display for FingerAssignment {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}-{}", self.hand, self.finger)
+    }
+}
+
 const N_FINGERS: usize = Hand::COUNT * Finger::COUNT;
 
 #[derive(Clone, Copy, Debug)]
@@ -95,8 +117,7 @@ pub struct Coordinates {
 #[derive(Debug)]
 pub struct Key {
     coords: Coordinates,
-    hand: Hand,
-    finger: Finger,
+    finger_assignment: FingerAssignment,
     row: Row,
     is_resting_key: bool,
 }
@@ -119,8 +140,7 @@ impl RowSpec {
                 for j in 0..fc.count {
                     keys.push(Key {
                         coords: Coordinates { x, y: self.y },
-                        hand,
-                        finger: fc.finger,
+                        finger_assignment: FingerAssignment::new(hand, fc.finger),
                         row: self.row,
                         is_resting_key: fc.rest_at == Some(j),
                     });
@@ -141,9 +161,9 @@ impl RowSpec {
         left_size + right_size
     }
 
-    fn used_fingers(&self) -> impl IntoIterator<Item = (Hand, Finger)> {
-        let left = self.left.iter().map(|fc| (Hand::Left, fc.finger));
-        let right = self.right.iter().map(|fc| (Hand::Right, fc.finger));
+    fn used_fingers(&self) -> impl IntoIterator<Item = FingerAssignment> {
+        let left = self.left.iter().map(|fc| FingerAssignment::new(Hand::Left, fc.finger));
+        let right = self.right.iter().map(|fc| FingerAssignment::new(Hand::Right, fc.finger));
         left.chain(right)
     }
 }
@@ -198,12 +218,9 @@ impl<const N: usize> Geometry<N> {
     ) -> Result<[Option<KeyIndex>; N_FINGERS], String> {
         let mut default_placement: [Option<KeyIndex>; N_FINGERS] = [None; N_FINGERS];
         for (i, key) in keys.iter().enumerate().filter(|(_, key)| key.is_resting_key) {
-            let slot = key.hand.index() * Finger::COUNT + key.finger.index();
+            let slot = key.finger_assignment.index();
             if default_placement[slot].is_some() {
-                return Err(format!(
-                    "{}-{} has been already assigned to key",
-                    key.hand, key.finger
-                ));
+                return Err(format!("{} has been already assigned to key", key.finger_assignment));
             }
             default_placement[slot] = Some(i);
         }
@@ -218,9 +235,8 @@ impl<const N: usize> Geometry<N> {
         }
     }
 
-    pub fn default_key(&self, hand: Hand, finger: Finger) -> Option<&Key> {
-        let i = hand.index() * Finger::COUNT + finger.index();
-        match self.default_placement[i] {
+    pub fn default_key(&self, assignment: FingerAssignment) -> Option<&Key> {
+        match self.default_placement[assignment.index()] {
             Some(i) => Some(&self.keys[i]),
             None => None,
         }
@@ -230,8 +246,8 @@ impl<const N: usize> Geometry<N> {
         self.keys.get(idx).is_some_and(|key| key.row == Row::Home)
     }
 
-    pub fn hand_finger_of_key(&self, idx: KeyIndex) -> Option<(Hand, Finger)> {
-        self.keys.get(idx).map(|key| (key.hand, key.finger))
+    pub fn finger_assignment_of_key(&self, idx: KeyIndex) -> Option<FingerAssignment> {
+        self.keys.get(idx).map(|key| key.finger_assignment)
     }
 }
 
@@ -356,11 +372,11 @@ mod tests {
         for (i, key) in keys.iter().enumerate() {
             let expected_finger = order[i % n];
             if i < n {
-                assert_eq!(key.hand, Hand::Left);
+                assert_eq!(key.finger_assignment.hand, Hand::Left);
             } else {
-                assert_eq!(key.hand, Hand::Right);
+                assert_eq!(key.finger_assignment.hand, Hand::Right);
             }
-            assert_eq!(key.finger, expected_finger);
+            assert_eq!(key.finger_assignment.finger, expected_finger);
         }
     }
 
@@ -369,7 +385,7 @@ mod tests {
         let spec = RowSpec { left: vec![fc!(Finger::Pinky, 5)], ..test_row_spec() };
         let keys = spec.build_row();
         for key in keys.iter() {
-            assert_eq!(key.finger, Finger::Pinky);
+            assert_eq!(key.finger_assignment.finger, Finger::Pinky);
         }
     }
 
@@ -473,7 +489,10 @@ mod tests {
         let geometry = Geometry::<2>::new(specs);
         assert_eq!(
             geometry.err().unwrap(),
-            format!("{}-{} has been already assigned to key", Hand::Left, Finger::Pinky),
+            format!(
+                "{} has been already assigned to key",
+                FingerAssignment::new(Hand::Left, Finger::Pinky)
+            ),
         );
     }
 
@@ -522,14 +541,16 @@ mod tests {
         }];
         let geometry = Geometry::<2>::new(specs).unwrap();
 
-        let left_home = geometry.default_key(Hand::Left, Finger::Pinky).unwrap();
-        assert_eq!(left_home.hand, Hand::Left);
-        assert_eq!(left_home.finger, Finger::Pinky);
+        let left_home =
+            geometry.default_key(FingerAssignment::new(Hand::Left, Finger::Pinky)).unwrap();
+        assert_eq!(left_home.finger_assignment.hand, Hand::Left);
+        assert_eq!(left_home.finger_assignment.finger, Finger::Pinky);
         assert_eq!(left_home.coords.x, 0.0);
 
-        let right_home = geometry.default_key(Hand::Right, Finger::Index).unwrap();
-        assert_eq!(right_home.hand, Hand::Right);
-        assert_eq!(right_home.finger, Finger::Index);
+        let right_home =
+            geometry.default_key(FingerAssignment::new(Hand::Right, Finger::Index)).unwrap();
+        assert_eq!(right_home.finger_assignment.hand, Hand::Right);
+        assert_eq!(right_home.finger_assignment.finger, Finger::Index);
         assert_eq!(right_home.coords.x, 1.0);
     }
 
@@ -537,21 +558,22 @@ mod tests {
     fn geometry_new_assigns_none_within_not_defined_hand() {
         let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
         let geometry = Geometry::<1>::new(specs).unwrap();
-        assert!(geometry.default_key(Hand::Right, Finger::Pinky).is_none());
+        assert!(geometry.default_key(FingerAssignment::new(Hand::Right, Finger::Pinky)).is_none());
     }
 
     #[test]
     fn geometry_new_assigns_none_within_not_defined_finger() {
         let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
         let geometry = Geometry::<1>::new(specs).unwrap();
-        assert!(geometry.default_key(Hand::Left, Finger::Index).is_none());
+        assert!(geometry.default_key(FingerAssignment::new(Hand::Left, Finger::Index)).is_none());
     }
 
     #[test]
     fn geometry_new_assigns_default_placement_at_correct_index_within_finger() {
         let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 3, 2)], ..test_row_spec() }];
         let geometry = Geometry::<3>::new(specs).unwrap();
-        let home_key = geometry.default_key(Hand::Left, Finger::Pinky).unwrap();
+        let home_key =
+            geometry.default_key(FingerAssignment::new(Hand::Left, Finger::Pinky)).unwrap();
         assert_eq!(home_key.coords.x, 2.0);
     }
 
@@ -583,7 +605,7 @@ mod tests {
     }
 
     #[test]
-    fn hand_finger_of_key_returns_assignment_for_valid_index() {
+    fn finger_assignment_of_key_returns_assignment_for_valid_index() {
         let specs = [RowSpec {
             left: vec![fc!(Finger::Pinky, 1, 0), fc!(Finger::Ring, 1, 0)],
             right: vec![fc!(Finger::Index, 1, 0)],
@@ -591,16 +613,25 @@ mod tests {
         }];
         let geometry = Geometry::<3>::new(specs).unwrap();
 
-        assert_eq!(geometry.hand_finger_of_key(0), Some((Hand::Left, Finger::Pinky)));
-        assert_eq!(geometry.hand_finger_of_key(1), Some((Hand::Left, Finger::Ring)));
-        assert_eq!(geometry.hand_finger_of_key(2), Some((Hand::Right, Finger::Index)));
+        assert_eq!(
+            geometry.finger_assignment_of_key(0),
+            Some(FingerAssignment::new(Hand::Left, Finger::Pinky))
+        );
+        assert_eq!(
+            geometry.finger_assignment_of_key(1),
+            Some(FingerAssignment::new(Hand::Left, Finger::Ring))
+        );
+        assert_eq!(
+            geometry.finger_assignment_of_key(2),
+            Some(FingerAssignment::new(Hand::Right, Finger::Index))
+        );
     }
 
     #[test]
-    fn hand_finger_of_key_returns_none_for_invalid_index() {
+    fn finger_assignment_of_key_returns_none_for_invalid_index() {
         let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
         let geometry = Geometry::<1>::new(specs).unwrap();
 
-        assert_eq!(geometry.hand_finger_of_key(1), None);
+        assert_eq!(geometry.finger_assignment_of_key(1), None);
     }
 }
