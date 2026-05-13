@@ -11,3 +11,6 @@ any_ascii = "0.3.3"
 itertools = "0.14.0"
 rand = { version = "0.10.1", default-features = false, features = ["std"] }
 wasm-bindgen = "0.2.118"
+
+[dev-dependencies]
+rstest = "0.26.1"
