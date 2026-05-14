@@ -109,85 +109,92 @@ impl Default for Corpus<STANDARD_US_PRESS_COUNT> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
     fn press(base: u8, shifted: bool) -> KeyPress {
         KeyPress { base, shifted }
     }
 
-    #[test]
-    fn empty_input_creates_empty_corpus() {
-        let supported = [press(b'a', false), press(b'b', false)];
-
-        let corpus = Corpus::from_key_presses(supported, []).unwrap();
+    #[rstest]
+    #[case::empty_input(
+        [press(b'a', false), press(b'b', false)],
+        vec![],
+        [0, 0],
+        [[0, 0], [0, 0]],
+        0,
+        0
+    )]
+    #[case::single_press(
+        [press(b'a', false), press(b'b', false)],
+        vec![Some(press(b'b', false))],
+        [0, 1],
+        [[0, 0], [0, 0]],
+        1,
+        0
+    )]
+    #[case::bigrams(
+        [press(b'a', false), press(b'b', false)],
+        vec![Some(press(b'a', false)), Some(press(b'b', false)), Some(press(b'a', false))],
+        [2, 1],
+        [[0, 1], [1, 0]],
+        3,
+        2
+    )]
+    #[case::separator_resets_bigram_chain(
+        [press(b'a', false), press(b'b', false)],
+        vec![Some(press(b'a', false)), None, Some(press(b'b', false))],
+        [1, 1],
+        [[0, 0], [0, 0]],
+        2,
+        0
+    )]
+    #[case::shifted_and_unshifted_are_counted_separately(
+        [press(b'a', false), press(b'a', true)],
+        vec![Some(press(b'a', false)), Some(press(b'a', true))],
+        [1, 1],
+        [[0, 1], [0, 0]],
+        2,
+        1
+    )]
+    fn from_key_presses_counts_cases(
+        #[case] supported: [KeyPress; 2],
+        #[case] input: Vec<Option<KeyPress>>,
+        #[case] expected_unigrams: [usize; 2],
+        #[case] expected_bigrams: [[usize; 2]; 2],
+        #[case] expected_total_chars: usize,
+        #[case] expected_total_bigrams: usize,
+    ) {
+        let corpus = Corpus::from_key_presses(supported, input).unwrap();
 
         assert_eq!(corpus.supported_presses, supported);
-        assert_eq!(corpus.unigrams, [0, 0]);
-        assert_eq!(corpus.bigrams, [[0, 0], [0, 0]]);
-        assert_eq!(corpus.total_chars, 0);
-        assert_eq!(corpus.total_bigrams, 0);
+        assert_eq!(corpus.unigrams, expected_unigrams);
+        assert_eq!(corpus.bigrams, expected_bigrams);
+        assert_eq!(corpus.total_chars, expected_total_chars);
+        assert_eq!(corpus.total_bigrams, expected_total_bigrams);
     }
 
-    #[test]
-    fn single_press_counts_unigram_without_bigram() {
-        let corpus = Corpus::from_key_presses(
-            [press(b'a', false), press(b'b', false)],
-            [Some(press(b'b', false))],
-        )
-        .unwrap();
+    #[rstest]
+    #[case::duplicate_supported_press(
+        [press(b'a', false), press(b'a', false)],
+        vec![],
+        CorpusError::DuplicateSupportedKeyPress(press(b'a', false))
+    )]
+    #[case::unsupported_input_press(
+        [press(b'a', false), press(b'b', false)],
+        vec![Some(press(b'c', true))],
+        CorpusError::UnsupportedKeyPress(press(b'c', true))
+    )]
+    fn from_key_presses_returns_error(
+        #[case] supported: [KeyPress; 2],
+        #[case] input: Vec<Option<KeyPress>>,
+        #[case] expected: CorpusError,
+    ) {
+        let result = Corpus::from_key_presses(supported, input);
 
-        assert_eq!(corpus.unigrams, [0, 1]);
-        assert_eq!(corpus.bigrams, [[0, 0], [0, 0]]);
-        assert_eq!(corpus.total_chars, 1);
-        assert_eq!(corpus.total_bigrams, 0);
-    }
-
-    #[test]
-    fn counts_bigrams() {
-        let a = press(b'a', false);
-        let b = press(b'b', false);
-        let corpus = Corpus::from_key_presses([a, b], [Some(a), Some(b), Some(a)]).unwrap();
-
-        assert_eq!(corpus.unigrams, [2, 1]);
-        assert_eq!(corpus.bigrams, [[0, 1], [1, 0]]);
-        assert_eq!(corpus.total_chars, 3);
-        assert_eq!(corpus.total_bigrams, 2);
-    }
-
-    #[test]
-    fn none_prevents_bigram_across_separator() {
-        let a = press(b'a', false);
-        let b = press(b'b', false);
-        let corpus = Corpus::from_key_presses([a, b], [Some(a), None, Some(b)]).unwrap();
-
-        assert_eq!(corpus.unigrams, [1, 1]);
-        assert_eq!(corpus.bigrams, [[0, 0], [0, 0]]);
-        assert_eq!(corpus.total_chars, 2);
-        assert_eq!(corpus.total_bigrams, 0);
-    }
-
-    #[test]
-    fn duplicate_supported_press_returns_error() {
-        let duplicated = press(b'a', false);
-
-        let result = Corpus::from_key_presses([duplicated, duplicated], []);
-
-        assert!(matches!(
-            result,
-            Err(CorpusError::DuplicateSupportedKeyPress(found)) if found == duplicated
-        ));
-    }
-
-    #[test]
-    fn unsupported_input_press_returns_error() {
-        let unsupported = press(b'c', true);
-
-        let result =
-            Corpus::from_key_presses([press(b'a', false), press(b'b', false)], [Some(unsupported)]);
-
-        assert!(matches!(
-            result,
-            Err(CorpusError::UnsupportedKeyPress(found)) if found == unsupported
-        ));
+        match result {
+            Err(error) => assert_eq!(error, expected),
+            Ok(_) => panic!("expected {expected:?}"),
+        }
     }
 
     #[test]
@@ -204,23 +211,6 @@ mod tests {
     }
 
     #[test]
-    fn shifted_and_unshifted_presses_are_counted_separately() {
-        let unshifted_a = press(b'a', false);
-        let shifted_a = press(b'a', true);
-
-        let corpus = Corpus::from_key_presses(
-            [unshifted_a, shifted_a],
-            [Some(unshifted_a), Some(shifted_a)],
-        )
-        .unwrap();
-
-        assert_eq!(corpus.unigrams, [1, 1]);
-        assert_eq!(corpus.bigrams, [[0, 1], [0, 0]]);
-        assert_eq!(corpus.total_chars, 2);
-        assert_eq!(corpus.total_bigrams, 1);
-    }
-
-    #[test]
     fn from_text_standard_us_empty_input_creates_empty_standard_us_corpus() {
         let corpus = Corpus::from_text_standard_us("");
 
@@ -231,36 +221,30 @@ mod tests {
         assert!(corpus.bigrams.iter().flatten().all(|&count| count == 0));
     }
 
-    #[test]
-    fn from_text_standard_us_counts_base_and_shifted_presses() {
-        let corpus = Corpus::from_text_standard_us("aA!");
-        let unshifted_a = corpus.index_of(press(b'a', false)).unwrap();
-        let shifted_a = corpus.index_of(press(b'a', true)).unwrap();
-        let shifted_1 = corpus.index_of(press(b'1', true)).unwrap();
+    #[rstest]
+    #[case::base_and_shifted_presses(
+        "aA!",
+        [press(b'a', false), press(b'a', true), press(b'1', true)]
+    )]
+    #[case::normalizes_text_before_counting(
+        "Ą a!",
+        [press(b'a', true), press(b'a', false), press(b'1', true)]
+    )]
+    fn from_text_standard_us_counts_normalized_presses(
+        #[case] input: &str,
+        #[case] expected_sequence: [KeyPress; 3],
+    ) {
+        let corpus = Corpus::from_text_standard_us(input);
+        let expected_indices =
+            expected_sequence.map(|key_press| corpus.index_of(key_press).unwrap());
 
         assert_eq!(corpus.total_chars, 3);
         assert_eq!(corpus.total_bigrams, 2);
-        assert_eq!(corpus.unigrams[unshifted_a], 1);
-        assert_eq!(corpus.unigrams[shifted_a], 1);
-        assert_eq!(corpus.unigrams[shifted_1], 1);
-        assert_eq!(corpus.bigrams[unshifted_a][shifted_a], 1);
-        assert_eq!(corpus.bigrams[shifted_a][shifted_1], 1);
-    }
-
-    #[test]
-    fn from_text_standard_us_normalizes_text_before_counting() {
-        let corpus = Corpus::from_text_standard_us("Ą a!");
-        let shifted_a = corpus.index_of(press(b'a', true)).unwrap();
-        let unshifted_a = corpus.index_of(press(b'a', false)).unwrap();
-        let shifted_1 = corpus.index_of(press(b'1', true)).unwrap();
-
-        assert_eq!(corpus.total_chars, 3);
-        assert_eq!(corpus.total_bigrams, 2);
-        assert_eq!(corpus.unigrams[shifted_a], 1);
-        assert_eq!(corpus.unigrams[unshifted_a], 1);
-        assert_eq!(corpus.unigrams[shifted_1], 1);
-        assert_eq!(corpus.bigrams[shifted_a][unshifted_a], 1);
-        assert_eq!(corpus.bigrams[unshifted_a][shifted_1], 1);
+        for &index in &expected_indices {
+            assert_eq!(corpus.unigrams[index], 1);
+        }
+        assert_eq!(corpus.bigrams[expected_indices[0]][expected_indices[1]], 1);
+        assert_eq!(corpus.bigrams[expected_indices[1]][expected_indices[2]], 1);
     }
 
     #[test]
