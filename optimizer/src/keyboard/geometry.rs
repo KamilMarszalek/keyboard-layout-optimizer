@@ -333,6 +333,7 @@ impl Geometry<KEY_COUNT> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
     fn test_row_spec() -> RowSpec {
         RowSpec { left: vec![], right: vec![], x_offset: 0.0, y: 0.0, row: Row::Home }
@@ -458,25 +459,16 @@ mod tests {
         assert!(geometry.is_ok());
     }
 
-    #[test]
-    fn geometry_new_fails_when_total_is_less_than_n() {
-        let specs = [RowSpec {
-            left: vec![fc!(Finger::Pinky, 1, 0)],
-            right: vec![fc!(Finger::Index, 1, 0)],
-            ..test_row_spec()
-        }];
+    #[rstest]
+    #[case::less_than_n(vec![fc!(Finger::Pinky, 1, 0)], vec![fc!(Finger::Index, 1, 0)])]
+    #[case::greater_than_n(vec![fc!(Finger::Pinky, 2)], vec![fc!(Finger::Index, 2)])]
+    fn geometry_new_fails_when_total_does_not_match_n(
+        #[case] left: Vec<FingerCount>,
+        #[case] right: Vec<FingerCount>,
+    ) {
+        let specs = [RowSpec { left, right, ..test_row_spec() }];
         let geometry = Geometry::<3>::new(specs);
-        assert_eq!(geometry.err().unwrap(), "Specs must define exactly 3 keys");
-    }
 
-    #[test]
-    fn geometry_new_fails_when_total_is_greater_than_n() {
-        let specs = [RowSpec {
-            left: vec![fc!(Finger::Pinky, 2)],
-            right: vec![fc!(Finger::Index, 2)],
-            ..test_row_spec()
-        }];
-        let geometry = Geometry::<3>::new(specs);
         assert_eq!(geometry.err().unwrap(), "Specs must define exactly 3 keys");
     }
 
@@ -541,31 +533,25 @@ mod tests {
         }];
         let geometry = Geometry::<2>::new(specs).unwrap();
 
-        let left_home =
-            geometry.default_key(FingerAssignment::new(Hand::Left, Finger::Pinky)).unwrap();
-        assert_eq!(left_home.finger_assignment.hand, Hand::Left);
-        assert_eq!(left_home.finger_assignment.finger, Finger::Pinky);
-        assert_eq!(left_home.coords.x, 0.0);
-
-        let right_home =
-            geometry.default_key(FingerAssignment::new(Hand::Right, Finger::Index)).unwrap();
-        assert_eq!(right_home.finger_assignment.hand, Hand::Right);
-        assert_eq!(right_home.finger_assignment.finger, Finger::Index);
-        assert_eq!(right_home.coords.x, 1.0);
+        let cases = [
+            (FingerAssignment::new(Hand::Left, Finger::Pinky), 0.0),
+            (FingerAssignment::new(Hand::Right, Finger::Index), 1.0),
+        ];
+        for (assignment, expected_x) in cases {
+            let home_key = geometry.default_key(assignment).unwrap();
+            assert_eq!(home_key.finger_assignment, assignment);
+            assert_eq!(home_key.coords.x, expected_x);
+        }
     }
 
-    #[test]
-    fn geometry_new_assigns_none_within_not_defined_hand() {
+    #[rstest]
+    #[case::not_defined_hand(FingerAssignment::new(Hand::Right, Finger::Pinky))]
+    #[case::not_defined_finger(FingerAssignment::new(Hand::Left, Finger::Index))]
+    fn geometry_new_assigns_none_for_not_defined_assignment(#[case] assignment: FingerAssignment) {
         let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
         let geometry = Geometry::<1>::new(specs).unwrap();
-        assert!(geometry.default_key(FingerAssignment::new(Hand::Right, Finger::Pinky)).is_none());
-    }
 
-    #[test]
-    fn geometry_new_assigns_none_within_not_defined_finger() {
-        let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
-        let geometry = Geometry::<1>::new(specs).unwrap();
-        assert!(geometry.default_key(FingerAssignment::new(Hand::Left, Finger::Index)).is_none());
+        assert!(geometry.default_key(assignment).is_none());
     }
 
     #[test]
@@ -583,16 +569,17 @@ mod tests {
         assert_eq!(geometry.keys.len(), KEY_COUNT);
     }
 
-    #[test]
-    fn geometry_standard_us_preserves_row_sizes() {
+    #[rstest]
+    #[case::number(Row::Number, 13)]
+    #[case::top(Row::Top, 13)]
+    #[case::home(Row::Home, 11)]
+    #[case::bottom(Row::Bottom, 10)]
+    fn geometry_standard_us_preserves_row_sizes(#[case] row: Row, #[case] expected_size: usize) {
         let geometry = Geometry::standard_us();
 
-        let row_size = |row| geometry.keys.iter().filter(|key| key.row == row).count();
+        let row_size = geometry.keys.iter().filter(|key| key.row == row).count();
 
-        assert_eq!(row_size(Row::Number), 13);
-        assert_eq!(row_size(Row::Top), 13);
-        assert_eq!(row_size(Row::Home), 11);
-        assert_eq!(row_size(Row::Bottom), 10);
+        assert_eq!(row_size, expected_size);
     }
 
     #[test]
@@ -613,18 +600,14 @@ mod tests {
         }];
         let geometry = Geometry::<3>::new(specs).unwrap();
 
-        assert_eq!(
-            geometry.finger_assignment_of_key(0),
-            Some(FingerAssignment::new(Hand::Left, Finger::Pinky))
-        );
-        assert_eq!(
-            geometry.finger_assignment_of_key(1),
-            Some(FingerAssignment::new(Hand::Left, Finger::Ring))
-        );
-        assert_eq!(
-            geometry.finger_assignment_of_key(2),
-            Some(FingerAssignment::new(Hand::Right, Finger::Index))
-        );
+        let cases = [
+            (0, FingerAssignment::new(Hand::Left, Finger::Pinky)),
+            (1, FingerAssignment::new(Hand::Left, Finger::Ring)),
+            (2, FingerAssignment::new(Hand::Right, Finger::Index)),
+        ];
+        for (key_idx, assignment) in cases {
+            assert_eq!(geometry.finger_assignment_of_key(key_idx), Some(assignment));
+        }
     }
 
     #[test]
