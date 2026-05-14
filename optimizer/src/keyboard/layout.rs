@@ -100,6 +100,7 @@ impl Layout<KEY_COUNT> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
     fn test_modifier() -> Modifier {
         Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap()
@@ -109,25 +110,18 @@ mod tests {
         Layout::new(b"ab", &test_modifier()).unwrap()
     }
 
-    #[test]
-    fn layout_new_fails_when_empty_symbols() {
-        let modifer = test_modifier();
-        let layout = Layout::new(&[], &modifer);
+    fn assert_layout_new_rejects_symbols<const N: usize>(symbols: &[AsciiChar; N]) {
+        let modifier = test_modifier();
+        let layout = Layout::new(symbols, &modifier);
+
         assert_eq!(layout.err().unwrap(), "Provided symbols do not match modifier's base symbols");
     }
 
     #[test]
-    fn layout_new_fails_when_incomplete_symbols() {
-        let modifer = test_modifier();
-        let layout = Layout::new(b"a", &modifer);
-        assert_eq!(layout.err().unwrap(), "Provided symbols do not match modifier's base symbols");
-    }
-
-    #[test]
-    fn layout_new_fails_when_too_many_symbols() {
-        let modifer = test_modifier();
-        let layout = Layout::new(b"abc", &modifer);
-        assert_eq!(layout.err().unwrap(), "Provided symbols do not match modifier's base symbols");
+    fn layout_new_rejects_non_matching_symbols() {
+        assert_layout_new_rejects_symbols(&[]);
+        assert_layout_new_rejects_symbols(b"a");
+        assert_layout_new_rejects_symbols(b"abc");
     }
 
     #[test]
@@ -159,26 +153,38 @@ mod tests {
         }
     }
 
-    #[test]
-    fn layout_swap_updates_mappings() {
+    #[rstest]
+    #[case::first_key(0, KeySymbol { base: b'b', shifted: b'B' })]
+    #[case::second_key(1, KeySymbol { base: b'a', shifted: b'A' })]
+    fn layout_swap_updates_mappings(#[case] key: KeyIndex, #[case] expected: KeySymbol) {
         let mut layout = test_layout();
 
         layout.swap(0, 1);
 
-        assert_eq!(layout.mappings[0], KeySymbol { base: b'b', shifted: b'B' });
-        assert_eq!(layout.mappings[1], KeySymbol { base: b'a', shifted: b'A' });
+        assert_eq!(layout.mappings[key], expected);
     }
 
-    #[test]
-    fn layout_swap_updates_symbol_to_key() {
+    #[rstest]
+    #[case::base_a(b'a', Some(1))]
+    #[case::shifted_a(b'A', Some(1))]
+    #[case::base_b(b'b', Some(0))]
+    #[case::shifted_b(b'B', Some(0))]
+    fn layout_swap_updates_symbol_to_key(
+        #[case] symbol: AsciiChar,
+        #[case] expected_key: Option<KeyIndex>,
+    ) {
         let mut layout = test_layout();
 
         layout.swap(0, 1);
 
-        assert_eq!(layout.key_of(b'a'), Some(1));
-        assert_eq!(layout.key_of(b'A'), Some(1));
-        assert_eq!(layout.key_of(b'b'), Some(0));
-        assert_eq!(layout.key_of(b'B'), Some(0));
+        assert_eq!(layout.key_of(symbol), expected_key);
+    }
+
+    fn assert_original_symbol_to_key(layout: &Layout<2>) {
+        assert_eq!(layout.key_of(b'a'), Some(0));
+        assert_eq!(layout.key_of(b'A'), Some(0));
+        assert_eq!(layout.key_of(b'b'), Some(1));
+        assert_eq!(layout.key_of(b'B'), Some(1));
     }
 
     #[test]
@@ -189,10 +195,7 @@ mod tests {
         layout.swap(0, 0);
 
         assert_eq!(layout.mappings, before);
-        assert_eq!(layout.key_of(b'a'), Some(0));
-        assert_eq!(layout.key_of(b'A'), Some(0));
-        assert_eq!(layout.key_of(b'b'), Some(1));
-        assert_eq!(layout.key_of(b'B'), Some(1));
+        assert_original_symbol_to_key(&layout);
     }
 
     #[test]
@@ -204,10 +207,7 @@ mod tests {
         layout.swap(0, 1);
 
         assert_eq!(layout.mappings, before);
-        assert_eq!(layout.key_of(b'a'), Some(0));
-        assert_eq!(layout.key_of(b'A'), Some(0));
-        assert_eq!(layout.key_of(b'b'), Some(1));
-        assert_eq!(layout.key_of(b'B'), Some(1));
+        assert_original_symbol_to_key(&layout);
     }
 
     #[test]
