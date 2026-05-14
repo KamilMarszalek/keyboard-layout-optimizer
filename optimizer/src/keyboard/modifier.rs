@@ -175,22 +175,29 @@ impl Modifier {
 mod tests {
     use super::*;
     use crate::keyboard::common::KEY_COUNT;
+    use rstest::rstest;
 
-    #[test]
-    fn shift_supported() {
+    #[rstest]
+    #[case::letter_a(b'a', b'A')]
+    #[case::letter_z(b'z', b'Z')]
+    #[case::digit_1(b'1', b'!')]
+    #[case::slash(b'/', b'?')]
+    fn shift_supported(#[case] base: AsciiChar, #[case] shifted: AsciiChar) {
         let modifier =
             Modifier::new([(b'a', b'A'), (b'z', b'Z'), (b'1', b'!'), (b'/', b'?')]).unwrap();
-        assert_eq!(modifier.shift(b'a').unwrap(), b'A');
-        assert_eq!(modifier.shift(b'z').unwrap(), b'Z');
-        assert_eq!(modifier.shift(b'1').unwrap(), b'!');
-        assert_eq!(modifier.shift(b'/').unwrap(), b'?');
+
+        assert_eq!(modifier.shift(base).unwrap(), shifted);
     }
 
-    #[test]
-    fn shift_unsupported() {
+    #[rstest]
+    #[case::shifted_base(b'B')]
+    #[case::missing_base(b'/')]
+    fn shift_unsupported(#[case] base: AsciiChar) {
         let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
-        assert!(matches!(modifier.shift(b'B'), Err(ModifierError::UnsupportedBase(b'B'))));
-        assert!(matches!(modifier.shift(b'/'), Err(ModifierError::UnsupportedBase(b'/'))));
+
+        assert!(
+            matches!(modifier.shift(base), Err(ModifierError::UnsupportedBase(found)) if found == base)
+        );
     }
 
     #[test]
@@ -210,22 +217,17 @@ mod tests {
         }
     }
 
-    #[test]
-    fn key_press() {
+    #[rstest]
+    #[case::base_letter(b'a', KeyPress { base: b'a', shifted: false })]
+    #[case::shifted_letter(b'A', KeyPress { base: b'a', shifted: true })]
+    #[case::base_digit(b'1', KeyPress { base: b'1', shifted: false })]
+    #[case::shifted_digit(b'!', KeyPress { base: b'1', shifted: true })]
+    #[case::base_punctuation(b'/', KeyPress { base: b'/', shifted: false })]
+    #[case::shifted_punctuation(b'?', KeyPress { base: b'/', shifted: true })]
+    fn key_press(#[case] symbol: AsciiChar, #[case] expected: KeyPress) {
         let modifier = Modifier::standard_us();
 
-        let cases = [
-            (b'a', KeyPress { base: b'a', shifted: false }),
-            (b'A', KeyPress { base: b'a', shifted: true }),
-            (b'1', KeyPress { base: b'1', shifted: false }),
-            (b'!', KeyPress { base: b'1', shifted: true }),
-            (b'/', KeyPress { base: b'/', shifted: false }),
-            (b'?', KeyPress { base: b'/', shifted: true }),
-        ];
-
-        for (symbol, expected) in cases {
-            assert_eq!(modifier.key_press_of(symbol), Some(expected));
-        }
+        assert_eq!(modifier.key_press_of(symbol), Some(expected));
     }
 
     #[test]
@@ -242,32 +244,27 @@ mod tests {
         assert_eq!(modifier.base_symbols(), [b'a', b'1', b'/']);
     }
 
-    #[test]
-    fn modifier_new_returns_error_for_duplicate_base() {
-        let result = Modifier::new([(b'a', b'A'), (b'a', b'@')]);
+    #[rstest]
+    #[case::duplicate_base(vec![(b'a', b'A'), (b'a', b'@')], ModifierError::DuplicateBase(b'a'))]
+    #[case::duplicate_shifted(
+        vec![(b'a', b'!'), (b'1', b'!')],
+        ModifierError::DuplicateShifted(b'!')
+    )]
+    #[case::base_also_shifted(
+        vec![(b'a', b'A'), (b'A', b'!')],
+        ModifierError::AmbiguousSymbol(b'A')
+    )]
+    #[case::base_matches_shifted(vec![(b'a', b'a')], ModifierError::AmbiguousSymbol(b'a'))]
+    fn modifier_new_returns_error(
+        #[case] shift_pairs: Vec<(AsciiChar, AsciiChar)>,
+        #[case] expected: ModifierError,
+    ) {
+        let result = Modifier::new(shift_pairs);
 
-        assert!(matches!(result, Err(ModifierError::DuplicateBase(b'a'))));
-    }
-
-    #[test]
-    fn modifier_new_returns_error_for_duplicate_shifted_symbol() {
-        let result = Modifier::new([(b'a', b'!'), (b'1', b'!')]);
-
-        assert!(matches!(result, Err(ModifierError::DuplicateShifted(b'!'))));
-    }
-
-    #[test]
-    fn modifier_new_returns_error_when_symbol_is_base_and_shifted() {
-        let result = Modifier::new([(b'a', b'A'), (b'A', b'!')]);
-
-        assert!(matches!(result, Err(ModifierError::AmbiguousSymbol(b'A'))));
-    }
-
-    #[test]
-    fn modifier_new_returns_error_when_base_matches_shifted_symbol() {
-        let result = Modifier::new([(b'a', b'a')]);
-
-        assert!(matches!(result, Err(ModifierError::AmbiguousSymbol(b'a'))));
+        match result {
+            Err(error) => assert_eq!(error, expected),
+            Ok(_) => panic!("expected {expected:?}"),
+        }
     }
 
     #[test]
