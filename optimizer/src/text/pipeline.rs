@@ -20,49 +20,44 @@ pub fn map_normalized_text_to_key_presses(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::rstest;
 
-    #[test]
-    fn normalize_text_transliterates_non_ascii_characters() {
-        let result = normalize_text("Ąłą");
-        assert_eq!(result, "Ala");
+    #[rstest]
+    #[case::transliterates_non_ascii_characters("Ąłą", "Ala")]
+    #[case::preserves_case_digits_and_punctuation_but_removes_spaces("ma Kota! 123", "maKota!123")]
+    fn normalize_text_cases(#[case] input: &str, #[case] expected: &str) {
+        let result = normalize_text(input);
+
+        assert_eq!(result, expected);
     }
 
-    #[test]
-    fn normalize_text_preserves_case_digits_and_punctuation_but_removes_spaces() {
-        let result = normalize_text("ma Kota! 123");
-        assert_eq!(result, "maKota!123");
-    }
-}
-
-#[test]
-fn map_normalized_text_to_key_presses_maps_supported_symbols() {
-    let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
-
-    let result: Vec<_> = map_normalized_text_to_key_presses("aA1!", &modifier).collect();
-
-    assert_eq!(
-        result,
+    #[rstest]
+    #[case::supported_symbols(
+        Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap(),
+        "aA1!",
         vec![
             Some(KeyPress { base: b'a', shifted: false }),
             Some(KeyPress { base: b'a', shifted: true }),
             Some(KeyPress { base: b'1', shifted: false }),
             Some(KeyPress { base: b'1', shifted: true }),
         ]
-    );
-}
-
-#[test]
-fn map_normalized_text_to_key_presses_returns_none_for_unsupported_symbols() {
-    let modifier = Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap();
-
-    let result: Vec<_> = map_normalized_text_to_key_presses("a b", &modifier).collect();
-
-    assert_eq!(
-        result,
+    )]
+    #[case::unsupported_symbols_reset_to_none(
+        Modifier::new([(b'a', b'A'), (b'b', b'B')]).unwrap(),
+        "a b",
         vec![
             Some(KeyPress { base: b'a', shifted: false }),
             None,
             Some(KeyPress { base: b'b', shifted: false }),
         ]
-    );
+    )]
+    fn map_normalized_text_to_key_presses_cases(
+        #[case] modifier: Modifier,
+        #[case] input: &str,
+        #[case] expected: Vec<Option<KeyPress>>,
+    ) {
+        let result: Vec<_> = map_normalized_text_to_key_presses(input, &modifier).collect();
+
+        assert_eq!(result, expected);
+    }
 }
