@@ -1,5 +1,8 @@
 use crate::{
-    keyboard::{geometry::FingerAssignment, model::Keyboard},
+    keyboard::{
+        geometry::{FingerAssignment, Row},
+        model::Keyboard,
+    },
     text::corpus::Corpus,
 };
 
@@ -93,75 +96,101 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
     /// combined into a single scalar cost.
     pub fn evaluate_breakdown(&self, keyboard: &Keyboard<N>) -> MetricBreakdown {
         MetricBreakdown {
-            same_finger_bigrams: self.same_finger_bigrams(keyboard),
             finger_distance: self.finger_distance(keyboard),
             home_row_usage: self.home_row_usage(keyboard),
+            same_finger_bigrams: self.same_finger_bigrams(keyboard),
             hand_alternation: self.hand_alternation(keyboard),
             row_jumping: self.row_jumping(keyboard),
         }
     }
 
-    /// Computes the same-finger bigrams metric.
-    fn same_finger_bigrams(&self, keyboard: &Keyboard<N>) -> f64 {
-        if self.corpus.total_bigrams == 0 {
-            return 0.0;
-        }
-
-        let press_fingers = self.press_fingers(keyboard);
-        let mut same_finger_total = 0;
-        for (prev_idx, current_counts) in self.corpus.bigrams.iter().enumerate() {
-            let Some(prev_finger) = press_fingers[prev_idx] else {
-                continue;
-            };
-            for (curr_idx, &count) in current_counts.iter().enumerate() {
-                if press_fingers[curr_idx] == Some(prev_finger) {
-                    same_finger_total += count;
-                }
-            }
-        }
-
-        same_finger_total as f64 / self.corpus.total_bigrams as f64
-    }
-
-    fn press_fingers(&self, keyboard: &Keyboard<N>) -> [Option<FingerAssignment>; P] {
-        std::array::from_fn(|idx| {
-            let press = self.corpus.supported_presses[idx];
-            let key_idx = keyboard.layout.key_of(press.base)?;
-            keyboard.geometry.finger_assignment_of_key(key_idx)
-        })
-    }
-
-    /// Computes the finger distance metric.
     fn finger_distance(&self, _keyboard: &Keyboard<N>) -> f64 {
         todo!()
     }
-    /// Computes the home-row usage metric.
+
     fn home_row_usage(&self, keyboard: &Keyboard<N>) -> f64 {
         if self.corpus.total_chars == 0 {
             return 0.0;
         }
 
-        let home_row_total: usize = self
-            .corpus
-            .supported_presses
-            .iter()
-            .zip(self.corpus.unigrams.iter())
-            .filter_map(|(press, count)| {
-                let key_idx = keyboard.layout.key_of(press.base)?;
-                keyboard.geometry.is_home_row_key(key_idx).then_some(*count)
-            })
-            .sum();
+        let mut home_row_total = 0;
+
+        for (press, count) in self.corpus.supported_presses.iter().zip(&self.corpus.unigrams) {
+            let Some(key_idx) = keyboard.layout.key_of(press.base) else {
+                continue;
+            };
+
+            let Some(key) = keyboard.geometry.key(key_idx) else {
+                continue;
+            };
+
+            if key.row == Row::Home {
+                home_row_total += count;
+            }
+        }
 
         home_row_total as f64 / self.corpus.total_chars as f64
     }
 
-    /// Computes the hand alternation metric.
-    fn hand_alternation(&self, _keyboard: &Keyboard<N>) -> f64 {
-        todo!()
+    fn same_finger_bigrams(&self, keyboard: &Keyboard<N>) -> f64 {
+        let key_finger_assignments = self.key_finger_assignments(keyboard);
+        self.bigrams_metric(|idx| key_finger_assignments[idx], |a, b| a == b)
     }
-    /// Computes the row jumping metric.
-    fn row_jumping(&self, _keyboard: &Keyboard<N>) -> f64 {
-        todo!()
+
+    fn hand_alternation(&self, keyboard: &Keyboard<N>) -> f64 {
+        let key_finger_assignments = self.key_finger_assignments(keyboard);
+        self.bigrams_metric(|idx| key_finger_assignments[idx], |a, b| a.hand != b.hand)
+    }
+
+    fn row_jumping(&self, keyboard: &Keyboard<N>) -> f64 {
+        let key_row_assignment = self.key_row_assignments(keyboard);
+        self.bigrams_metric(|idx| key_row_assignment[idx], |a, b| a.order().abs_diff(b.order()) > 1)
+    }
+
+    fn bigrams_metric<T, M, F>(&self, mapper: M, predicate: F) -> f64
+    where
+        M: Fn(usize) -> Option<T>,
+        F: Fn(&T, &T) -> bool,
+    {
+        if self.corpus.total_bigrams == 0 {
+            return 0.0;
+        }
+
+        let mut metric = 0;
+
+        for (first_idx, second_chars) in self.corpus.bigrams.iter().enumerate() {
+            let Some(first) = mapper(first_idx) else {
+                continue;
+            };
+
+            for (second_idx, &count) in second_chars.iter().enumerate() {
+                let Some(second) = mapper(second_idx) else {
+                    continue;
+                };
+
+                if predicate(&first, &second) {
+                    metric += count;
+                }
+            }
+        }
+
+        metric as f64 / self.corpus.total_bigrams as f64
+    }
+
+    fn key_finger_assignments(&self, keyboard: &Keyboard<N>) -> [Option<FingerAssignment>; P] {
+        std::array::from_fn(|idx| {
+            let press = self.corpus.supported_presses[idx];
+            let key_idx = keyboard.layout.key_of(press.base)?;
+            keyboard.geometry.key(key_idx).map(|key| key.finger_assignment)
+        })
+    }
+
+    fn key_row_assignments(&self, keyboard: &Keyboard<N>) -> [Option<Row>; P] {
+        std::array::from_fn(|idx| {
+            let press = self.corpus.supported_presses[idx];
+            let key_idx = keyboard.layout.key_of(press.base)?;
+            keyboard.geometry.key(key_idx).map(|key| key.row)
+        })
     }
 }
 
@@ -169,6 +198,8 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
 mod tests {
     use super::*;
     use rstest::rstest;
+
+    const TOL: f64 = 1e-12;
 
     #[rstest]
     #[case::empty_corpus("", 0.0)]
@@ -181,10 +212,7 @@ mod tests {
 
         let actual = cost.home_row_usage(&keyboard);
 
-        assert!(
-            (actual - expected).abs() < 1e-12,
-            "input {input:?}: expected {expected}, got {actual}"
-        );
+        assert!((actual - expected).abs() < 1e-12,);
     }
 
     #[test]
@@ -204,6 +232,8 @@ mod tests {
     #[case::empty_corpus("", 0.0)]
     #[case::repeated_same_key("aa", 1.0)]
     #[case::shifted_and_unshifted_same_key("aA", 1.0)]
+    #[case::same_finger_different_keys("1qaz", 1.0)]
+    #[case::same_finger_different_hands("1=q]a'z/", 0.0)]
     #[case::different_fingers("af", 0.0)]
     #[case::mixed_bigrams("aqs", 0.5)]
     fn same_finger_bigrams_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
@@ -214,7 +244,7 @@ mod tests {
         let actual = cost.same_finger_bigrams(&keyboard);
 
         assert!(
-            (actual - expected).abs() < 1e-12,
+            (actual - expected).abs() < TOL,
             "input {input:?}: expected {expected}, got {actual}"
         );
     }
@@ -230,5 +260,41 @@ mod tests {
         let cost = WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us("as"));
 
         assert_eq!(cost.same_finger_bigrams(&keyboard), 1.0);
+    }
+
+    #[rstest]
+    #[case::empty_corpus("", 0.0)]
+    #[case::repeated_same_key("aaa", 0.0)]
+    #[case::shifted_and_unshifted_key("aA", 0.0)]
+    #[case::hands_used_alternately("alalal", 1.0)]
+    #[case::semi_alternation("aal", 0.5)]
+    fn hand_alternation_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
+        let keyboard = Keyboard::standard_us();
+        let cost =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+
+        let actual = cost.hand_alternation(&keyboard);
+
+        assert!(
+            (actual - expected).abs() < TOL,
+            "input {input:?}: expected {expected}, got {actual}"
+        );
+    }
+
+    #[rstest]
+    #[case::empty_corpus("", 0.0)]
+    #[case::row_jump("qz", 1.0)]
+    #[case::key_in_middle("qlz", 0.0)] // There is no jump - we assume that finger goes back to default placement
+    fn row_jumping_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
+        let keyboard = Keyboard::standard_us();
+        let cost =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+
+        let actual = cost.row_jumping(&keyboard);
+
+        assert!(
+            (actual - expected).abs() < TOL,
+            "input {input:?}: expected {expected}, got {actual}"
+        );
     }
 }

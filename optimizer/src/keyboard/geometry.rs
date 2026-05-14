@@ -11,6 +11,17 @@ pub enum Row {
     Bottom,
 }
 
+impl Row {
+    pub fn order(&self) -> usize {
+        match self {
+            Row::Number => 0,
+            Row::Top => 1,
+            Row::Home => 2,
+            Row::Bottom => 3,
+        }
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum Hand {
     Left,
@@ -109,17 +120,17 @@ macro_rules! fc {
 #[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub struct Coordinates {
-    x: f32,
-    y: f32,
+    pub x: f32,
+    pub y: f32,
 }
 
 #[allow(dead_code)]
 #[derive(Debug)]
 pub struct Key {
-    coords: Coordinates,
-    finger_assignment: FingerAssignment,
-    row: Row,
-    is_resting_key: bool,
+    pub coords: Coordinates,
+    pub finger_assignment: FingerAssignment,
+    pub row: Row,
+    pub is_resting_key: bool,
 }
 
 struct RowSpec {
@@ -235,19 +246,15 @@ impl<const N: usize> Geometry<N> {
         }
     }
 
+    pub fn key(&self, idx: KeyIndex) -> Option<&Key> {
+        self.keys.get(idx)
+    }
+
     pub fn default_key(&self, assignment: FingerAssignment) -> Option<&Key> {
         match self.default_placement[assignment.index()] {
             Some(i) => Some(&self.keys[i]),
             None => None,
         }
-    }
-
-    pub fn is_home_row_key(&self, idx: usize) -> bool {
-        self.keys.get(idx).is_some_and(|key| key.row == Row::Home)
-    }
-
-    pub fn finger_assignment_of_key(&self, idx: KeyIndex) -> Option<FingerAssignment> {
-        self.keys.get(idx).map(|key| key.finger_assignment)
     }
 }
 
@@ -580,41 +587,5 @@ mod tests {
         let row_size = geometry.keys.iter().filter(|key| key.row == row).count();
 
         assert_eq!(row_size, expected_size);
-    }
-
-    #[test]
-    fn geometry_is_home_row() {
-        let geometry = Geometry::standard_us();
-        assert_eq!(
-            (0..=46).map(|x| geometry.is_home_row_key(x)).collect::<Vec<_>>(),
-            (0..=46).map(|x| matches!(x, 26..=36)).collect::<Vec<_>>()
-        );
-    }
-
-    #[test]
-    fn finger_assignment_of_key_returns_assignment_for_valid_index() {
-        let specs = [RowSpec {
-            left: vec![fc!(Finger::Pinky, 1, 0), fc!(Finger::Ring, 1, 0)],
-            right: vec![fc!(Finger::Index, 1, 0)],
-            ..test_row_spec()
-        }];
-        let geometry = Geometry::<3>::new(specs).unwrap();
-
-        let cases = [
-            (0, FingerAssignment::new(Hand::Left, Finger::Pinky)),
-            (1, FingerAssignment::new(Hand::Left, Finger::Ring)),
-            (2, FingerAssignment::new(Hand::Right, Finger::Index)),
-        ];
-        for (key_idx, assignment) in cases {
-            assert_eq!(geometry.finger_assignment_of_key(key_idx), Some(assignment));
-        }
-    }
-
-    #[test]
-    fn finger_assignment_of_key_returns_none_for_invalid_index() {
-        let specs = [RowSpec { left: vec![fc!(Finger::Pinky, 1, 0)], ..test_row_spec() }];
-        let geometry = Geometry::<1>::new(specs).unwrap();
-
-        assert_eq!(geometry.finger_assignment_of_key(1), None);
     }
 }
