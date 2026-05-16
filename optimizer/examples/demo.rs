@@ -1,6 +1,6 @@
 use optimizer::annealing::sa::{AnnealingConfig, simulated_annealing};
 use optimizer::keyboard::layout::Layout;
-use optimizer::preset::keyboard_preset::qwerty_us;
+use optimizer::preset::qwerty_us::qwerty_us;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
