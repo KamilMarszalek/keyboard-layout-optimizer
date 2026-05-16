@@ -1,6 +1,6 @@
 use crate::{
     keyboard::{
-        geometry::{FingerAssignment, Row},
+        geometry::{Coordinates, Key, Row},
         model::Keyboard,
     },
     text::corpus::Corpus,
@@ -104,92 +104,117 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
         }
     }
 
-    fn finger_distance(&self, _keyboard: &Keyboard<N>) -> f64 {
-        todo!()
+    fn finger_distance(&self, keyboard: &Keyboard<N>) -> f64 {
+        let max_distance = keyboard.geometry.max_finger_distance();
+        let distance = Coordinates::euclidean_distance;
+        self.bigrams_metric(
+            keyboard,
+            |_, _| true,
+            |count, a, b| {
+                let cost = match a.finger_assignment == b.finger_assignment {
+                    true => distance(a.coords, b.coords) / max_distance,
+                    false => {
+                        let a_default = keyboard.geometry.default_key(a.finger_assignment).unwrap();
+                        let b_default = keyboard.geometry.default_key(b.finger_assignment).unwrap();
+                        (distance(a.coords, a_default.coords)
+                            + distance(b.coords, b_default.coords))
+                            / (2.0 * max_distance)
+                    }
+                };
+                count as f64 * cost
+            },
+        )
     }
 
     fn home_row_usage(&self, keyboard: &Keyboard<N>) -> f64 {
+        self.unigram_metric(keyboard, |a| a.row == Row::Home, |count, _| count as f64)
+    }
+
+    fn same_finger_bigrams(&self, keyboard: &Keyboard<N>) -> f64 {
+        self.bigrams_metric(
+            keyboard,
+            |a, b| a.finger_assignment == b.finger_assignment,
+            |count, _, _| count as f64,
+        )
+    }
+
+    fn hand_alternation(&self, keyboard: &Keyboard<N>) -> f64 {
+        self.bigrams_metric(
+            keyboard,
+            |a, b| a.finger_assignment.hand != b.finger_assignment.hand,
+            |count, _, _| count as f64,
+        )
+    }
+
+    fn row_jumping(&self, keyboard: &Keyboard<N>) -> f64 {
+        self.bigrams_metric(
+            keyboard,
+            |a, b| a.row.order().abs_diff(b.row.order()) > 1,
+            |count, _, _| count as f64,
+        )
+    }
+
+    fn unigram_metric<F, W>(&self, keyboard: &Keyboard<N>, predicate: F, extractor: W) -> f64
+    where
+        F: Fn(&Key) -> bool,
+        W: Fn(usize, &Key) -> f64,
+    {
         if self.corpus.total_chars == 0 {
             return 0.0;
         }
 
-        let mut home_row_total = 0;
+        let key_assignments = self.key_assignments(keyboard);
+        let mut metric = 0.0;
 
-        for (press, count) in self.corpus.supported_presses.iter().zip(&self.corpus.unigrams) {
-            let Some(key_idx) = keyboard.layout.key_of(press.base) else {
+        for (idx, count) in self.corpus.unigrams.iter().enumerate() {
+            let Some(object) = key_assignments[idx] else {
                 continue;
             };
 
-            let Some(key) = keyboard.geometry.key(key_idx) else {
-                continue;
-            };
-
-            if key.row == Row::Home {
-                home_row_total += count;
+            if predicate(&object) {
+                metric += extractor(*count, &object);
             }
         }
 
-        home_row_total as f64 / self.corpus.total_chars as f64
+        metric / self.corpus.total_chars as f64
     }
 
-    fn same_finger_bigrams(&self, keyboard: &Keyboard<N>) -> f64 {
-        let key_finger_assignments = self.key_finger_assignments(keyboard);
-        self.bigrams_metric(|idx| key_finger_assignments[idx], |a, b| a == b)
-    }
-
-    fn hand_alternation(&self, keyboard: &Keyboard<N>) -> f64 {
-        let key_finger_assignments = self.key_finger_assignments(keyboard);
-        self.bigrams_metric(|idx| key_finger_assignments[idx], |a, b| a.hand != b.hand)
-    }
-
-    fn row_jumping(&self, keyboard: &Keyboard<N>) -> f64 {
-        let key_row_assignment = self.key_row_assignments(keyboard);
-        self.bigrams_metric(|idx| key_row_assignment[idx], |a, b| a.order().abs_diff(b.order()) > 1)
-    }
-
-    fn bigrams_metric<T, M, F>(&self, mapper: M, predicate: F) -> f64
+    fn bigrams_metric<F, W>(&self, keyboard: &Keyboard<N>, predicate: F, extractor: W) -> f64
     where
-        M: Fn(usize) -> Option<T>,
-        F: Fn(&T, &T) -> bool,
+        F: Fn(&Key, &Key) -> bool,
+        W: Fn(usize, &Key, &Key) -> f64,
     {
         if self.corpus.total_bigrams == 0 {
             return 0.0;
         }
 
-        let mut metric = 0;
+        let key_assignments = self.key_assignments(keyboard);
+        let mut metric = 0.0;
 
         for (first_idx, second_chars) in self.corpus.bigrams.iter().enumerate() {
-            let Some(first) = mapper(first_idx) else {
+            let Some(first) = key_assignments[first_idx] else {
                 continue;
             };
 
             for (second_idx, &count) in second_chars.iter().enumerate() {
-                let Some(second) = mapper(second_idx) else {
+                let Some(second) = key_assignments[second_idx] else {
                     continue;
                 };
 
                 if predicate(&first, &second) {
-                    metric += count;
+                    metric += extractor(count, &first, &second);
                 }
             }
         }
 
-        metric as f64 / self.corpus.total_bigrams as f64
+        metric / self.corpus.total_bigrams as f64
     }
 
-    fn key_finger_assignments(&self, keyboard: &Keyboard<N>) -> [Option<FingerAssignment>; P] {
+    fn key_assignments<'a>(&self, keyboard: &'a Keyboard<N>) -> [Option<&'a Key>; P] {
         std::array::from_fn(|idx| {
             let press = self.corpus.supported_presses[idx];
             let key_idx = keyboard.layout.key_of(press.base)?;
-            keyboard.geometry.key(key_idx).map(|key| key.finger_assignment)
-        })
-    }
-
-    fn key_row_assignments(&self, keyboard: &Keyboard<N>) -> [Option<Row>; P] {
-        std::array::from_fn(|idx| {
-            let press = self.corpus.supported_presses[idx];
-            let key_idx = keyboard.layout.key_of(press.base)?;
-            keyboard.geometry.key(key_idx).map(|key| key.row)
+            keyboard.geometry.key(key_idx)
         })
     }
 }

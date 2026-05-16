@@ -1,5 +1,7 @@
 use core::fmt;
+
 use itertools::Itertools;
+use std::collections::HashMap;
 
 use super::common::{KEY_COUNT, KeyIndex};
 
@@ -117,11 +119,16 @@ macro_rules! fc {
     };
 }
 
-#[allow(dead_code)]
 #[derive(Clone, Copy, Debug)]
 pub struct Coordinates {
-    pub x: f32,
-    pub y: f32,
+    pub x: f64,
+    pub y: f64,
+}
+
+impl Coordinates {
+    pub fn euclidean_distance(a: Coordinates, b: Coordinates) -> f64 {
+        ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
+    }
 }
 
 #[allow(dead_code)]
@@ -136,8 +143,8 @@ pub struct Key {
 struct RowSpec {
     left: Vec<FingerCount>,
     right: Vec<FingerCount>,
-    x_offset: f32,
-    y: f32,
+    x_offset: f64,
+    y: f64,
     row: Row,
 }
 
@@ -244,6 +251,29 @@ impl<const N: usize> Geometry<N> {
                 filled, n_fingers
             )),
         }
+    }
+
+    pub fn max_finger_distance(&self) -> f64 {
+        let mut buckets: HashMap<FingerAssignment, Vec<&Key>> = HashMap::new();
+
+        for key in self.keys.iter() {
+            buckets.entry(key.finger_assignment).or_default().push(key);
+        }
+
+        let mut max_distance: f64 = 0.0;
+        for (_, keys) in buckets.iter() {
+            let length = keys.len();
+            for i in 0..length {
+                for j in (i + 1)..length {
+                    max_distance = f64::max(
+                        max_distance,
+                        Coordinates::euclidean_distance(keys[i].coords, keys[j].coords),
+                    );
+                }
+            }
+        }
+
+        max_distance
     }
 
     pub fn key(&self, idx: KeyIndex) -> Option<&Key> {
