@@ -171,8 +171,8 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
                 continue;
             };
 
-            if predicate(&object) {
-                metric += extractor(*count, &object);
+            if predicate(object) {
+                metric += extractor(*count, object);
             }
         }
 
@@ -201,8 +201,8 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
                     continue;
                 };
 
-                if predicate(&first, &second) {
-                    metric += extractor(count, &first, &second);
+                if predicate(first, second) {
+                    metric += extractor(count, first, second);
                 }
             }
         }
