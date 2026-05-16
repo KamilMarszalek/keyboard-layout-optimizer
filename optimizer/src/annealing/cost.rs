@@ -227,6 +227,45 @@ mod tests {
     const TOL: f64 = 1e-12;
 
     #[rstest]
+    #[case::empty_corpus("")]
+    #[case::single_char("a")]
+    #[case::same_key_repeat("aa")]
+    #[case::different_fingers("qw")]
+    #[case::same_finger("1q")]
+    #[case::short_word("hello")]
+    #[case::longer_text("the quick brown fox jumps over the lazy dog")]
+    fn finger_distance_is_normalized(#[case] input: &str) {
+        let keyboard = Keyboard::standard_us();
+        let cost =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+
+        let actual = cost.finger_distance(&keyboard);
+
+        assert!(
+            (0.0..=1.0).contains(&actual),
+            "input {input:?}: expected value in [0,1], got {actual}"
+        );
+    }
+
+    #[rstest]
+    #[case::same_finger_farther_than_closer("qz", "1q", true)]
+    #[case::same_finger_farther_than_different_finger("qz", "qw", true)]
+    #[case::different_finger_farther_than_resting("qw", "as", true)]
+    #[case::both_on_resting_keys_equal("as", "df", false)]
+    fn finger_distance_relations(#[case] input1: &str, #[case] input2: &str, #[case] result: bool) {
+        let keyboard = Keyboard::standard_us();
+        let cost1 =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input1));
+        let cost2 =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input2));
+
+        let d1 = cost1.finger_distance(&keyboard);
+        let d2 = cost2.finger_distance(&keyboard);
+
+        assert_eq!((d1 > d2), result, "d1={d1}, d2={d2}, input1={input1:?}, input2={input2:?}");
+    }
+
+    #[rstest]
     #[case::empty_corpus("", 0.0)]
     #[case::base_and_shifted_home_row_presses("aAqQ", 0.5)]
     #[case::all_presses_on_home_row("asdfjkl;ASDFJKL:", 1.0)]
@@ -316,6 +355,23 @@ mod tests {
             WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
 
         let actual = cost.row_jumping(&keyboard);
+
+        assert!(
+            (actual - expected).abs() < TOL,
+            "input {input:?}: expected {expected}, got {actual}"
+        );
+    }
+
+    #[rstest]
+    #[case::empty_corpus("", 0.0)]
+    #[case::single_char("a", 0.0)]
+    #[case::same_key("aa", 0.0)]
+    fn finger_distance_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
+        let keyboard = Keyboard::standard_us();
+        let cost =
+            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+
+        let actual = cost.finger_distance(&keyboard);
 
         assert!(
             (actual - expected).abs() < TOL,
