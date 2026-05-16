@@ -94,6 +94,11 @@ impl<const P: usize> Corpus<P> {
 
 #[cfg(test)]
 mod tests {
+    use crate::{
+        keyboard::modifier::Modifier,
+        preset::{constants::US_PRESS_COUNT, qwerty_us::qwerty_us},
+    };
+
     use super::*;
     use rstest::rstest;
 
@@ -216,11 +221,11 @@ mod tests {
         "Ą a!",
         [press(b'a', true), press(b'a', false), press(b'1', true)]
     )]
-    fn from_text_standard_us_counts_normalized_presses(
+    fn preset_corpus_from_text_counts_normalized_presses(
         #[case] input: &str,
         #[case] expected_sequence: [KeyPress; 3],
     ) {
-        let corpus = Corpus::from_text_standard_us(input);
+        let corpus = qwerty_us().corpus_from_text(input).unwrap();
         let expected_indices =
             expected_sequence.map(|key_press| corpus.index_of(key_press).unwrap());
 

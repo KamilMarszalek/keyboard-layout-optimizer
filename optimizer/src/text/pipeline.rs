@@ -19,6 +19,8 @@ pub fn map_normalized_text_to_key_presses(
 
 #[cfg(test)]
 mod tests {
+    use crate::keyboard::modifier::Modifier;
+
     use super::*;
     use rstest::rstest;
 
