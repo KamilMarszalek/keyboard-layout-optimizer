@@ -42,7 +42,7 @@ pub fn dvorak_us() -> KeyboardPreset<US_KEY_COUNT, US_PRESS_COUNT> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keyboard::model::KeyPress;
+    use crate::keyboard::model::{KeyPress, Keyboard};
 
     #[test]
     fn dvorak_us_reuses_us_ascii_modifier_with_different_symbol_placement() {
@@ -56,5 +56,13 @@ mod tests {
         assert_eq!(keyboard.layout.key_of(b's'), Some(35));
         assert!(corpus.index_of(KeyPress { base: b'a', shifted: false }).is_some());
         assert!(corpus.index_of(KeyPress { base: b'1', shifted: true }).is_some());
+    }
+
+    #[test]
+    fn dvorak_preset_keyboard_matches_direct_keyboard_constructor() {
+        let preset_keyboard = dvorak_us().keyboard();
+        let direct_keyboard = Keyboard::dvorak_us();
+
+        assert_eq!(preset_keyboard.layout, direct_keyboard.layout);
     }
 }

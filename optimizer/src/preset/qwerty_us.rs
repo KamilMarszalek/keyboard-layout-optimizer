@@ -42,7 +42,7 @@ pub fn qwerty_us() -> KeyboardPreset<US_KEY_COUNT, US_PRESS_COUNT> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keyboard::model::KeyPress;
+    use crate::keyboard::model::{KeyPress, Keyboard};
 
     #[test]
     fn qwerty_us_composes_keyboard_and_corpus() {
@@ -55,5 +55,13 @@ mod tests {
         assert!(corpus.index_of(KeyPress { base: b'a', shifted: false }).is_some());
         assert!(corpus.index_of(KeyPress { base: b'a', shifted: true }).is_some());
         assert!(corpus.index_of(KeyPress { base: b'1', shifted: true }).is_some());
+    }
+
+    #[test]
+    fn qwerty_preset_keyboard_matches_direct_keyboard_constructor() {
+        let preset_keyboard = qwerty_us().keyboard();
+        let direct_keyboard = Keyboard::qwerty_us();
+
+        assert_eq!(preset_keyboard.layout, direct_keyboard.layout);
     }
 }
