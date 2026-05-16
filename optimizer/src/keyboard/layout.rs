@@ -231,4 +231,18 @@ mod tests {
 
         assert_eq!(layout_symbols, modifier_symbols);
     }
+
+    #[rstest]
+    #[case::qwerty_top_q(Layout::qwerty_us(&Modifier::standard_us()), b'q', 13)]
+    #[case::qwerty_home_a(Layout::qwerty_us(&Modifier::standard_us()), b'a', 26)]
+    #[case::dvorak_home_a(Layout::dvorak_us(&Modifier::standard_us()), b'a', 26)]
+    #[case::dvorak_home_o(Layout::dvorak_us(&Modifier::standard_us()), b'o', 27)]
+    #[case::dvorak_home_s(Layout::dvorak_us(&Modifier::standard_us()), b's', 35)]
+    fn preset_layout_places_symbols_at_expected_keys(
+        #[case] layout: Layout<{ US_KEY_COUNT }>,
+        #[case] symbol: AsciiChar,
+        #[case] expected_key: KeyIndex,
+    ) {
+        assert_eq!(layout.key_of(symbol), Some(expected_key));
+    }
 }
