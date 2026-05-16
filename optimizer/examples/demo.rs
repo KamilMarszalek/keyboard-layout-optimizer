@@ -1,12 +1,16 @@
 use optimizer::annealing::sa::{AnnealingConfig, simulated_annealing};
 use optimizer::keyboard::layout::Layout;
+use optimizer::preset::keyboard_preset::qwerty_us;
 use rand::SeedableRng;
 use rand::rngs::SmallRng;
 
 fn us_mismatch_cost<const N: usize>(layout: &Layout<N>) -> f64 {
-    let qwerty = Layout::standard_us();
-    layout.mappings_iter().zip(qwerty.mappings_iter()).filter(|(a, b)| a.base != b.base).count()
-        as f64
+    let qwerty = qwerty_us();
+    layout
+        .mappings_iter()
+        .zip(qwerty.layout.mappings_iter())
+        .filter(|(a, b)| a.base != b.base)
+        .count() as f64
 }
 
 fn main() {
@@ -15,13 +19,13 @@ fn main() {
 
     let mut rng = SmallRng::seed_from_u64(1);
 
-    let mut initial = Layout::standard_us();
-    initial.swap(0, 1);
-    initial.swap(2, 3);
+    let mut initial = qwerty_us();
+    initial.layout.swap(0, 1);
+    initial.layout.swap(2, 3);
 
-    let initial_cost = us_mismatch_cost(&initial);
+    let initial_cost = us_mismatch_cost(&initial.layout);
 
-    let result = simulated_annealing(initial, &config, &mut rng, us_mismatch_cost);
+    let result = simulated_annealing(initial.layout, &config, &mut rng, us_mismatch_cost);
 
     println!("Keyboard Layout Optimizer demo");
     println!("Initial cost: {initial_cost}");
