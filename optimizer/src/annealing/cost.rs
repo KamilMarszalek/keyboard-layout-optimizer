@@ -68,9 +68,6 @@ impl MetricBreakdown {
 /// `WeightedCost` combines a text corpus and user-provided metric weights.
 /// It can evaluate a keyboard layout and return either a single scalar cost
 /// or a detailed metric breakdown.
-///
-/// The individual metric implementations are currently placeholders and will
-/// be completed in the next project milestone.
 #[allow(dead_code)]
 pub struct WeightedCost<const N: usize, const P: usize> {
     weights: MetricWeights,
@@ -106,6 +103,9 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
 
     fn finger_distance(&self, keyboard: &Keyboard<N>) -> f64 {
         let max_distance = keyboard.geometry.max_fingers_distance();
+        if max_distance <= 0.0 {
+            return 0.0;
+        }
         let distance = Coordinates::euclidean_distance;
         self.bigrams_metric(
             keyboard,
