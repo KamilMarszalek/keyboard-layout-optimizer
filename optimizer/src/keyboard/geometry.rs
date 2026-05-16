@@ -3,7 +3,7 @@ use core::fmt;
 use itertools::Itertools;
 use std::collections::HashMap;
 
-use super::common::{KEY_COUNT, KeyIndex};
+use super::common::{KeyIndex, US_KEY_COUNT};
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Row {
@@ -131,7 +131,7 @@ impl Coordinates {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Key {
     pub coords: Coordinates,
     pub finger_assignment: FingerAssignment,
@@ -190,6 +190,7 @@ impl RowSpec {
 /// Each key stores its row, hand, finger assignment, and approximate 2D position. `Geometry` does
 /// not define which symbols appear on those keys; it only describes the keyboard's physical
 /// structure. Keys are ordered from left to right within a row, and from top to bottom across rows.
+#[derive(Clone)]
 pub struct Geometry<const N: usize> {
     keys: [Key; N],
     default_placement: [Option<KeyIndex>; N_FINGERS],
@@ -286,7 +287,7 @@ impl<const N: usize> Geometry<N> {
     }
 }
 
-impl Geometry<KEY_COUNT> {
+impl Geometry<US_KEY_COUNT> {
     // Builds US ANSI-like geometry, containing `KEY_COUNT` keys that store visible ASCII symbols
     // ordered in 4 rows.
     pub fn standard_us() -> Self {
@@ -601,7 +602,7 @@ mod tests {
     #[test]
     fn geometry_standard_us_produces_key_count_keys() {
         let geometry = Geometry::standard_us();
-        assert_eq!(geometry.keys.len(), KEY_COUNT);
+        assert_eq!(geometry.keys.len(), US_KEY_COUNT);
     }
 
     #[rstest]
