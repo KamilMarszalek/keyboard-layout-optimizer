@@ -222,7 +222,7 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::preset::keyboard_preset;
+    use crate::preset::qwerty_us::qwerty_us;
     use rstest::rstest;
 
     const TOL: f64 = 1e-12;
@@ -271,7 +271,7 @@ mod tests {
     #[case::base_and_shifted_home_row_presses("aAqQ", 0.5)]
     #[case::all_presses_on_home_row("asdfjkl;ASDFJKL:", 1.0)]
     fn home_row_usage_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
-        let preset = keyboard_preset::qwerty_us();
+        let preset = qwerty_us();
         let keyboard = preset.keyboard();
         let cost =
             WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn home_row_usage_uses_current_layout_after_swap() {
-        let preset = keyboard_preset::qwerty_us();
+        let preset = qwerty_us();
         let mut keyboard = preset.keyboard();
 
         let a_key = keyboard.layout.key_of(b'a').unwrap();
@@ -305,7 +305,7 @@ mod tests {
     #[case::different_fingers("af", 0.0)]
     #[case::mixed_bigrams("aqs", 0.5)]
     fn same_finger_bigrams_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
-        let preset = keyboard_preset::qwerty_us();
+        let preset = qwerty_us();
         let keyboard = preset.keyboard();
         let cost =
             WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn same_finger_bigrams_uses_current_layout_after_swap() {
-        let preset = keyboard_preset::qwerty_us();
+        let preset = qwerty_us();
         let mut keyboard = preset.keyboard();
 
         let s_key = keyboard.layout.key_of(b's').unwrap();
