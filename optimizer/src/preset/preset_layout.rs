@@ -11,10 +11,4 @@ impl Layout<US_KEY_COUNT> {
     pub fn dvorak_us(modifier: &Modifier) -> Self {
         Self::new(&DVORAK_US_SYMBOLS, modifier).unwrap()
     }
-
-    /// Compatibility wrapper for the old preset-specific name.
-    pub fn standard_us() -> Self {
-        let modifier = Modifier::standard_us();
-        Self::qwerty_us(&modifier)
-    }
 }
