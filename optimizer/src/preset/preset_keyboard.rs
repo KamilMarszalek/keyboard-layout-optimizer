@@ -17,9 +17,4 @@ impl Keyboard<US_KEY_COUNT> {
         let layout = Layout::dvorak_us(&modifier);
         Self::new(geometry, layout)
     }
-
-    /// Compatibility wrapper for the old preset-specific name.
-    pub fn standard_us() -> Self {
-        Self::qwerty_us()
-    }
 }
