@@ -253,27 +253,11 @@ impl<const N: usize> Geometry<N> {
         }
     }
 
-    pub fn max_finger_distance(&self) -> f64 {
-        let mut buckets: HashMap<FingerAssignment, Vec<&Key>> = HashMap::new();
-
-        for key in self.keys.iter() {
-            buckets.entry(key.finger_assignment).or_default().push(key);
-        }
-
-        let mut max_distance: f64 = 0.0;
-        for (_, keys) in buckets.iter() {
-            let length = keys.len();
-            for i in 0..length {
-                for j in (i + 1)..length {
-                    max_distance = f64::max(
-                        max_distance,
-                        Coordinates::euclidean_distance(keys[i].coords, keys[j].coords),
-                    );
-                }
-            }
-        }
-
-        max_distance
+    pub fn max_fingers_distance(&self) -> f64 {
+        self.keys_by_fingers()
+            .values()
+            .map(|keys| self.max_pairwise_distance(keys))
+            .fold(0.0, f64::max)
     }
 
     pub fn key(&self, idx: KeyIndex) -> Option<&Key> {
@@ -285,6 +269,21 @@ impl<const N: usize> Geometry<N> {
             Some(i) => Some(&self.keys[i]),
             None => None,
         }
+    }
+
+    fn keys_by_fingers(&self) -> HashMap<FingerAssignment, Vec<&Key>> {
+        let mut buckets: HashMap<FingerAssignment, Vec<&Key>> = HashMap::new();
+        for key in self.keys.iter() {
+            buckets.entry(key.finger_assignment).or_default().push(key);
+        }
+        buckets
+    }
+
+    fn max_pairwise_distance(&self, keys: &[&Key]) -> f64 {
+        keys.iter()
+            .combinations(2)
+            .map(|pair| Coordinates::euclidean_distance(pair[0].coords, pair[1].coords))
+            .fold(0.0, f64::max)
     }
 }
 
@@ -617,5 +616,81 @@ mod tests {
         let row_size = geometry.keys.iter().filter(|key| key.row == row).count();
 
         assert_eq!(row_size, expected_size);
+    }
+
+    #[test]
+    fn max_distance_single_key_per_finger() {
+        let geometry = Geometry::<2>::new([RowSpec {
+            left: vec![fc!(Finger::Pinky, 1, 0)],
+            right: vec![fc!(Finger::Index, 1, 0)],
+            ..test_row_spec()
+        }])
+        .unwrap();
+
+        assert_eq!(geometry.max_fingers_distance(), 0.0);
+    }
+
+    #[test]
+    fn max_distance_two_keys_same_row() {
+        let geometry = Geometry::<2>::new([RowSpec {
+            left: vec![fc!(Finger::Pinky, 2, 0)],
+            right: vec![],
+            ..test_row_spec()
+        }])
+        .unwrap();
+
+        assert_eq!(geometry.max_fingers_distance(), 1.0);
+    }
+
+    #[test]
+    fn max_distance_across_rows() {
+        let geometry = Geometry::<2>::new([
+            RowSpec {
+                left: vec![fc!(Finger::Pinky, 1)],
+                right: vec![],
+                x_offset: 0.0,
+                y: 0.0,
+                row: Row::Top,
+            },
+            RowSpec {
+                left: vec![fc!(Finger::Pinky, 1, 0)],
+                right: vec![],
+                x_offset: 0.0,
+                y: 2.0,
+                row: Row::Home,
+            },
+        ])
+        .unwrap();
+
+        assert_eq!(geometry.max_fingers_distance(), 2.0);
+    }
+
+    #[test]
+    fn max_distance_across_fingers() {
+        let geometry = Geometry::<5>::new([
+            RowSpec {
+                left: vec![fc!(Finger::Pinky, 1)],
+                right: vec![],
+                x_offset: 0.0,
+                y: 0.0,
+                row: Row::Number,
+            },
+            RowSpec {
+                left: vec![fc!(Finger::Pinky, 2, 0), fc!(Finger::Index, 2, 0)],
+                right: vec![],
+                x_offset: 0.0,
+                y: 1.0,
+                row: Row::Home,
+            },
+        ])
+        .unwrap();
+        let buckets = geometry.keys_by_fingers();
+        let pinky_assignment = FingerAssignment { hand: Hand::Left, finger: Finger::Pinky };
+        let index_assignment = FingerAssignment { hand: Hand::Left, finger: Finger::Index };
+        let pinky_distance =
+            geometry.max_pairwise_distance(buckets.get(&pinky_assignment).unwrap());
+        let index_distance =
+            geometry.max_pairwise_distance(buckets.get(&index_assignment).unwrap());
+        assert!(pinky_distance > index_distance);
     }
 }

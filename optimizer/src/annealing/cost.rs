@@ -105,7 +105,7 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
     }
 
     fn finger_distance(&self, keyboard: &Keyboard<N>) -> f64 {
-        let max_distance = keyboard.geometry.max_finger_distance();
+        let max_distance = keyboard.geometry.max_fingers_distance();
         let distance = Coordinates::euclidean_distance;
         self.bigrams_metric(
             keyboard,
