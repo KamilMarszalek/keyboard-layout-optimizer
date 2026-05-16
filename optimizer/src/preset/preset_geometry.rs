@@ -1,6 +1,6 @@
 use super::constants::US_KEY_COUNT;
 use crate::fc;
-use crate::keyboard::geometry::{Finger, FingerCount, Geometry, Row, RowSpec};
+use crate::keyboard::geometry::{Finger, Geometry, Row, RowSpec};
 
 impl Geometry<US_KEY_COUNT> {
     // Builds US ANSI-like geometry, containing `KEY_COUNT` keys that store visible ASCII symbols

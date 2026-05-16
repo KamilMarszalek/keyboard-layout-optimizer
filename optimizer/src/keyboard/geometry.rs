@@ -112,11 +112,15 @@ pub struct FingerCount {
 #[macro_export]
 macro_rules! fc {
     ( $finger:expr, $count:expr ) => {
-        FingerCount { finger: $finger, count: $count, rest_at: None }
+        $crate::keyboard::geometry::FingerCount { finger: $finger, count: $count, rest_at: None }
     };
 
     ( $finger:expr, $count:expr, $rest_at:expr ) => {
-        FingerCount { finger: $finger, count: $count, rest_at: Some($rest_at) }
+        $crate::keyboard::geometry::FingerCount {
+            finger: $finger,
+            count: $count,
+            rest_at: Some($rest_at),
+        }
     };
 }
 
