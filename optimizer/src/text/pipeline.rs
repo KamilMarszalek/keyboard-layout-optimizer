@@ -1,6 +1,6 @@
 use any_ascii::any_ascii;
 
-use crate::keyboard::{model::KeyPress, modifier::Modifier};
+use crate::keyboard::{model::KeyPress, modifier::KeyPressMapper};
 
 /// Normalizes `input` text
 ///
@@ -12,9 +12,9 @@ pub fn normalize_text(input: &str) -> String {
 
 pub fn map_normalized_text_to_key_presses(
     normalized: &str,
-    modifier: &Modifier,
+    mapper: &impl KeyPressMapper,
 ) -> impl Iterator<Item = Option<KeyPress>> {
-    normalized.bytes().map(|c| modifier.key_press_of(c))
+    normalized.bytes().map(|c| mapper.key_press_of(c))
 }
 
 #[cfg(test)]

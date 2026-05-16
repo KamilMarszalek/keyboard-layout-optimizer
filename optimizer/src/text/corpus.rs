@@ -1,7 +1,7 @@
 use crate::{
     keyboard::{
         model::KeyPress,
-        modifier::{Modifier, STANDARD_US_PRESS_COUNT, SupportedPressesError},
+        modifier::{KeyPressMapper, SupportedPressesError},
     },
     text::pipeline::{map_normalized_text_to_key_presses, normalize_text},
 };
@@ -29,11 +29,11 @@ pub enum CorpusError {
 }
 
 impl<const P: usize> Corpus<P> {
-    /// Builds a corpus from text input and modifier
-    pub fn from_text(input: &str, modifier: &Modifier) -> Result<Self, CorpusError> {
+    /// Builds a corpus from text input and a key press mapper.
+    pub fn from_text(input: &str, mapper: &impl KeyPressMapper) -> Result<Self, CorpusError> {
         let normalized_input = normalize_text(input);
-        let supported = modifier.supported_presses().map_err(CorpusError::SupportedPresses)?;
-        let presses = map_normalized_text_to_key_presses(&normalized_input, modifier);
+        let supported = mapper.supported_presses::<P>().map_err(CorpusError::SupportedPresses)?;
+        let presses = map_normalized_text_to_key_presses(&normalized_input, mapper);
         Corpus::from_key_presses(supported, presses)
     }
     /// Builds a corpus from a sequence of logical key presses.
@@ -89,20 +89,6 @@ impl<const P: usize> Corpus<P> {
             total_chars: 0,
             total_bigrams: 0,
         })
-    }
-}
-
-impl Corpus<STANDARD_US_PRESS_COUNT> {
-    pub fn from_text_standard_us(input: &str) -> Self {
-        let modifier = Modifier::standard_us();
-        Self::from_text(input, &modifier)
-            .expect("standard US modifier should produce a valid corpus")
-    }
-}
-
-impl Default for Corpus<STANDARD_US_PRESS_COUNT> {
-    fn default() -> Self {
-        Self::from_text_standard_us("")
     }
 }
 
@@ -211,10 +197,10 @@ mod tests {
     }
 
     #[test]
-    fn from_text_standard_us_empty_input_creates_empty_standard_us_corpus() {
-        let corpus = Corpus::from_text_standard_us("");
+    fn preset_corpus_from_text_empty_input_creates_empty_qwerty_us_corpus() {
+        let corpus = qwerty_us().corpus_from_text("").unwrap();
 
-        assert_eq!(corpus.supported_presses.len(), STANDARD_US_PRESS_COUNT);
+        assert_eq!(corpus.supported_presses.len(), US_PRESS_COUNT);
         assert_eq!(corpus.total_chars, 0);
         assert_eq!(corpus.total_bigrams, 0);
         assert!(corpus.unigrams.iter().all(|&count| count == 0));

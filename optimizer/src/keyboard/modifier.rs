@@ -1,10 +1,7 @@
-use crate::keyboard::{common::KEY_COUNT, model::KeyPress};
+use crate::keyboard::{common::AsciiChar, model::KeyPress};
 
-use super::common::AsciiChar;
 use core::fmt;
 use std::collections::HashMap;
-
-pub const STANDARD_US_PRESS_COUNT: usize = 2 * KEY_COUNT;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum ModifierError {
@@ -46,15 +43,21 @@ impl fmt::Display for ModifierError {
 /// is applied to a base key symbol (`a` -> `A`, `1` -> `!`). It also supports
 /// reverse lookup from an input symbol to a [`KeyPress`], preserving whether Shift
 /// is required.
+#[derive(Clone)]
 pub struct Modifier {
     encode: HashMap<AsciiChar, AsciiChar>,
     decode: HashMap<AsciiChar, KeyPress>,
     symbols: Vec<AsciiChar>,
 }
 
+pub trait KeyPressMapper {
+    fn supported_presses<const P: usize>(&self) -> Result<[KeyPress; P], SupportedPressesError>;
+    fn key_press_of(&self, symbol: AsciiChar) -> Option<KeyPress>;
+}
+
 impl Modifier {
     /// Builds a modifier from `(base, shifted)` symbol pairs.
-    pub(crate) fn new<I>(shift_pairs: I) -> Result<Self, ModifierError>
+    pub fn new<I>(shift_pairs: I) -> Result<Self, ModifierError>
     where
         I: IntoIterator<Item = (AsciiChar, AsciiChar)>,
     {
@@ -97,40 +100,6 @@ impl Modifier {
         &self.symbols
     }
 
-    /// Returns the standard US Shift mapping for the main printable keyboard symbols.
-    /// This includes lowercase Latin letters, digits, and punctuation used by the
-    /// main alphanumeric section of a US keyboard layout.
-    pub fn standard_us() -> Self {
-        let letter_pairs = (b'a'..=b'z').map(|c| (c, c.to_ascii_uppercase()));
-
-        let punctuation_pairs = [
-            (b'1', b'!'),
-            (b'2', b'@'),
-            (b'3', b'#'),
-            (b'4', b'$'),
-            (b'5', b'%'),
-            (b'6', b'^'),
-            (b'7', b'&'),
-            (b'8', b'*'),
-            (b'9', b'('),
-            (b'0', b')'),
-            (b'-', b'_'),
-            (b'=', b'+'),
-            (b'[', b'{'),
-            (b']', b'}'),
-            (b'\\', b'|'),
-            (b';', b':'),
-            (b'\'', b'"'),
-            (b',', b'<'),
-            (b'.', b'>'),
-            (b'/', b'?'),
-            (b'`', b'~'),
-        ];
-
-        Self::new(letter_pairs.chain(punctuation_pairs))
-            .expect("standard US modifier mapping is valid")
-    }
-
     /// Converts an input symbol to a logical key press.
     ///
     /// Base symbols are returned with `shifted=false`, while shifted symbols are
@@ -171,6 +140,16 @@ impl Modifier {
     }
 }
 
+impl KeyPressMapper for Modifier {
+    fn supported_presses<const P: usize>(&self) -> Result<[KeyPress; P], SupportedPressesError> {
+        Modifier::supported_presses::<P>(self)
+    }
+
+    fn key_press_of(&self, symbol: AsciiChar) -> Option<KeyPress> {
+        Modifier::key_press_of(self, symbol)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -206,15 +185,6 @@ mod tests {
         let mut symbols: Vec<AsciiChar> = modifier.base_symbols().to_vec();
         symbols.sort();
         assert_eq!(symbols, [b'1', b'a']);
-    }
-
-    #[test]
-    fn standard_us() {
-        let modifier = Modifier::standard_us();
-        assert_eq!(modifier.base_symbols().len(), KEY_COUNT);
-        for &symbol in modifier.base_symbols().iter() {
-            modifier.shift(symbol).unwrap();
-        }
     }
 
     #[rstest]

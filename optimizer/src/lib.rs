@@ -9,6 +9,7 @@
 
 pub mod annealing;
 pub mod keyboard;
+pub mod preset;
 pub mod text;
 
 #[cfg(target_arch = "wasm32")]

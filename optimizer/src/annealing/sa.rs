@@ -105,6 +105,8 @@ fn should_accept_worse(delta: f64, temperature: f64, rng: &mut impl Rng) -> bool
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::keyboard::modifier::Modifier;
+    use crate::preset::constants::US_KEY_COUNT;
     use rand::rngs::SmallRng;
     use rand::{RngExt, SeedableRng};
 
@@ -125,8 +127,13 @@ mod tests {
         simulated_annealing(initial, config, &mut rng, cost_func)
     }
 
+    fn qwerty_us_layout() -> Layout<{ US_KEY_COUNT }> {
+        let modifier = Modifier::standard_us();
+        Layout::qwerty_us(&modifier)
+    }
+
     fn us_mismatch_cost<const N: usize>(layout: &Layout<N>) -> f64 {
-        let qwerty = Layout::standard_us();
+        let qwerty = qwerty_us_layout();
         layout.mappings_iter().zip(qwerty.mappings_iter()).filter(|(a, b)| a.base != b.base).count()
             as f64
     }
@@ -146,7 +153,7 @@ mod tests {
 
     #[test]
     fn sa_best_cost_is_not_worse_than_initial_cost() {
-        let mut layout = Layout::standard_us();
+        let mut layout = qwerty_us_layout();
         scramble_layout(&mut layout, 42, 10);
         let initial_cost = us_mismatch_cost(&layout);
         let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
@@ -161,7 +168,7 @@ mod tests {
 
     #[test]
     fn cost_history_is_non_increasing() {
-        let mut layout = Layout::standard_us();
+        let mut layout = qwerty_us_layout();
         scramble_layout(&mut layout, 42, 10);
         let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
         let is_non_increasing = result.cost_history.windows(2).all(|w| w[0] >= w[1]);
@@ -176,8 +183,8 @@ mod tests {
     #[test]
     fn same_seed_gives_same_result() {
         let config = test_config();
-        let result_a = run_sa(Layout::standard_us(), &config, 7, us_mismatch_cost);
-        let result_b = run_sa(Layout::standard_us(), &config, 7, us_mismatch_cost);
+        let result_a = run_sa(qwerty_us_layout(), &config, 7, us_mismatch_cost);
+        let result_b = run_sa(qwerty_us_layout(), &config, 7, us_mismatch_cost);
 
         assert_eq!(result_a.best_cost, result_b.best_cost);
         assert_eq!(result_a.best_layout, result_b.best_layout);
@@ -186,7 +193,7 @@ mod tests {
 
     #[test]
     fn best_cost_matches_best_layout() {
-        let mut layout = Layout::standard_us();
+        let mut layout = qwerty_us_layout();
         scramble_layout(&mut layout, 42, 10);
         let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
 
@@ -195,7 +202,7 @@ mod tests {
 
     #[test]
     fn cost_history_starts_with_initial_cost() {
-        let mut layout = Layout::standard_us();
+        let mut layout = qwerty_us_layout();
         scramble_layout(&mut layout, 42, 10);
         let initial_cost = us_mismatch_cost(&layout);
         let result = run_sa(layout, &test_config(), 7, us_mismatch_cost);
@@ -207,14 +214,14 @@ mod tests {
     fn cost_history_has_expected_length() {
         let config =
             AnnealingConfig { t_start: 1.0, t_min: 0.25, alpha: 0.5, iterations_per_temp: 1 };
-        let result = run_sa(Layout::standard_us(), &config, 0, us_mismatch_cost);
+        let result = run_sa(qwerty_us_layout(), &config, 0, us_mismatch_cost);
 
         assert_eq!(result.cost_history.len(), 3);
     }
 
     #[test]
     fn improving_swap_is_kept() {
-        let initial = Layout::standard_us();
+        let initial = qwerty_us_layout();
         let snapshot = initial.clone();
         let config =
             AnnealingConfig { t_start: 1.0, t_min: 0.5, alpha: 0.1, iterations_per_temp: 1 };

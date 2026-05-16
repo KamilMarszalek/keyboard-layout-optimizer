@@ -3,7 +3,7 @@ use core::fmt;
 use itertools::Itertools;
 use std::collections::HashMap;
 
-use super::common::{KeyIndex, US_KEY_COUNT};
+use super::common::KeyIndex;
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Row {
@@ -103,12 +103,13 @@ impl fmt::Display for FingerAssignment {
 const N_FINGERS: usize = Hand::COUNT * Finger::COUNT;
 
 #[derive(Clone, Copy, Debug)]
-struct FingerCount {
-    finger: Finger,
-    count: usize,
-    rest_at: Option<usize>,
+pub struct FingerCount {
+    pub finger: Finger,
+    pub count: usize,
+    pub rest_at: Option<usize>,
 }
 
+#[macro_export]
 macro_rules! fc {
     ( $finger:expr, $count:expr ) => {
         FingerCount { finger: $finger, count: $count, rest_at: None }
@@ -139,7 +140,7 @@ pub struct Key {
     pub is_resting_key: bool,
 }
 
-struct RowSpec {
+pub struct RowSpec {
     left: Vec<FingerCount>,
     right: Vec<FingerCount>,
     x_offset: f64,
@@ -148,6 +149,15 @@ struct RowSpec {
 }
 
 impl RowSpec {
+    pub fn new(
+        left: Vec<FingerCount>,
+        right: Vec<FingerCount>,
+        x_offset: f32,
+        y: f32,
+        row: Row,
+    ) -> Self {
+        Self { left, right, x_offset, y, row }
+    }
     fn build_row(&self) -> Vec<Key> {
         let mut keys = Vec::with_capacity(self.size());
         let mut x = self.x_offset;
@@ -202,7 +212,7 @@ impl<const N: usize> Geometry<N> {
     /// Each `RowSpec` expands into a contiguous row of keys. The resulting key array preserves the
     /// order of the provided rows, and the order of keys implied by each row's `left` and `right`
     /// finger definitions.
-    fn new<I>(specs: I) -> Result<Self, String>
+    pub fn new<I>(specs: I) -> Result<Self, String>
     where
         I: IntoIterator<Item = RowSpec>,
     {
@@ -287,87 +297,10 @@ impl<const N: usize> Geometry<N> {
     }
 }
 
-impl Geometry<US_KEY_COUNT> {
-    // Builds US ANSI-like geometry, containing `KEY_COUNT` keys that store visible ASCII symbols
-    // ordered in 4 rows.
-    pub fn standard_us() -> Self {
-        let specs = [
-            RowSpec {
-                left: vec![
-                    fc!(Finger::Pinky, 2),
-                    fc!(Finger::Ring, 1),
-                    fc!(Finger::Middle, 1),
-                    fc!(Finger::Index, 2),
-                ],
-                right: vec![
-                    fc!(Finger::Index, 2),
-                    fc!(Finger::Middle, 1),
-                    fc!(Finger::Ring, 1),
-                    fc!(Finger::Pinky, 3),
-                ],
-                x_offset: 0.0,
-                y: 0.0,
-                row: Row::Number,
-            },
-            RowSpec {
-                left: vec![
-                    fc!(Finger::Pinky, 1),
-                    fc!(Finger::Ring, 1),
-                    fc!(Finger::Middle, 1),
-                    fc!(Finger::Index, 2),
-                ],
-                right: vec![
-                    fc!(Finger::Index, 2),
-                    fc!(Finger::Middle, 1),
-                    fc!(Finger::Ring, 1),
-                    fc!(Finger::Pinky, 4),
-                ],
-                x_offset: 1.5,
-                y: 1.0,
-                row: Row::Top,
-            },
-            RowSpec {
-                left: vec![
-                    fc!(Finger::Pinky, 1, 0),
-                    fc!(Finger::Ring, 1, 0),
-                    fc!(Finger::Middle, 1, 0),
-                    fc!(Finger::Index, 2, 0),
-                ],
-                right: vec![
-                    fc!(Finger::Index, 2, 1),
-                    fc!(Finger::Middle, 1, 0),
-                    fc!(Finger::Ring, 1, 0),
-                    fc!(Finger::Pinky, 2, 0),
-                ],
-                x_offset: 2.0,
-                y: 2.0,
-                row: Row::Home,
-            },
-            RowSpec {
-                left: vec![
-                    fc!(Finger::Pinky, 1),
-                    fc!(Finger::Ring, 1),
-                    fc!(Finger::Middle, 1),
-                    fc!(Finger::Index, 2),
-                ],
-                right: vec![
-                    fc!(Finger::Index, 2),
-                    fc!(Finger::Middle, 1),
-                    fc!(Finger::Ring, 1),
-                    fc!(Finger::Pinky, 1),
-                ],
-                x_offset: 2.5,
-                y: 3.0,
-                row: Row::Bottom,
-            },
-        ];
-
-        Self::new(specs).unwrap()
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::preset::constants::US_KEY_COUNT;
+
     use super::*;
     use rstest::rstest;
 
