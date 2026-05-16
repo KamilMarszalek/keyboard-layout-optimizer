@@ -42,7 +42,7 @@ mod tests {
 
     use super::*;
     #[test]
-    fn us_ascii() {
+    fn standard_us() {
         let modifier = Modifier::standard_us();
         assert_eq!(modifier.base_symbols().len(), US_KEY_COUNT);
         for &symbol in modifier.base_symbols().iter() {
