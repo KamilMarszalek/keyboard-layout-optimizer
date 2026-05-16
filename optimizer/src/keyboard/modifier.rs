@@ -153,7 +153,6 @@ impl KeyPressMapper for Modifier {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keyboard::common::KEY_COUNT;
     use rstest::rstest;
 
     #[rstest]
