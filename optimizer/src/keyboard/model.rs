@@ -1,6 +1,5 @@
 use crate::keyboard::common::AsciiChar;
 
-use super::common::KEY_COUNT;
 use super::geometry::Geometry;
 use super::layout::Layout;
 
@@ -23,15 +22,5 @@ impl<const N: usize> Keyboard<N> {
     /// Builds a keyboard from a geometry and a layout with the same key count.
     pub fn new(geometry: Geometry<N>, layout: Layout<N>) -> Self {
         Self { geometry, layout }
-    }
-}
-
-impl Keyboard<KEY_COUNT> {
-    /// Returns a keyboard using the standard US geometry and layout.
-    /// Returns a keyboard built from [`Geometry::standard_us`] and [`Layout::standard_us`].
-    pub fn standard_us() -> Self {
-        let geometry = Geometry::standard_us();
-        let layout = Layout::standard_us();
-        Self::new(geometry, layout)
     }
 }

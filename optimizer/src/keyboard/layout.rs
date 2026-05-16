@@ -1,4 +1,4 @@
-use super::common::{ASCII_COUNT, AsciiChar, KEY_COUNT, KeyIndex};
+use super::common::{ASCII_COUNT, AsciiChar, KeyIndex};
 use super::modifier::Modifier;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
@@ -82,23 +82,10 @@ impl<const N: usize> Layout<N> {
     }
 }
 
-impl Layout<KEY_COUNT> {
-    /// Returns the standard US ANSI-like symbol arrangement for the main alphanumeric keys.
-    pub fn standard_us() -> Self {
-        let modifier = Modifier::standard_us();
-        #[rustfmt::skip]
-        let symbols: [AsciiChar; KEY_COUNT] = [
-            b'`', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'0', b'-', b'=',
-            b'q', b'w', b'e', b'r', b't', b'y', b'u', b'i', b'o', b'p', b'[', b']', b'\\',
-            b'a', b's', b'd', b'f', b'g', b'h', b'j', b'k', b'l', b';', b'\'',
-            b'z', b'x', b'c', b'v', b'b', b'n', b'm', b',', b'.', b'/',
-        ];
-        Self::new(&symbols, &modifier).unwrap()
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use crate::preset::constants::US_KEY_COUNT;
+
     use super::*;
     use rstest::rstest;
 
@@ -211,15 +198,30 @@ mod tests {
     }
 
     #[test]
-    fn layout_standard_us_has_key_count_mappings() {
-        let layout = Layout::standard_us();
-        assert_eq!(layout.mappings.len(), KEY_COUNT);
+    fn layout_qwerty_us_has_printable_key_count_mappings() {
+        let modifier = Modifier::standard_us();
+        let layout = Layout::qwerty_us(&modifier);
+        assert_eq!(layout.mappings.len(), US_KEY_COUNT);
     }
 
     #[test]
-    fn layout_standard_us_uses_modifier_alphabet() {
-        let layout = Layout::standard_us();
+    fn layout_qwerty_us_uses_modifier_alphabet() {
         let modifier = Modifier::standard_us();
+        let layout = Layout::qwerty_us(&modifier);
+
+        let mut layout_symbols: Vec<AsciiChar> =
+            layout.mappings.iter().map(|mapping| mapping.base).collect();
+        let mut modifier_symbols = modifier.base_symbols().to_vec();
+        layout_symbols.sort();
+        modifier_symbols.sort();
+
+        assert_eq!(layout_symbols, modifier_symbols);
+    }
+
+    #[test]
+    fn layout_dvorak_us_uses_modifier_alphabet() {
+        let modifier = Modifier::standard_us();
+        let layout = Layout::dvorak_us(&modifier);
 
         let mut layout_symbols: Vec<AsciiChar> =
             layout.mappings.iter().map(|mapping| mapping.base).collect();
