@@ -131,7 +131,6 @@ impl Coordinates {
     }
 }
 
-#[allow(dead_code)]
 #[derive(Debug)]
 pub struct Key {
     pub coords: Coordinates,
