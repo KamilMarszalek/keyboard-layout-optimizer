@@ -156,8 +156,8 @@ impl RowSpec {
     pub fn new(
         left: Vec<FingerCount>,
         right: Vec<FingerCount>,
-        x_offset: f32,
-        y: f32,
+        x_offset: f64,
+        y: f64,
         row: Row,
     ) -> Self {
         Self { left, right, x_offset, y, row }

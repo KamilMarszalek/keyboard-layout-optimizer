@@ -236,9 +236,10 @@ mod tests {
     #[case::short_word("hello")]
     #[case::longer_text("the quick brown fox jumps over the lazy dog")]
     fn finger_distance_is_normalized(#[case] input: &str) {
-        let keyboard = Keyboard::standard_us();
+        let preset = qwerty_us();
+        let keyboard = preset.keyboard();
         let cost =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
 
         let actual = cost.finger_distance(&keyboard);
 
@@ -254,11 +255,12 @@ mod tests {
     #[case::different_finger_farther_than_resting("qw", "as", true)]
     #[case::both_on_resting_keys_equal("as", "df", false)]
     fn finger_distance_relations(#[case] input1: &str, #[case] input2: &str, #[case] result: bool) {
-        let keyboard = Keyboard::standard_us();
+        let preset = qwerty_us();
+        let keyboard = preset.keyboard();
         let cost1 =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input1));
+            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input1).unwrap());
         let cost2 =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input2));
+            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input2).unwrap());
 
         let d1 = cost1.finger_distance(&keyboard);
         let d2 = cost2.finger_distance(&keyboard);
@@ -340,9 +342,10 @@ mod tests {
     #[case::hands_used_alternately("alalal", 1.0)]
     #[case::semi_alternation("aal", 0.5)]
     fn hand_alternation_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
-        let keyboard = Keyboard::standard_us();
+        let preset = qwerty_us();
+        let keyboard = preset.keyboard();
         let cost =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
 
         let actual = cost.hand_alternation(&keyboard);
 
@@ -357,9 +360,10 @@ mod tests {
     #[case::row_jump("qz", 1.0)]
     #[case::key_in_middle("qlz", 0.0)] // There is no jump - we assume that finger goes back to default placement
     fn row_jumping_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
-        let keyboard = Keyboard::standard_us();
+        let preset = qwerty_us();
+        let keyboard = preset.keyboard();
         let cost =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
 
         let actual = cost.row_jumping(&keyboard);
 
@@ -374,9 +378,10 @@ mod tests {
     #[case::single_char("a", 0.0)]
     #[case::same_key("aa", 0.0)]
     fn finger_distance_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
-        let keyboard = Keyboard::standard_us();
+        let preset = qwerty_us();
+        let keyboard = preset.keyboard();
         let cost =
-            WeightedCost::new(MetricWeights::default(), Corpus::from_text_standard_us(input));
+            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
 
         let actual = cost.finger_distance(&keyboard);
 
