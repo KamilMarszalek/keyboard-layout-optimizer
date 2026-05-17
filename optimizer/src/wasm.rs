@@ -3,6 +3,8 @@ use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIter
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
+pub use wasm_bindgen_rayon::init_thread_pool;
+
 use crate::{
     annealing::{
         cost::{MetricBreakdown, MetricWeights, WeightedCost},
@@ -109,6 +111,16 @@ pub fn optimize_layout(input: JsValue) -> Result<JsValue, JsValue> {
         .map_err(|err| JsValue::from_str(&format!("Serialization failed: {err}")))
 }
 
+#[wasm_bindgen]
+pub fn qwerty_layout() -> Vec<String> {
+    layout_to_dto(&qwerty_us().layout)
+}
+
+#[wasm_bindgen]
+pub fn dvorak_layout() -> Vec<String> {
+    layout_to_dto(&dvorak_us().layout)
+}
+
 fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDto, String> {
     let preset = qwerty_us();
     let corpus = preset
@@ -136,7 +148,7 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
         .enumerate()
         .map(|(index, initial_layout)| {
             let mut rng = rand::rngs::SmallRng::seed_from_u64(seed + index as u64);
-            simulated_annealing(initial_layout.clone(), &config, &mut rng, &cost_func)
+            simulated_annealing(initial_layout.clone(), &config, &mut rng, cost_func)
         })
         .min_by(|a, b| a.best_cost.total_cmp(&b.best_cost))
         .ok_or_else(|| "No layouts available for optimization".to_string())?;
