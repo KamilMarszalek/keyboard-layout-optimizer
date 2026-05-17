@@ -33,6 +33,7 @@ FROM nginx:stable-alpine AS runtime
 RUN apk upgrade --no-cache
 
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
