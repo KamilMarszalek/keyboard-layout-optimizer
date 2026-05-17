@@ -23,9 +23,10 @@ jobs:
         uses: taiki-e/install-action@just
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
         with:
-          components: rustfmt, clippy
+          toolchain: nightly-2025-11-15
+          components: rustfmt, clippy, rust-src
           targets: wasm32-unknown-unknown
 
       - name: Cache Rust
@@ -48,8 +49,10 @@ jobs:
         uses: taiki-e/install-action@just
 
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
         with:
+          toolchain: nightly-2025-11-15
+          components: rust-src
           targets: wasm32-unknown-unknown
 
       - name: Install wasm-pack
