@@ -2,8 +2,8 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import { metricControls } from "../constants/optimizerControls";
 import { formatError } from "../lib/format";
-import type { AnnealingConfigDto, MetricWeightsDto, OptimizeRequestDto, OptimizeResultDto } from "../wasmTypes";
 import { disposeOptimizerWorker, optimizeInWorker } from "../services/optimizerWorkerClient";
+import type { AnnealingConfigDto, MetricWeightsDto, OptimizeRequestDto, OptimizeResultDto } from "../wasmTypes";
 
 const sampleText =
   "The quick brown fox jumps over the lazy dog while the keyboard optimizer searches for a smoother typing layout.";
@@ -49,11 +49,6 @@ export const useOptimizerStore = defineStore("optimizer", () => {
   );
   const costHistoryLength = computed(() => result.value?.costHistory.length ?? 0);
   const bestCost = computed(() => result.value?.bestCost ?? null);
-
-  function resetResult() {
-    result.value = null;
-    runtimeError.value = null;
-  }
 
   function buildRequest(): OptimizeRequestDto | null {
     validationError.value = null;
@@ -118,7 +113,6 @@ export const useOptimizerStore = defineStore("optimizer", () => {
     isOptimizing,
     metricWeights,
     recentCostHistory,
-    resetResult,
     result,
     resultMetrics,
     runOptimization,
