@@ -7,7 +7,6 @@ import { useOptimizerStore } from "./optimizerStore";
 
 export const useLayoutStore = defineStore("layout", () => {
   const standardQwertyLayout = ref<string[]>([]);
-  const isLayoutLoading = ref(false);
   const layoutError = ref<string | null>(null);
 
   const optimizerStore = useOptimizerStore();
@@ -39,7 +38,6 @@ export const useLayoutStore = defineStore("layout", () => {
 
   async function loadStandardQwertyLayout() {
     layoutError.value = null;
-    isLayoutLoading.value = true;
 
     try {
       const layout = await getQwertyLayout();
@@ -52,15 +50,12 @@ export const useLayoutStore = defineStore("layout", () => {
       standardQwertyLayout.value = layout;
     } catch (caught) {
       layoutError.value = `Failed to load QWERTY layout: ${formatError(caught)}`;
-    } finally {
-      isLayoutLoading.value = false;
     }
   }
 
   return {
     currentLayout,
     expectedLayoutLength,
-    isLayoutLoading,
     layoutError,
     layoutTitle,
     layoutValidationMessage,
