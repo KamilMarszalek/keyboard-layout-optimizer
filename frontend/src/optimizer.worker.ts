@@ -1,13 +1,6 @@
 import { optimizeLayout } from "./wasmClient";
 import type { OptimizerWorkerRequest, OptimizerWorkerResponse } from "./optimizerWorkerTypes";
-
-function formatError(caught: unknown): string {
-  if (caught instanceof Error) {
-    return caught.message;
-  }
-
-  return String(caught);
-}
+import { formatError } from "./lib/format";
 
 function validateThreadSupport() {
   if (!globalThis.crossOriginIsolated) {

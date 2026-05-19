@@ -28,7 +28,8 @@ export function initOptimizerWasm(): Promise<void> {
     threadPoolPromise = (async () => {
       await initOptimizerModule();
       const availableThreads = navigator.hardwareConcurrency ?? 2;
-      const threadCount = Math.min(2, availableThreads);
+      // Cap at 8 to avoid monopolising browser resources on high-core-count machines.
+      const threadCount = Math.min(availableThreads, 8);
 
       await initThreadPool(threadCount);
     })();
