@@ -5,6 +5,7 @@ defineProps<{
   id: string;
   label: string;
   description?: string;
+  error?: string;
 }>();
 </script>
 
@@ -20,5 +21,8 @@ defineProps<{
       <slot name="value" />
     </div>
     <slot />
+    <p v-if="error" class="text-xs leading-5 text-destructive">
+      {{ error }}
+    </p>
   </div>
 </template>

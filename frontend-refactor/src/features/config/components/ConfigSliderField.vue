@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { useField } from 'vee-validate';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
 import ConfigField from './ConfigField.vue';
 
-defineProps<{
-  id: string;
+const props = defineProps<{
+  name: string;
   label: string;
   description?: string;
   min?: number;
@@ -12,21 +13,21 @@ defineProps<{
   step?: number;
 }>();
 
-const model = defineModel<number>({ required: true });
+const { value, errorMessage } = useField<number>(() => props.name);
 </script>
 
 <template>
-  <ConfigField :id="id" :label="label" :description="description">
+  <ConfigField :id="name" :label="label" :description="description" :error="errorMessage">
     <template #value>
-      <Badge variant="secondary">{{ model.toFixed(1) }}</Badge>
+      <Badge variant="secondary">{{ value.toFixed(1) }}</Badge>
     </template>
     <Slider
-      :id="id"
-      :model-value="[model]"
+      :id="name"
+      :model-value="[value]"
       :min="min"
       :max="max"
       :step="step"
-      @update:model-value="(value) => (model = value?.[0] ?? 0)"
+      @update:model-value="(v) => (value = v?.[0] ?? 0)"
     />
   </ConfigField>
 </template>
