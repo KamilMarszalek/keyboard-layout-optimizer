@@ -14,7 +14,7 @@ import ConfigNumberField from './ConfigNumberField.vue';
       </CardDescription>
     </CardHeader>
 
-    <CardContent class="grid gap-4 pt-5 sm:grid-cols-2 lg:grid-cols-4">
+    <CardContent class="grid gap-4 pt-5">
       <ConfigNumberField
         v-for="control in annealingControls"
         :key="control.key"

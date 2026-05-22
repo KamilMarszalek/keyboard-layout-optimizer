@@ -11,7 +11,7 @@ import ConfigSliderField from './ConfigSliderField.vue';
       <CardDescription class="mt-1"> Set each objective from 0.0 to 5.0. </CardDescription>
     </CardHeader>
 
-    <CardContent class="grid gap-4 pt-5 md:grid-cols-2">
+    <CardContent class="grid gap-4 pt-5">
       <ConfigSliderField
         v-for="control in metricControls"
         :key="control.key"
