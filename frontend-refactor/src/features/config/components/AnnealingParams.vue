@@ -18,7 +18,7 @@ import ConfigNumberField from './ConfigNumberField.vue';
       <ConfigNumberField
         v-for="control in annealingControls"
         :key="control.key"
-        :name="`annealing.${control.key}`"
+        :name="`config.annealing.${control.key}`"
         :label="control.label"
         :step="control.step"
         :min="control.min"

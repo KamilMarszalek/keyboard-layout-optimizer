@@ -4,9 +4,9 @@ import { useForm } from 'vee-validate';
 import AnnealingParams from '@/features/config/components/AnnealingParams.vue';
 import MetricWeights from '@/features/config/components/MetricWeights.vue';
 import Seed from '@/features/config/components/Seed.vue';
-import { defaultAnnealingParams, defaultMetricWeithgs } from '@/features/config/config.schema';
+import { defaultConfig } from '@/features/config/config.schema';
 import Corpus from '@/features/corpus/components/Corpus.vue';
-import { defaultText } from '@/features/corpus/corpus.schema';
+import { defaultCorpus } from '@/features/corpus/corpus.schema';
 import { optimizeRequestSchema } from '../optimizer.schema';
 import { useOptimizerStore } from '../optimizer.store';
 import Run from './Run.vue';
@@ -16,10 +16,8 @@ const optimizer = useOptimizerStore();
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(optimizeRequestSchema),
   initialValues: {
-    text: defaultText,
-    weights: defaultMetricWeithgs,
-    annealing: defaultAnnealingParams,
-    seed: 42,
+    config: defaultConfig,
+    corpus: defaultCorpus,
   },
 });
 
@@ -27,7 +25,7 @@ const onSubmit = handleSubmit((values) => optimizer.run(values));
 </script>
 
 <template>
-  <form class="space-y-6" @submit="onSubmit">
+  <form class="space-y-6 novalidate" @submit="onSubmit">
     <Corpus />
     <MetricWeights />
     <AnnealingParams />

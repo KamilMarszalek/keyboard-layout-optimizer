@@ -14,7 +14,7 @@ const control = seedControl;
     <CardContent class="pt-5">
       <ConfigNumberField
         :key="control.key"
-        :name="`${control.key}`"
+        :name="`config.${control.key}`"
         :label="control.label"
         :description="control.description"
         :step="control.step"
