@@ -1,12 +1,23 @@
 import { defineStore } from 'pinia';
-import { defaultMetricWeithgs, defaultAnnealingParams } from './config.schema';
+import {
+  defaultMetricWeithgs,
+  defaultAnnealingParams,
+  type MetricsWeights,
+  type AnnealingParams,
+} from './config.schema';
+
+interface ConfigState {
+  metricWeights: MetricsWeights;
+  annealingParams: AnnealingParams;
+  seed: number | null;
+}
 
 export const useConfigStore = defineStore('config', {
-  state: () => {
+  state: (): ConfigState => {
     return {
       metricWeights: defaultMetricWeithgs,
       annealingParams: defaultAnnealingParams,
-      seed: 42,
+      seed: null,
     };
   },
 });
