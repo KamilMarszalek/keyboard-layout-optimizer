@@ -7,7 +7,6 @@ export const metricWeightsSchema = z.object({
   handAlternation: z.number().min(0).max(5).default(1.0),
   rowJumping: z.number().min(0).max(5).default(1.0),
 });
-
 export type MetricsWeights = z.infer<typeof metricWeightsSchema>;
 export const defaultMetricWeithgs = metricWeightsSchema.parse({});
 
@@ -17,6 +16,11 @@ export const annealingParamsSchema = z.object({
   alpha: z.number().min(0).max(1).default(0.995),
   iterationsPerTemp: z.number().min(0).default(100),
 });
-
 export type AnnealingParams = z.infer<typeof annealingParamsSchema>;
 export const defaultAnnealingParams = annealingParamsSchema.parse({});
+
+export const seedSchema = z.object({
+  seed: z.number().default(42),
+});
+export type Seed = z.infer<typeof seedSchema>;
+export const defaultSeed = seedSchema.parse({});

@@ -1,17 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { storeToRefs } from 'pinia';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useConfigStore } from '../config.store';
+import ConfigNumberField from './ConfigNumberField.vue';
+import { seedControl } from '../config.controls';
 
-const store = useConfigStore();
-const { seed } = storeToRefs(store);
-const seedInput = computed({
-  get: () => seed.value ?? '',
-  set: (val: string) => (seed.value = val === '' ? null : Number(val)),
-});
+const control = seedControl;
 </script>
 
 <template>
@@ -20,13 +12,12 @@ const seedInput = computed({
       <CardTitle>Seed</CardTitle>
     </CardHeader>
     <CardContent class="pt-5">
-      <Label for="seed">Optional seed</Label>
-      <Input
-        v-model="seedInput"
-        id="seed"
-        type="number"
-        class="mt-2"
-        placeholder="Leave empty for no seed"
+      <ConfigNumberField
+        :key="control.key"
+        :name="`${control.key}`"
+        :label="control.label"
+        :description="control.description"
+        :step="control.step"
       />
     </CardContent>
   </Card>

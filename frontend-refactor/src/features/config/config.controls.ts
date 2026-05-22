@@ -1,4 +1,4 @@
-import type { AnnealingParams, MetricsWeights } from './config.schema';
+import type { AnnealingParams, MetricsWeights, Seed } from './config.schema';
 
 type FieldDefinition<T> = {
   key: keyof T;
@@ -82,3 +82,10 @@ export const annealingControls: ReadonlyArray<NumberFieldDefinition<AnnealingPar
     min: 0,
   },
 ];
+
+export const seedControl: NumberFieldDefinition<Seed> = {
+  key: 'seed',
+  label: 'Seed',
+  description: 'Fixed seed for reproducible runs.',
+  step: 1,
+};
