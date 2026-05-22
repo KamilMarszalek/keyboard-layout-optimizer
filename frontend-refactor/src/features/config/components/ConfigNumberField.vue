@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { useField } from 'vee-validate';
-import { Input } from '@/components/ui/input';
 import ConfigField from './ConfigField.vue';
+import {
+  NumberField,
+  NumberFieldContent,
+  NumberFieldIncrement,
+  NumberFieldDecrement,
+  NumberFieldInput,
+} from '@/components/ui/number-field';
 
 const props = defineProps<{
   name: string;
@@ -17,14 +23,12 @@ const { value, errorMessage } = useField<number>(() => props.name);
 
 <template>
   <ConfigField :id="name" :label="label" :description="description" :error="errorMessage">
-    <Input
-      :id="name"
-      :model-value="value"
-      type="number"
-      :step="step"
-      :min="min"
-      :max="max"
-      @update:model-value="(v) => (value = Number(v))"
-    />
+    <NumberField v-model="value" :id="name" :step="step" :min="min" :max="max">
+      <NumberFieldContent>
+        <NumberFieldDecrement />
+        <NumberFieldInput />
+        <NumberFieldIncrement />
+      </NumberFieldContent>
+    </NumberField>
   </ConfigField>
 </template>

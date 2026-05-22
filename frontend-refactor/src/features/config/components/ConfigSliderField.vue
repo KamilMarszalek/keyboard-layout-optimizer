@@ -22,8 +22,8 @@ const { value, errorMessage } = useField<number>(() => props.name);
       <Badge variant="secondary">{{ value.toFixed(1) }}</Badge>
     </template>
     <Slider
-      :id="name"
       :model-value="[value]"
+      :id="name"
       :min="min"
       :max="max"
       :step="step"

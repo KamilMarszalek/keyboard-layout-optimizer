@@ -1,18 +1,7 @@
-import type { AnnealingParams, MetricsWeights, Seed } from './config.schema';
+import type { NumberControlField } from '@/lib/field';
+import type { AnnealingParams, MetricsWeights, Config } from './config.schema';
 
-type FieldDefinition<T> = {
-  key: keyof T;
-  label: string;
-  description?: string;
-};
-
-type NumberFieldDefinition<T> = FieldDefinition<T> & {
-  step: number;
-  min?: number;
-  max?: number;
-};
-
-export const metricControls: ReadonlyArray<NumberFieldDefinition<MetricsWeights>> = [
+export const metricControls: ReadonlyArray<NumberControlField<MetricsWeights>> = [
   {
     key: 'sameFingerBigrams',
     label: 'Same finger bigrams',
@@ -55,7 +44,7 @@ export const metricControls: ReadonlyArray<NumberFieldDefinition<MetricsWeights>
   },
 ];
 
-export const annealingControls: ReadonlyArray<NumberFieldDefinition<AnnealingParams>> = [
+export const annealingControls: ReadonlyArray<NumberControlField<AnnealingParams>> = [
   {
     key: 'tStart',
     label: 'Start temperature',
@@ -65,13 +54,13 @@ export const annealingControls: ReadonlyArray<NumberFieldDefinition<AnnealingPar
   {
     key: 'tMin',
     label: 'Minimum temperature',
-    step: 0.0001,
+    step: 0.001,
     min: 0,
   },
   {
     key: 'alpha',
     label: 'Cooling alpha',
-    step: 0.0001,
+    step: 0.001,
     min: 0,
     max: 1,
   },
@@ -83,7 +72,7 @@ export const annealingControls: ReadonlyArray<NumberFieldDefinition<AnnealingPar
   },
 ];
 
-export const seedControl: NumberFieldDefinition<Seed> = {
+export const seedControl: NumberControlField<Config> = {
   key: 'seed',
   label: 'Seed',
   description: 'Fixed seed for reproducible runs.',
