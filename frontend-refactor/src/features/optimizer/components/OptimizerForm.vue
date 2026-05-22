@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { toTypedSchema } from '@vee-validate/zod';
 import { useForm } from 'vee-validate';
-import AnnealingParams from '@/features/config/components/AnnealingParams.vue';
-import MetricWeights from '@/features/config/components/MetricWeights.vue';
-import Seed from '@/features/config/components/Seed.vue';
+import {
+  AnnealingParams,
+  MetricWeights,
+  Seed,
+} from '@/features/config/components';
 import { defaultConfig } from '@/features/config/config.schema';
-import Corpus from '@/features/corpus/components/Corpus.vue';
+import { Corpus } from '@/features/corpus/components';
 import { defaultCorpus } from '@/features/corpus/corpus.schema';
 import { optimizeRequestSchema } from '../optimizer.schema';
 import { useOptimizerStore } from '../optimizer.store';
@@ -27,9 +29,13 @@ const onSubmit = handleSubmit((values) => optimizer.run(values));
 <template>
   <form class="space-y-6 novalidate" @submit="onSubmit">
     <Corpus />
-    <MetricWeights />
-    <AnnealingParams />
-    <Seed />
-    <Run />
+    <div class="grid gap-6 lg:grid-cols-2">
+      <MetricWeights />
+      <AnnealingParams />
+    </div>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <Seed />
+      <Run />
+    </div>
   </form>
 </template>
