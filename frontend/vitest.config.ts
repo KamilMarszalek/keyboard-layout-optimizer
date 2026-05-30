@@ -1,7 +1,8 @@
-import { defineConfig } from 'vitest/config';
 import path from 'node:path';
+import { defineConfig, type UserConfig } from 'vite';
+import type { InlineConfig } from 'vitest/node';
 
-export default defineConfig({
+const config = {
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -10,4 +11,6 @@ export default defineConfig({
   test: {
     globals: true,
   },
-});
+} satisfies UserConfig & { test: InlineConfig };
+
+export default defineConfig(config);
