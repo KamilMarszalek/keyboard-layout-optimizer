@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     keyboard::{
         key_press::KeyPress,
@@ -69,11 +71,10 @@ impl<const P: usize> Corpus<P> {
     }
 
     fn validate_unique_presses(presses: &[KeyPress; P]) -> Result<(), CorpusError> {
-        for i in 0..P {
-            for j in (i + 1)..P {
-                if presses[i] == presses[j] {
-                    return Err(CorpusError::DuplicateSupportedKeyPress(presses[i]));
-                }
+        let mut seen = HashSet::with_capacity(P);
+        for &press in presses {
+            if !seen.insert(press) {
+                return Err(CorpusError::DuplicateSupportedKeyPress(press));
             }
         }
         Ok(())
