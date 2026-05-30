@@ -16,7 +16,7 @@ const { result, costHistory } = storeToRefs(store);
       <div class="p-4">
         <p class="text-sm">Best cost</p>
         <p class="mt-2 text-2xl">
-          {{ result!.bestCost.toFixed(4) }}
+          {{ result?.bestCost.toFixed(4) ?? '-' }}
         </p>
       </div>
       <div class="p-4">
