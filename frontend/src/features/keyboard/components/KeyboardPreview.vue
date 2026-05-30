@@ -10,10 +10,12 @@ import {
   hasExpectedLayoutLength,
   layoutToRows,
 } from '../keyboardLayout';
+import type { CharFrequencyDto } from '@/services/optimizer/optimizer.dto';
 import { useKeyboardStore } from '../keyboard.store';
 
 const props = defineProps<{
   optimizedLayout?: string[];
+  charFrequencies?: CharFrequencyDto[];
 }>();
 
 const store = useKeyboardStore();
@@ -52,6 +54,30 @@ const layoutValidationMessage = computed((): string | null => {
 });
 
 const displayedLayoutRows = computed(() => layoutToRows(currentLayout.value));
+
+const freqMap = computed((): Map<string, number> => {
+  if (!props.charFrequencies) return new Map();
+  return new Map(props.charFrequencies.map(({ key, frequency }) => [key, frequency]));
+});
+
+const maxFreq = computed((): number => {
+  if (!props.charFrequencies || props.charFrequencies.length === 0) return 1;
+  return Math.max(...props.charFrequencies.map((f) => f.frequency));
+});
+
+function keyHeatStyle(keyLabel: string): { backgroundColor: string } | undefined {
+  if (!props.charFrequencies) return undefined;
+
+  const freq = freqMap.value.get(keyLabel) ?? 0;
+  const ratio = maxFreq.value > 0 ? freq / maxFreq.value : 0;
+
+  // Interpolate from light neutral (low/no freq) to amber (high freq)
+  const hue = 30;
+  const saturation = Math.round(15 + ratio * 75); // 15 % → 90 %
+  const lightness = Math.round(88 - ratio * 36);  // 88 % → 52 %
+
+  return { backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)` };
+}
 </script>
 
 <template>
@@ -90,6 +116,7 @@ const displayedLayoutRows = computed(() => layoutToRows(currentLayout.value));
               v-for="(keyLabel, keyIndex) in row"
               :key="`${rowIndex}-${keyIndex}-${keyLabel}`"
               class="flex h-12 w-12 shrink-0 items-center justify-center rounded-md border border-border bg-card font-mono text-base font-semibold text-card-foreground shadow-sm"
+              :style="keyHeatStyle(keyLabel)"
             >
               {{ keyLabel }}
             </div>
