@@ -12,5 +12,5 @@ pub mod keyboard;
 pub mod preset;
 pub mod text;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(any(test, target_arch = "wasm32"))]
 pub mod wasm;

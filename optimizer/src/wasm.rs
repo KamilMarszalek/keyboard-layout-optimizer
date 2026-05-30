@@ -205,3 +205,113 @@ fn ensure_valid_weight(name: &str, value: f64) -> Result<(), String> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn valid_weights_dto() -> MetricWeightsDto {
+        MetricWeightsDto {
+            same_finger_bigrams: 1.0,
+            finger_distance: 1.0,
+            home_row_usage: 1.0,
+            hand_alternation: 1.0,
+            row_jumping: 1.0,
+        }
+    }
+
+    fn valid_annealing_dto() -> AnnealingConfigDto {
+        AnnealingConfigDto { t_start: 1.0, t_min: 0.001, alpha: 0.995, iterations_per_temp: 100 }
+    }
+
+    #[test]
+    fn annealing_config_accepts_valid_dto() {
+        let config = AnnealingConfig::try_from(valid_annealing_dto()).unwrap();
+
+        assert_eq!(config.t_start, 1.0);
+        assert_eq!(config.t_min, 0.001);
+        assert_eq!(config.alpha, 0.995);
+        assert_eq!(config.iterations_per_temp, 100);
+    }
+
+    #[test]
+    fn annealing_config_rejects_non_finite_t_start() {
+        let dto = AnnealingConfigDto { t_start: f64::NAN, ..valid_annealing_dto() };
+
+        assert_eq!(
+            AnnealingConfig::try_from(dto).err().as_deref(),
+            Some("tStart must be a finite number")
+        );
+    }
+
+    #[test]
+    fn annealing_config_rejects_zero_t_min() {
+        let dto = AnnealingConfigDto { t_min: 0.0, ..valid_annealing_dto() };
+
+        assert_eq!(
+            AnnealingConfig::try_from(dto).err().as_deref(),
+            Some("tMin must be greater than 0")
+        );
+    }
+
+    #[test]
+    fn annealing_config_rejects_t_start_not_greater_than_t_min() {
+        let dto = AnnealingConfigDto { t_start: 0.001, t_min: 0.001, ..valid_annealing_dto() };
+
+        assert_eq!(
+            AnnealingConfig::try_from(dto).err().as_deref(),
+            Some("tStart must be greater than tMin")
+        );
+    }
+
+    #[test]
+    fn annealing_config_rejects_alpha_at_upper_bound() {
+        let dto = AnnealingConfigDto { alpha: 1.0, ..valid_annealing_dto() };
+
+        assert_eq!(
+            AnnealingConfig::try_from(dto).err().as_deref(),
+            Some("alpha must be in range (0, 1)")
+        );
+    }
+
+    #[test]
+    fn annealing_config_rejects_zero_iterations_per_temp() {
+        let dto = AnnealingConfigDto { iterations_per_temp: 0, ..valid_annealing_dto() };
+
+        assert_eq!(
+            AnnealingConfig::try_from(dto).err().as_deref(),
+            Some("iterationsPerTemp must be greater than 0")
+        );
+    }
+
+    #[test]
+    fn metric_weights_accepts_valid_dto() {
+        let weights = MetricWeights::try_from(valid_weights_dto()).unwrap();
+
+        assert_eq!(weights.same_finger_bigrams, 1.0);
+        assert_eq!(weights.finger_distance, 1.0);
+        assert_eq!(weights.home_row_usage, 1.0);
+        assert_eq!(weights.hand_alternation, 1.0);
+        assert_eq!(weights.row_jumping, 1.0);
+    }
+
+    #[test]
+    fn metric_weights_rejects_negative_value() {
+        let dto = MetricWeightsDto { finger_distance: -1.0, ..valid_weights_dto() };
+
+        assert_eq!(
+            MetricWeights::try_from(dto).err().as_deref(),
+            Some("fingerDistance must be non-negative")
+        );
+    }
+
+    #[test]
+    fn metric_weights_rejects_non_finite_value() {
+        let dto = MetricWeightsDto { row_jumping: f64::INFINITY, ..valid_weights_dto() };
+
+        assert_eq!(
+            MetricWeights::try_from(dto).err().as_deref(),
+            Some("rowJumping must be a finite number")
+        );
+    }
+}
