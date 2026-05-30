@@ -1,23 +1,9 @@
 {
-    "compilerOptions": {
-        "target": "ES2020",
-        "module": "ESNext",
-        "moduleResolution": "Bundler",
-        "strict": true,
-        "noEmit": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "baseUrl": ".",
-        "paths": {
-            "@/*": [
-                "src/*"
-            ]
-        },
-        "types": [
-            "vitest/globals"
-        ]
-    },
-    "include": [
-        "src"
-    ]
+  "files": [],
+  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { seedControl } from '../config.controls.ts';
 import ConfigNumberField from './ConfigNumberField.vue';
-import { seedControl } from '../config.controls';
 </script>
 
 <template>
