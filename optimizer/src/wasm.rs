@@ -1,6 +1,4 @@
 use itertools::Itertools;
-use rand::SeedableRng;
-use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -9,7 +7,8 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 use crate::{
     annealing::{
         cost::{MetricBreakdown, MetricWeights, WeightedCost},
-        sa::{AnnealingConfig, simulated_annealing},
+        run_multi_start,
+        sa::AnnealingConfig,
     },
     keyboard::{layout::Layout, modifier::Modifier},
     preset::{
@@ -170,19 +169,9 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
     let cost = WeightedCost::<US_KEY_COUNT, US_PRESS_COUNT>::new(weights, corpus, preset.geometry);
 
     let seed = request.seed.unwrap_or(42) as u64;
-
     let initial_layouts = [preset.layout, dvorak_us().layout];
 
-    let result = initial_layouts
-        .par_iter()
-        .enumerate()
-        .map(|(index, initial_layout)| {
-            let mut rng = rand::rngs::SmallRng::seed_from_u64(seed + index as u64);
-            simulated_annealing(initial_layout.clone(), &config, &mut rng, |layout| {
-                cost.evaluate(layout)
-            })
-        })
-        .min_by(|a, b| a.best_cost.total_cmp(&b.best_cost))
+    let result = run_multi_start(&initial_layouts, &config, seed, |layout| cost.evaluate(layout))
         .ok_or_else(|| "No layouts available for optimization".to_string())?;
 
     let metrics = cost.evaluate_breakdown(&result.best_layout);
