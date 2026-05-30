@@ -1,5 +1,5 @@
 use crate::{
-    keyboard::{geometry::Geometry, layout::Layout, model::Keyboard, modifier::Modifier},
+    keyboard::{geometry::Geometry, layout::Layout, modifier::Modifier},
     text::corpus::{Corpus, CorpusError},
 };
 
@@ -16,10 +16,6 @@ pub struct KeyboardPreset<const N: usize, const P: usize> {
 }
 
 impl<const N: usize, const P: usize> KeyboardPreset<N, P> {
-    pub fn keyboard(&self) -> Keyboard<N> {
-        Keyboard::new(self.geometry.clone(), self.layout.clone())
-    }
-
     pub fn corpus_from_text(&self, input: &str) -> Result<Corpus<P>, CorpusError> {
         Corpus::from_text(input, &self.modifier)
     }

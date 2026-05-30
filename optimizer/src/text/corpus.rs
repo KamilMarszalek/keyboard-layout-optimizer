@@ -1,6 +1,6 @@
 use crate::{
     keyboard::{
-        model::KeyPress,
+        key_press::KeyPress,
         modifier::{KeyPressMapper, SupportedPressesError},
     },
     text::pipeline::{map_normalized_text_to_key_presses, normalize_text},

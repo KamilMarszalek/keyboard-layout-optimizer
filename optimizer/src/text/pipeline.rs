@@ -1,6 +1,6 @@
 use any_ascii::any_ascii;
 
-use crate::keyboard::{model::KeyPress, modifier::KeyPressMapper};
+use crate::keyboard::{key_press::KeyPress, modifier::KeyPressMapper};
 
 /// Normalizes `input` text
 ///
