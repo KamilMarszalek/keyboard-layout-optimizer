@@ -6,13 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { corpusTextControl as control } from '../corpus.controls';
-import { useKeyboardStore } from '@/features/keyboard/keyboard.store';
+import { useCorpusStore } from '../corpus.store';
 
 const { value, errorMessage } = useField<string>(`corpus.${control.key}`);
 const characterCount = computed(() => value.value?.trim().length ?? 0);
 
-const keyboardStore = useKeyboardStore();
-watch(value, (text) => { keyboardStore.setCorpusText(text ?? ''); }, { immediate: true });
+const corpusStore = useCorpusStore();
+watch(value, (text) => { corpusStore.setText(text ?? ''); }, { immediate: true });
 </script>
 
 <template>

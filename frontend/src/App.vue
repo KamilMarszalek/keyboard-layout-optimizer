@@ -4,6 +4,7 @@ import { OptimizerForm } from '@/features/optimizer/components';
 import { useOptimizerStore } from '@/features/optimizer/optimizer.store';
 import { KeyboardPreview } from '@/features/keyboard/components';
 import { useKeyboardStore } from '@/features/keyboard/keyboard.store';
+import { useCorpusStore } from '@/features/corpus/corpus.store';
 import { useResultsStore } from '@/features/results/results.store';
 import type { CharFrequencyDto } from '@/services/optimizer/optimizer.dto';
 import { getCharFrequencies } from '@/services/optimizer/wasmClient';
@@ -13,6 +14,7 @@ import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/re
 
 const optimizerStore = useOptimizerStore();
 const keyboardStore = useKeyboardStore();
+const corpusStore = useCorpusStore();
 const resultsStore = useResultsStore();
 const { result } = storeToRefs(resultsStore);
 
@@ -27,13 +29,13 @@ async function refreshCharFrequencies(text: string) {
 
 watch(showHeatmap, async (show) => {
   if (show) {
-    await refreshCharFrequencies(keyboardStore.corpusText);
+    await refreshCharFrequencies(corpusStore.text);
   } else {
     charFrequencies.value = undefined;
   }
 });
 
-watch(() => keyboardStore.corpusText, async (text) => {
+watch(() => corpusStore.text, async (text) => {
   if (showHeatmap.value) {
     await refreshCharFrequencies(text);
   }

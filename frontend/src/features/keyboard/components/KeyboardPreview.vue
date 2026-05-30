@@ -19,8 +19,7 @@ const props = defineProps<{
 }>();
 
 const store = useKeyboardStore();
-const { standardQwertyLayout, isLoadingQwerty, layoutError, expectedLayoutLength } =
-  storeToRefs(store);
+const { standardQwertyLayout, isLoadingQwerty, layoutError } = storeToRefs(store);
 
 const currentLayout = computed(() => {
   if (props.optimizedLayout) {
@@ -89,7 +88,7 @@ function keyHeatStyle(keyLabel: string): { backgroundColor: string } | undefined
           Keys are shown in fixed physical ANSI positions.
         </CardDescription>
       </div>
-      <Badge variant="secondary">{{ expectedLayoutLength }} keys</Badge>
+      <Badge variant="secondary">{{ EXPECTED_LAYOUT_LENGTH }} keys</Badge>
     </CardHeader>
 
     <CardContent class="pt-5">
