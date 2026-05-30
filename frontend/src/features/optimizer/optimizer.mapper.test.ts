@@ -13,7 +13,7 @@ type OptimizeRequestOverrides = {
 function makeRequest(overrides: OptimizeRequestOverrides = {}): OptimizeRequest {
   const base: OptimizeRequest = {
     corpus: {
-      text: '  sample corpus  ',
+      text: 'sample corpus',
     },
     config: {
       weights: {
@@ -56,7 +56,7 @@ function makeRequest(overrides: OptimizeRequestOverrides = {}): OptimizeRequest 
 }
 
 describe('toOptimizeRequestDto', () => {
-  it('trims corpus text', () => {
+  it('passes corpus text through unchanged (trimming is the schema layer responsibility)', () => {
     expect(toOptimizeRequestDto(makeRequest()).text).toBe('sample corpus');
   });
 
