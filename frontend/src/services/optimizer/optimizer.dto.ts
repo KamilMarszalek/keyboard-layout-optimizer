@@ -51,3 +51,15 @@ export const optimizeResultSchema = z.object({
   costHistory: z.array(z.number()),
   metrics: metricBreakdownSchema,
 });
+
+export interface CharFrequencyDto {
+  key: string;
+  frequency: number;
+}
+
+const charFrequencyDtoSchema = z.object({
+  key: z.string(),
+  frequency: z.number(),
+});
+
+export const charFrequenciesSchema = z.array(charFrequencyDtoSchema);
