@@ -121,10 +121,6 @@ pub fn qwerty_layout() -> Vec<String> {
     layout_to_dto(&qwerty_us().layout)
 }
 
-pub fn dvorak_layout() -> Vec<String> {
-    layout_to_dto(&dvorak_us().layout)
-}
-
 fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDto, String> {
     let preset = qwerty_us();
     let corpus = preset
