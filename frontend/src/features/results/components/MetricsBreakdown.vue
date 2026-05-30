@@ -2,14 +2,14 @@
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { metricControls } from '@/features/config/config.controls';
+import { metricLabels } from '../results.constants';
 import { useResultsStore } from '../results.store';
 
 const store = useResultsStore();
 const { resultMetrics } = storeToRefs(store);
 
 const labelledMetrics = computed(() =>
-  metricControls.map((m) => ({
+  metricLabels.map((m) => ({
     key: m.key,
     label: m.label,
     value: resultMetrics.value?.[m.key] ?? 0,

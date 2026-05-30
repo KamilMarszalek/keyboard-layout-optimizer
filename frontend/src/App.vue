@@ -28,7 +28,7 @@ onBeforeUnmount(() => {
     <div class="mx-auto max-w-7xl space-y-6">
       <Header />
       <OptimizerForm />
-      <KeyboardPreview />
+      <KeyboardPreview :optimized-layout="result?.bestLayout" />
 
       <section
         v-if="result"
