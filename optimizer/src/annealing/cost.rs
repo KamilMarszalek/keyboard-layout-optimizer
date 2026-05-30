@@ -115,8 +115,10 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
                 let cost = match a.finger_assignment == b.finger_assignment {
                     true => distance(a.coords, b.coords) / max_distance,
                     false => {
-                        let a_default = &self.geometry.default_key(a.finger_assignment).unwrap();
-                        let b_default = &self.geometry.default_key(b.finger_assignment).unwrap();
+                        let a_default = &self.geometry.default_key(a.finger_assignment)
+                            .expect("standard geometry guarantees a resting key for every finger assignment");
+                        let b_default = &self.geometry.default_key(b.finger_assignment)
+                            .expect("standard geometry guarantees a resting key for every finger assignment");
                         (distance(a.coords, a_default.coords)
                             + distance(b.coords, b_default.coords))
                             / (2.0 * max_distance)
