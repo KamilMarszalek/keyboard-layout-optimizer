@@ -361,6 +361,7 @@ mod tests {
     #[case::empty_corpus("", 0.0)]
     #[case::row_jump("qz", 1.0)]
     #[case::key_in_middle("qlz", 0.0)] // There is no jump - we assume that finger goes back to default placement
+    #[case::cross_finger_top_to_bottom("qx", 0.0)] // q=top/left-pinky, x=bottom/left-ring: row diff > 1 but different fingers
     fn row_jumping_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let preset = qwerty_us();
         let keyboard = preset.keyboard();
