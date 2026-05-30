@@ -15,9 +15,6 @@ export const useResultsStore = defineStore('results', {
     setResult(result: OptimizeResult) {
       this.result = result;
     },
-    clearResult() {
-      this.result = undefined;
-    },
   },
   getters: {
     costHistory: (state) => state.result?.costHistory ?? [],
