@@ -11,7 +11,8 @@
     "format:check": "prettier --check .",
     "lint": "eslint . --ext .ts,.vue",
     "lint:fix": "eslint . --ext .ts,.vue --fix",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@lucide/vue": "^1.16.0",
@@ -43,6 +44,7 @@
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.59.4",
     "vite": "^8.0.12",
+    "vitest": "^4.0.14",
     "vue-tsc": "^3.2.8"
   }
 }
