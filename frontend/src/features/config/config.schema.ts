@@ -1,17 +1,18 @@
 import { z } from 'zod';
+import { METRIC_WEIGHT_MAX, METRIC_WEIGHT_MIN } from './config.constants';
 
 export const configSchema = z.object({
   weights: z.object({
-    sameFingerBigrams: z.number().min(0).max(5),
-    fingerDistance: z.number().min(0).max(5),
-    homeRowUsage: z.number().min(0).max(5),
-    handAlternation: z.number().min(0).max(5),
-    rowJumping: z.number().min(0).max(5),
+    sameFingerBigrams: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
+    fingerDistance: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
+    homeRowUsage: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
+    handAlternation: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
+    rowJumping: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
   }),
   annealing: z.object({
-    tStart: z.number().min(0),
+    tStart: z.number().gt(0),
     tMin: z.number().min(0),
-    alpha: z.number().min(0).max(1),
+    alpha: z.number().min(0).lt(1),
     iterationsPerTemp: z.number().min(1),
   }),
   seed: z.number().nullable().default(null),
