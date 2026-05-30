@@ -1,8 +1,6 @@
 use super::constants::{US_KEY_COUNT, US_PRESS_COUNT};
 use crate::{
-    keyboard::{
-        common::AsciiChar, geometry::Geometry, layout::Layout, modifier::Modifier,
-    },
+    keyboard::{common::AsciiChar, geometry::Geometry, layout::Layout, modifier::Modifier},
     preset::keyboard_preset::KeyboardPreset,
 };
 
