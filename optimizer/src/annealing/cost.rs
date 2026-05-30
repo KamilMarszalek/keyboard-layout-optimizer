@@ -1,7 +1,7 @@
 use crate::{
     keyboard::{
-        geometry::{Coordinates, Key, Row},
-        model::Keyboard,
+        geometry::{Coordinates, Geometry, Key, Row},
+        layout::Layout,
     },
     text::corpus::Corpus,
 };
@@ -65,56 +65,58 @@ impl MetricBreakdown {
 
 /// Weighted ergonomic cost function.
 ///
-/// `WeightedCost` combines a text corpus and user-provided metric weights.
-/// It can evaluate a keyboard layout and return either a single scalar cost
-/// or a detailed metric breakdown.
+/// `WeightedCost` owns the keyboard geometry and corpus statistics so that
+/// multiple SA runs sharing the same physical layout can borrow it without
+/// cloning geometry on every evaluation.
 pub struct WeightedCost<const N: usize, const P: usize> {
     weights: MetricWeights,
     corpus: Corpus<P>,
+    geometry: Geometry<N>,
 }
 
 impl<const N: usize, const P: usize> WeightedCost<N, P> {
-    /// Creates a new weighted cost function from metric weights and corpus statistics.
-    pub fn new(weights: MetricWeights, corpus: Corpus<P>) -> Self {
-        Self { weights, corpus }
+    /// Creates a new weighted cost function from metric weights, corpus statistics,
+    /// and the keyboard geometry that will be shared across all evaluations.
+    pub fn new(weights: MetricWeights, corpus: Corpus<P>, geometry: Geometry<N>) -> Self {
+        Self { weights, corpus, geometry }
     }
 
-    /// Evaluates the weighted cost of a keyboard.
+    /// Evaluates the weighted cost of a layout.
     ///
     /// Lower values are considered better by optimization algorithms.
-    pub fn evaluate(&self, keyboard: &Keyboard<N>) -> f64 {
-        self.evaluate_breakdown(keyboard).weighted_cost(&self.weights)
+    pub fn evaluate(&self, layout: &Layout<N>) -> f64 {
+        self.evaluate_breakdown(layout).weighted_cost(&self.weights)
     }
 
-    /// Computes all ergonomic metric values for a keyboard.
+    /// Computes all ergonomic metric values for a layout.
     ///
     /// This method returns individual metric components before they are
     /// combined into a single scalar cost.
-    pub fn evaluate_breakdown(&self, keyboard: &Keyboard<N>) -> MetricBreakdown {
+    pub fn evaluate_breakdown(&self, layout: &Layout<N>) -> MetricBreakdown {
         MetricBreakdown {
-            finger_distance: self.finger_distance(keyboard),
-            home_row_usage: self.home_row_usage(keyboard),
-            same_finger_bigrams: self.same_finger_bigrams(keyboard),
-            hand_alternation: self.hand_alternation(keyboard),
-            row_jumping: self.row_jumping(keyboard),
+            finger_distance: self.finger_distance(layout),
+            home_row_usage: self.home_row_usage(layout),
+            same_finger_bigrams: self.same_finger_bigrams(layout),
+            hand_alternation: self.hand_alternation(layout),
+            row_jumping: self.row_jumping(layout),
         }
     }
 
-    fn finger_distance(&self, keyboard: &Keyboard<N>) -> f64 {
-        let max_distance = keyboard.geometry.max_fingers_distance();
+    fn finger_distance(&self, layout: &Layout<N>) -> f64 {
+        let max_distance = self.geometry.max_fingers_distance();
         if max_distance <= 0.0 {
             return 0.0;
         }
         let distance = Coordinates::euclidean_distance;
         self.bigrams_metric(
-            keyboard,
+            layout,
             |_, _| true,
             |count, a, b| {
                 let cost = match a.finger_assignment == b.finger_assignment {
                     true => distance(a.coords, b.coords) / max_distance,
                     false => {
-                        let a_default = keyboard.geometry.default_key(a.finger_assignment).unwrap();
-                        let b_default = keyboard.geometry.default_key(b.finger_assignment).unwrap();
+                        let a_default = &self.geometry.default_key(a.finger_assignment).unwrap();
+                        let b_default = &self.geometry.default_key(b.finger_assignment).unwrap();
                         (distance(a.coords, a_default.coords)
                             + distance(b.coords, b_default.coords))
                             / (2.0 * max_distance)
@@ -125,29 +127,29 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
         )
     }
 
-    fn home_row_usage(&self, keyboard: &Keyboard<N>) -> f64 {
-        self.unigram_metric(keyboard, |a| a.row == Row::Home, |count, _| count as f64)
+    fn home_row_usage(&self, layout: &Layout<N>) -> f64 {
+        self.unigram_metric(layout, |a| a.row == Row::Home, |count, _| count as f64)
     }
 
-    fn same_finger_bigrams(&self, keyboard: &Keyboard<N>) -> f64 {
+    fn same_finger_bigrams(&self, layout: &Layout<N>) -> f64 {
         self.bigrams_metric(
-            keyboard,
+            layout,
             |a, b| a.finger_assignment == b.finger_assignment,
             |count, _, _| count as f64,
         )
     }
 
-    fn hand_alternation(&self, keyboard: &Keyboard<N>) -> f64 {
+    fn hand_alternation(&self, layout: &Layout<N>) -> f64 {
         self.bigrams_metric(
-            keyboard,
+            layout,
             |a, b| a.finger_assignment.hand != b.finger_assignment.hand,
             |count, _, _| count as f64,
         )
     }
 
-    fn row_jumping(&self, keyboard: &Keyboard<N>) -> f64 {
+    fn row_jumping(&self, layout: &Layout<N>) -> f64 {
         self.bigrams_metric(
-            keyboard,
+            layout,
             |a, b| {
                 a.finger_assignment == b.finger_assignment
                     && a.row.order().abs_diff(b.row.order()) > 1
@@ -156,7 +158,7 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
         )
     }
 
-    fn unigram_metric<F, W>(&self, keyboard: &Keyboard<N>, predicate: F, extractor: W) -> f64
+    fn unigram_metric<F, W>(&self, layout: &Layout<N>, predicate: F, extractor: W) -> f64
     where
         F: Fn(&Key) -> bool,
         W: Fn(usize, &Key) -> f64,
@@ -165,7 +167,7 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
             return 0.0;
         }
 
-        let key_assignments = self.key_assignments(keyboard);
+        let key_assignments = self.key_assignments(layout);
         let mut metric = 0.0;
 
         for (idx, count) in self.corpus.unigrams.iter().enumerate() {
@@ -181,7 +183,7 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
         metric / self.corpus.total_chars as f64
     }
 
-    fn bigrams_metric<F, W>(&self, keyboard: &Keyboard<N>, predicate: F, extractor: W) -> f64
+    fn bigrams_metric<F, W>(&self, layout: &Layout<N>, predicate: F, extractor: W) -> f64
     where
         F: Fn(&Key, &Key) -> bool,
         W: Fn(usize, &Key, &Key) -> f64,
@@ -190,7 +192,7 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
             return 0.0;
         }
 
-        let key_assignments = self.key_assignments(keyboard);
+        let key_assignments = self.key_assignments(layout);
         let mut metric = 0.0;
 
         for (first_idx, second_chars) in self.corpus.bigrams.iter().enumerate() {
@@ -212,11 +214,11 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
         metric / self.corpus.total_bigrams as f64
     }
 
-    fn key_assignments<'a>(&self, keyboard: &'a Keyboard<N>) -> [Option<&'a Key>; P] {
+    fn key_assignments<'a>(&'a self, layout: &Layout<N>) -> [Option<&'a Key>; P] {
         std::array::from_fn(|idx| {
             let press = self.corpus.supported_presses[idx];
-            let key_idx = keyboard.layout.key_of(press.base)?;
-            keyboard.geometry.key(key_idx)
+            let key_idx = layout.key_of(press.base)?;
+            self.geometry.key(key_idx)
         })
     }
 }
@@ -239,11 +241,13 @@ mod tests {
     #[case::longer_text("the quick brown fox jumps over the lazy dog")]
     fn finger_distance_is_normalized(#[case] input: &str) {
         let preset = qwerty_us();
-        let keyboard = preset.keyboard();
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input).unwrap(),
+            preset.geometry.clone(),
+        );
 
-        let actual = cost.finger_distance(&keyboard);
+        let actual = cost.finger_distance(&preset.layout);
 
         assert!(
             (0.0..=1.0).contains(&actual),
@@ -258,14 +262,19 @@ mod tests {
     #[case::both_on_resting_keys_equal("as", "df", false)]
     fn finger_distance_relations(#[case] input1: &str, #[case] input2: &str, #[case] result: bool) {
         let preset = qwerty_us();
-        let keyboard = preset.keyboard();
-        let cost1 =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input1).unwrap());
-        let cost2 =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input2).unwrap());
+        let cost1 = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input1).unwrap(),
+            preset.geometry.clone(),
+        );
+        let cost2 = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input2).unwrap(),
+            preset.geometry.clone(),
+        );
 
-        let d1 = cost1.finger_distance(&keyboard);
-        let d2 = cost2.finger_distance(&keyboard);
+        let d1 = cost1.finger_distance(&preset.layout);
+        let d2 = cost2.finger_distance(&preset.layout);
 
         assert_eq!((d1 > d2), result, "d1={d1}, d2={d2}, input1={input1:?}, input2={input2:?}");
     }
@@ -276,11 +285,13 @@ mod tests {
     #[case::all_presses_on_home_row("asdfjkl;ASDFJKL:", 1.0)]
     fn home_row_usage_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let preset = qwerty_us();
-        let keyboard = preset.keyboard();
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input).unwrap(),
+            preset.geometry.clone(),
+        );
 
-        let actual = cost.home_row_usage(&keyboard);
+        let actual = cost.home_row_usage(&preset.layout);
 
         assert!((actual - expected).abs() < 1e-12,);
     }
@@ -288,16 +299,19 @@ mod tests {
     #[test]
     fn home_row_usage_uses_current_layout_after_swap() {
         let preset = qwerty_us();
-        let mut keyboard = preset.keyboard();
+        let mut layout = preset.layout.clone();
 
-        let a_key = keyboard.layout.key_of(b'a').unwrap();
-        let q_key = keyboard.layout.key_of(b'q').unwrap();
-        keyboard.layout.swap(a_key, q_key);
+        let a_key = layout.key_of(b'a').unwrap();
+        let q_key = layout.key_of(b'q').unwrap();
+        layout.swap(a_key, q_key);
 
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text("aA").unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text("aA").unwrap(),
+            preset.geometry.clone(),
+        );
 
-        assert_eq!(cost.home_row_usage(&keyboard), 0.0);
+        assert_eq!(cost.home_row_usage(&layout), 0.0);
     }
 
     #[rstest]
@@ -310,11 +324,13 @@ mod tests {
     #[case::mixed_bigrams("aqs", 0.5)]
     fn same_finger_bigrams_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let preset = qwerty_us();
-        let keyboard = preset.keyboard();
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input).unwrap(),
+            preset.geometry.clone(),
+        );
 
-        let actual = cost.same_finger_bigrams(&keyboard);
+        let actual = cost.same_finger_bigrams(&preset.layout);
 
         assert!(
             (actual - expected).abs() < TOL,
@@ -325,16 +341,19 @@ mod tests {
     #[test]
     fn same_finger_bigrams_uses_current_layout_after_swap() {
         let preset = qwerty_us();
-        let mut keyboard = preset.keyboard();
+        let mut layout = preset.layout.clone();
 
-        let s_key = keyboard.layout.key_of(b's').unwrap();
-        let q_key = keyboard.layout.key_of(b'q').unwrap();
-        keyboard.layout.swap(s_key, q_key);
+        let s_key = layout.key_of(b's').unwrap();
+        let q_key = layout.key_of(b'q').unwrap();
+        layout.swap(s_key, q_key);
 
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text("as").unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text("as").unwrap(),
+            preset.geometry.clone(),
+        );
 
-        assert_eq!(cost.same_finger_bigrams(&keyboard), 1.0);
+        assert_eq!(cost.same_finger_bigrams(&layout), 1.0);
     }
 
     #[rstest]
@@ -345,11 +364,13 @@ mod tests {
     #[case::semi_alternation("aal", 0.5)]
     fn hand_alternation_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let preset = qwerty_us();
-        let keyboard = preset.keyboard();
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input).unwrap(),
+            preset.geometry.clone(),
+        );
 
-        let actual = cost.hand_alternation(&keyboard);
+        let actual = cost.hand_alternation(&preset.layout);
 
         assert!(
             (actual - expected).abs() < TOL,
@@ -364,11 +385,13 @@ mod tests {
     #[case::cross_finger_top_to_bottom("qx", 0.0)] // q=top/left-pinky, x=bottom/left-ring: row diff > 1 but different fingers
     fn row_jumping_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let preset = qwerty_us();
-        let keyboard = preset.keyboard();
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input).unwrap(),
+            preset.geometry.clone(),
+        );
 
-        let actual = cost.row_jumping(&keyboard);
+        let actual = cost.row_jumping(&preset.layout);
 
         assert!(
             (actual - expected).abs() < TOL,
@@ -382,11 +405,13 @@ mod tests {
     #[case::same_key("aa", 0.0)]
     fn finger_distance_standard_us_cases(#[case] input: &str, #[case] expected: f64) {
         let preset = qwerty_us();
-        let keyboard = preset.keyboard();
-        let cost =
-            WeightedCost::new(MetricWeights::default(), preset.corpus_from_text(input).unwrap());
+        let cost = WeightedCost::new(
+            MetricWeights::default(),
+            preset.corpus_from_text(input).unwrap(),
+            preset.geometry.clone(),
+        );
 
-        let actual = cost.finger_distance(&keyboard);
+        let actual = cost.finger_distance(&preset.layout);
 
         assert!(
             (actual - expected).abs() < TOL,
