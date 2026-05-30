@@ -1,5 +1,12 @@
 import { defineStore } from 'pinia';
 import type { OptimizeRequest } from './optimizer.schema';
+import { formatError } from '@/lib/format';
+import {
+  disposeOptimizerWorker,
+  optimizeInWorker,
+} from '@/services/optimizer/optimizerWorkerClient';
+import { useResultsStore } from '@/features/results/results.store';
+import { toOptimizeRequestDto } from './optimizer.mapper';
 
 export const useOptimizerStore = defineStore('optimizer', {
   state: () => ({
@@ -8,17 +15,25 @@ export const useOptimizerStore = defineStore('optimizer', {
   }),
   actions: {
     async run(request: OptimizeRequest) {
+      if (this.isOptimizing) {
+        return;
+      }
+
       this.isOptimizing = true;
       this.error = null;
+
       try {
-        // TODO: send `request` to the WASM optimizer worker.
-        void request;
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (e) {
-        this.error = e instanceof Error ? e.message : String(e);
+        const resultsStore = useResultsStore();
+        const result = await optimizeInWorker(toOptimizeRequestDto(request));
+        resultsStore.setResult(result);
+      } catch (caught) {
+        this.error = formatError(caught);
       } finally {
         this.isOptimizing = false;
       }
+    },
+    dispose() {
+      disposeOptimizerWorker();
     },
   },
 });
