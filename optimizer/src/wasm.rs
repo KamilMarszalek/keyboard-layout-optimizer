@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use rand::SeedableRng;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
@@ -10,12 +11,13 @@ use crate::{
         cost::{MetricBreakdown, MetricWeights, WeightedCost},
         sa::{AnnealingConfig, simulated_annealing},
     },
-    keyboard::layout::Layout,
+    keyboard::{layout::Layout, modifier::Modifier},
     preset::{
         constants::{US_KEY_COUNT, US_PRESS_COUNT},
         dvorak_us::dvorak_us,
         qwerty_us::qwerty_us,
     },
+    text::pipeline::{map_normalized_text_to_key_presses, normalize_text},
 };
 
 #[derive(Debug, Deserialize)]
@@ -103,6 +105,41 @@ impl From<MetricBreakdown> for MetricBreakdownDto {
             row_jumping: metric.row_jumping,
         }
     }
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CharFrequencyDto {
+    pub key: String,
+    pub frequency: f64,
+}
+
+#[wasm_bindgen]
+pub fn get_char_freq(input: &str) -> Result<JsValue, JsValue> {
+    let normalized = normalize_text(input);
+    let mapper = Modifier::standard_us();
+
+    let counts = map_normalized_text_to_key_presses(&normalized, &mapper)
+        .flatten()
+        .counts_by(|press| press.base);
+
+    let total: usize = counts.values().sum();
+
+    if total == 0 {
+        return serde_wasm_bindgen::to_value(&Vec::<CharFrequencyDto>::new())
+            .map_err(|err| JsValue::from_str(&format!("Serialization failed: {err}")));
+    }
+
+    let freq: Vec<CharFrequencyDto> = counts
+        .into_iter()
+        .map(|(key, count)| CharFrequencyDto {
+            key: (key as char).to_string(),
+            frequency: count as f64 / total as f64,
+        })
+        .collect();
+
+    serde_wasm_bindgen::to_value(&freq)
+        .map_err(|err| JsValue::from_str(&format!("Serialization failed: {err}")))
 }
 
 #[wasm_bindgen]
