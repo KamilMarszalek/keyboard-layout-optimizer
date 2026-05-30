@@ -10,8 +10,8 @@ pub mod sa;
 use rand::{SeedableRng, rngs::SmallRng};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
-use crate::keyboard::layout::Layout;
 use self::sa::{AnnealingConfig, AnnealingResult, simulated_annealing};
+use crate::keyboard::layout::Layout;
 
 /// Runs simulated annealing from each of the provided starting layouts in
 /// parallel and returns the result with the lowest cost.
