@@ -1,30 +1,27 @@
 import { defineStore } from 'pinia';
 import type { OptimizeResult } from './results.types';
-import { metricControls } from '@/features/config/config.controls';
+
+const RECENT_COST_HISTORY_SIZE = 8;
 
 interface ResultsState {
   result?: OptimizeResult;
-  error?: string;
 }
 
 export const useResultsStore = defineStore('results', {
   state: (): ResultsState => ({
     result: undefined,
-    error: undefined,
   }),
   actions: {
-    setError(e: unknown) {
-      this.error = e instanceof Error ? e.message : String(e);
+    setResult(result: OptimizeResult) {
+      this.result = result;
+    },
+    clearResult() {
+      this.result = undefined;
     },
   },
   getters: {
-    costHistory: (state) => state.result!.costHistory,
-    recentCostHistory: (state) => state.result!.costHistory.slice(-8),
-    resultMetrics: (state) =>
-      metricControls.map((m) => ({
-        key: m.key,
-        label: m.label,
-        value: state.result!.metrics[m.key],
-      })),
+    costHistory: (state) => state.result?.costHistory ?? [],
+    recentCostHistory: (state) => state.result?.costHistory.slice(-RECENT_COST_HISTORY_SIZE) ?? [],
+    resultMetrics: (state) => state.result?.metrics,
   },
 });
