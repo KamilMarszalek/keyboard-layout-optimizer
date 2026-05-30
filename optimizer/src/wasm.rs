@@ -65,26 +65,31 @@ pub struct MetricBreakdownDto {
     pub row_jumping: f64,
 }
 
-impl From<MetricWeightsDto> for MetricWeights {
-    fn from(dto: MetricWeightsDto) -> Self {
-        Self {
+impl TryFrom<MetricWeightsDto> for MetricWeights {
+    type Error = String;
+    fn try_from(dto: MetricWeightsDto) -> Result<Self, Self::Error> {
+        ensure_valid_metric_weights(&dto)?;
+
+        Ok(Self {
             same_finger_bigrams: dto.same_finger_bigrams,
             finger_distance: dto.finger_distance,
             home_row_usage: dto.home_row_usage,
             hand_alternation: dto.hand_alternation,
             row_jumping: dto.row_jumping,
-        }
+        })
     }
 }
 
-impl From<AnnealingConfigDto> for AnnealingConfig {
-    fn from(dto: AnnealingConfigDto) -> Self {
-        Self {
+impl TryFrom<AnnealingConfigDto> for AnnealingConfig {
+    type Error = String;
+    fn try_from(dto: AnnealingConfigDto) -> Result<Self, Self::Error> {
+        ensure_valid_annealing_config(&dto)?;
+        Ok(Self {
             t_start: dto.t_start,
             t_min: dto.t_min,
             alpha: dto.alpha,
             iterations_per_temp: dto.iterations_per_temp,
-        }
+        })
     }
 }
 
@@ -126,8 +131,8 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
         .corpus_from_text(&request.text)
         .map_err(|err| format!("Failed to build corpus: {err:?}"))?;
 
-    let weights: MetricWeights = request.weights.into();
-    let config: AnnealingConfig = request.annealing.into();
+    let weights: MetricWeights = request.weights.try_into()?;
+    let config: AnnealingConfig = request.annealing.try_into()?;
 
     let cost = WeightedCost::<US_KEY_COUNT, US_PRESS_COUNT>::new(weights, corpus);
 
@@ -165,4 +170,38 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
 
 fn layout_to_dto(layout: &Layout<US_KEY_COUNT>) -> Vec<String> {
     layout.mappings_iter().map(|symbol| (symbol.base as char).to_string()).collect()
+}
+
+fn ensure(condition: bool, message: impl Into<String>) -> Result<(), String> {
+    if condition { Ok(()) } else { Err(message.into()) }
+}
+
+fn ensure_valid_annealing_config(dto: &AnnealingConfigDto) -> Result<(), String> {
+    ensure(dto.t_start.is_finite(), "tStart must be a finite number")?;
+    ensure(dto.t_min.is_finite(), "tMin must be a finite number")?;
+    ensure(dto.alpha.is_finite(), "alpha must be a finite number")?;
+    ensure(dto.t_start > 0.0, "tStart must be greater than 0")?;
+    ensure(dto.t_min > 0.0, "tMin must be greater than 0")?;
+    ensure(dto.t_start > dto.t_min, "tStart must be greater than tMin")?;
+    ensure((0.0..1.0).contains(&dto.alpha), "alpha must be in range (0, 1)")?;
+    ensure(dto.iterations_per_temp > 0, "iterationsPerTemp must be greater than 0")?;
+
+    Ok(())
+}
+
+fn ensure_valid_metric_weights(dto: &MetricWeightsDto) -> Result<(), String> {
+    ensure_valid_weight("sameFingerBigrams", dto.same_finger_bigrams)?;
+    ensure_valid_weight("fingerDistance", dto.finger_distance)?;
+    ensure_valid_weight("homeRowUsage", dto.home_row_usage)?;
+    ensure_valid_weight("handAlternation", dto.hand_alternation)?;
+    ensure_valid_weight("rowJumping", dto.row_jumping)?;
+
+    Ok(())
+}
+
+fn ensure_valid_weight(name: &str, value: f64) -> Result<(), String> {
+    ensure(value.is_finite(), format!("{name} must be a finite number"))?;
+    ensure(value >= 0.0, format!("{name} must be non-negative"))?;
+
+    Ok(())
 }
