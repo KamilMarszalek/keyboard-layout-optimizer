@@ -68,7 +68,6 @@ impl MetricBreakdown {
 /// `WeightedCost` combines a text corpus and user-provided metric weights.
 /// It can evaluate a keyboard layout and return either a single scalar cost
 /// or a detailed metric breakdown.
-#[allow(dead_code)]
 pub struct WeightedCost<const N: usize, const P: usize> {
     weights: MetricWeights,
     corpus: Corpus<P>,
@@ -149,7 +148,10 @@ impl<const N: usize, const P: usize> WeightedCost<N, P> {
     fn row_jumping(&self, keyboard: &Keyboard<N>) -> f64 {
         self.bigrams_metric(
             keyboard,
-            |a, b| a.row.order().abs_diff(b.row.order()) > 1,
+            |a, b| {
+                a.finger_assignment == b.finger_assignment
+                    && a.row.order().abs_diff(b.row.order()) > 1
+            },
             |count, _, _| count as f64,
         )
     }
