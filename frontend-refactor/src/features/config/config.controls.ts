@@ -68,7 +68,7 @@ export const annealingControls: ReadonlyArray<NumberControlField<AnnealingParams
     key: 'iterationsPerTemp',
     label: 'Iterations per temperature',
     step: 1,
-    min: 0,
+    min: 1,
   },
 ];
 

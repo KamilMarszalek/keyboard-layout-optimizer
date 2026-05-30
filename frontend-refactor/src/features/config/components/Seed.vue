@@ -2,8 +2,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ConfigNumberField from './ConfigNumberField.vue';
 import { seedControl } from '../config.controls';
-
-const control = seedControl;
 </script>
 
 <template>
@@ -13,11 +11,11 @@ const control = seedControl;
     </CardHeader>
     <CardContent class="pt-5">
       <ConfigNumberField
-        :key="control.key"
-        :name="`config.${control.key}`"
-        :label="control.label"
-        :description="control.description"
-        :step="control.step"
+        :key="seedControl.key"
+        :name="`config.${seedControl.key}`"
+        :label="seedControl.label"
+        :description="seedControl.description"
+        :step="seedControl.step"
       />
     </CardContent>
   </Card>
