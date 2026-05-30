@@ -1,12 +1,26 @@
 <script setup lang="ts">
 import Header from '@/components/common/Header.vue';
 import { OptimizerForm } from '@/features/optimizer/components';
+import { useOptimizerStore } from '@/features/optimizer/optimizer.store';
+import { KeyboardPreview } from '@/features/keyboard/components';
+import { useKeyboardStore } from '@/features/keyboard/keyboard.store';
 import { useResultsStore } from '@/features/results/results.store';
 import { storeToRefs } from 'pinia';
-import { OptimizationResult } from '@/features/results/components';
+import { onBeforeUnmount, onMounted } from 'vue';
+import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
 
-const store = useResultsStore();
-const { result } = storeToRefs(store);
+const optimizerStore = useOptimizerStore();
+const keyboardStore = useKeyboardStore();
+const resultsStore = useResultsStore();
+const { result } = storeToRefs(resultsStore);
+
+onMounted(() => {
+  void keyboardStore.loadStandardQwertyLayout();
+});
+
+onBeforeUnmount(() => {
+  optimizerStore.dispose();
+});
 </script>
 
 <template>
@@ -14,13 +28,18 @@ const { result } = storeToRefs(store);
     <div class="mx-auto max-w-7xl space-y-6">
       <Header />
       <OptimizerForm />
+      <KeyboardPreview />
+
+      <section
+        v-if="result"
+        class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]"
+      >
+        <OptimizationResult />
+        <div class="space-y-6">
+          <MetricsBreakdown />
+          <CostHistory />
+        </div>
+      </section>
     </div>
-    <section v-if="result">
-      <OptimizationResult />
-      <div class="space-y-6">
-        <MetricsBreakdown />
-        <CostHistoryList />
-      </div>
-    </section>
   </main>
 </template>
