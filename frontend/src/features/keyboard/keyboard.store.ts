@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia';
 import { formatError } from '@/lib/format';
 import { getQwertyLayout } from '@/services/optimizer/wasmClient';
-import { useResultsStore } from '@/features/results/results.store';
-import { EXPECTED_LAYOUT_LENGTH, hasExpectedLayoutLength } from './keyboardLayout';
+import { EXPECTED_LAYOUT_LENGTH } from './keyboardLayout';
 
 interface KeyboardState {
   standardQwertyLayout: string[];
@@ -18,41 +17,6 @@ export const useKeyboardStore = defineStore('keyboard', {
   }),
   getters: {
     expectedLayoutLength: () => EXPECTED_LAYOUT_LENGTH,
-    optimizedLayout(): string[] | undefined {
-      return useResultsStore().result?.bestLayout;
-    },
-    layoutValidationMessage(): string | null {
-      if (this.layoutError) {
-        return this.layoutError;
-      }
-
-      const optimizedLayout = this.optimizedLayout;
-      if (optimizedLayout && !hasExpectedLayoutLength(optimizedLayout)) {
-        return `The optimizer returned ${optimizedLayout.length} keys; expected ${EXPECTED_LAYOUT_LENGTH}.`;
-      }
-
-      if (
-        !optimizedLayout &&
-        this.standardQwertyLayout.length > 0 &&
-        !hasExpectedLayoutLength(this.standardQwertyLayout)
-      ) {
-        return `The standard keyboard layout loaded ${this.standardQwertyLayout.length} keys; expected ${EXPECTED_LAYOUT_LENGTH}.`;
-      }
-
-      return null;
-    },
-    currentLayout(): string[] {
-      const optimizedLayout = this.optimizedLayout;
-
-      if (optimizedLayout) {
-        return hasExpectedLayoutLength(optimizedLayout) ? optimizedLayout : [];
-      }
-
-      return hasExpectedLayoutLength(this.standardQwertyLayout) ? this.standardQwertyLayout : [];
-    },
-    layoutTitle(): string {
-      return this.optimizedLayout ? 'Optimized layout' : 'Standard QWERTY layout';
-    },
   },
   actions: {
     async loadStandardQwertyLayout() {

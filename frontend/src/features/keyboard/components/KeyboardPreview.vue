@@ -4,17 +4,52 @@ import { computed } from 'vue';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { KEYBOARD_ROW_OFFSETS, layoutToRows } from '../keyboardLayout';
+import {
+  EXPECTED_LAYOUT_LENGTH,
+  KEYBOARD_ROW_OFFSETS,
+  hasExpectedLayoutLength,
+  layoutToRows,
+} from '../keyboardLayout';
 import { useKeyboardStore } from '../keyboard.store';
 
+const props = defineProps<{
+  optimizedLayout?: string[];
+}>();
+
 const store = useKeyboardStore();
-const {
-  currentLayout,
-  expectedLayoutLength,
-  isLoadingQwerty,
-  layoutTitle,
-  layoutValidationMessage,
-} = storeToRefs(store);
+const { standardQwertyLayout, isLoadingQwerty, layoutError, expectedLayoutLength } =
+  storeToRefs(store);
+
+const currentLayout = computed(() => {
+  if (props.optimizedLayout) {
+    return hasExpectedLayoutLength(props.optimizedLayout) ? props.optimizedLayout : [];
+  }
+  return hasExpectedLayoutLength(standardQwertyLayout.value) ? standardQwertyLayout.value : [];
+});
+
+const layoutTitle = computed(() =>
+  props.optimizedLayout ? 'Optimized layout' : 'Standard QWERTY layout',
+);
+
+const layoutValidationMessage = computed((): string | null => {
+  if (layoutError.value) {
+    return layoutError.value;
+  }
+
+  if (props.optimizedLayout && !hasExpectedLayoutLength(props.optimizedLayout)) {
+    return `The optimizer returned ${props.optimizedLayout.length} keys; expected ${EXPECTED_LAYOUT_LENGTH}.`;
+  }
+
+  if (
+    !props.optimizedLayout &&
+    standardQwertyLayout.value.length > 0 &&
+    !hasExpectedLayoutLength(standardQwertyLayout.value)
+  ) {
+    return `The standard keyboard layout loaded ${standardQwertyLayout.value.length} keys; expected ${EXPECTED_LAYOUT_LENGTH}.`;
+  }
+
+  return null;
+});
 
 const displayedLayoutRows = computed(() => layoutToRows(currentLayout.value));
 </script>
