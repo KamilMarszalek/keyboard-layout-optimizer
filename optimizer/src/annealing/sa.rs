@@ -69,11 +69,7 @@ where
     while temperature > config.t_min {
         for _ in 0..config.iterations_per_temp {
             let first = rng.random_range(0..N);
-            let mut second = rng.random_range(0..N);
-
-            while first == second {
-                second = rng.random_range(0..N);
-            }
+            let second = (first + 1 + rng.random_range(0..N - 1)) % N;
             current_layout.swap(first, second);
 
             let new_cost = cost_func(&current_layout);
