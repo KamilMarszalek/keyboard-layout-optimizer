@@ -12,7 +12,7 @@ export const configSchema = z.object({
     tStart: z.number().min(0),
     tMin: z.number().min(0),
     alpha: z.number().min(0).max(1),
-    iterationsPerTemp: z.number().min(0),
+    iterationsPerTemp: z.number().min(1),
   }),
   seed: z.number().nullable().default(null),
 });
