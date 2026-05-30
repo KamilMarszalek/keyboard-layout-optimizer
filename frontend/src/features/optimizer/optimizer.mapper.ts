@@ -3,7 +3,7 @@ import type { OptimizeRequest } from './optimizer.schema';
 
 export function toOptimizeRequestDto(values: OptimizeRequest): OptimizeRequestDto {
   return {
-    text: values.corpus.text.trim(),
+    text: values.corpus.text,
     weights: { ...values.config.weights },
     annealing: {
       ...values.config.annealing,
