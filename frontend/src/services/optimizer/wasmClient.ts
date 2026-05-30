@@ -23,11 +23,14 @@ function initOptimizerModule(): Promise<void> {
   return initPromise;
 }
 
-export function initOptimizerWasm(): Promise<void> {
+function initOptimizerWasm(): Promise<void> {
   if (!threadPoolPromise) {
     threadPoolPromise = (async () => {
       await initOptimizerModule();
       const availableThreads = navigator.hardwareConcurrency ?? 2;
+      // Cap matches the length of initial_layouts in wasm.rs: two starting points
+      // (QWERTY + Dvorak) run in parallel, so more than 2 threads add no throughput.
+      // Should be changed if more starting layouts are added.
       const threadCount = Math.min(availableThreads, 2);
 
       await initThreadPool(threadCount);
