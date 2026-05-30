@@ -1,5 +1,5 @@
 import init, { initThreadPool, optimize_layout, qwerty_layout } from '@/wasm/optimizer';
-import type { OptimizeRequestDto, OptimizeResultDto } from './optimizer.dto';
+import { optimizeResultSchema, type OptimizeRequestDto, type OptimizeResultDto } from './optimizer.dto';
 
 let initPromise: Promise<void> | undefined;
 let threadPoolPromise: Promise<void> | undefined;
@@ -48,11 +48,14 @@ export async function optimizeLayout(
 ): Promise<OptimizeResultDto> {
   await initOptimizerWasm();
 
+  let raw: unknown;
   try {
-    return optimize_layout(request) as OptimizeResultDto;
+    raw = optimize_layout(request);
   } catch (caught) {
     throw errorWithCause(`WASM optimization failed: ${String(caught)}`, caught);
   }
+
+  return optimizeResultSchema.parse(raw);
 }
 
 // Must call initOptimizerModule (bare WASM init), NOT initOptimizerWasm —
