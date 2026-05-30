@@ -116,7 +116,6 @@ pub fn qwerty_layout() -> Vec<String> {
     layout_to_dto(&qwerty_us().layout)
 }
 
-#[wasm_bindgen]
 pub fn dvorak_layout() -> Vec<String> {
     layout_to_dto(&dvorak_us().layout)
 }
