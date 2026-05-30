@@ -56,7 +56,7 @@ export const annealingControls: ReadonlyArray<NumberControlField<AnnealingParams
     key: 'tMin',
     label: 'Minimum temperature',
     step: 0.001,
-    min: 0,
+    min: 0.001,
   },
   {
     key: 'alpha',
