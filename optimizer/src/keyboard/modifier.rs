@@ -1,4 +1,4 @@
-use crate::keyboard::{common::AsciiChar, model::KeyPress};
+use crate::keyboard::{common::AsciiChar, key_press::KeyPress};
 
 use core::fmt;
 use std::collections::HashMap;

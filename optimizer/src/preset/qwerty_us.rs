@@ -4,9 +4,6 @@ use crate::{
     preset::keyboard_preset::KeyboardPreset,
 };
 
-#[cfg(test)]
-use crate::keyboard::model::Keyboard;
-
 #[rustfmt::skip]
 pub const QWERTY_US_SYMBOLS: [AsciiChar; US_KEY_COUNT] = [
     b'`', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'0', b'-', b'=',
@@ -22,17 +19,6 @@ impl Layout<US_KEY_COUNT> {
     }
 }
 
-#[cfg(test)]
-impl Keyboard<US_KEY_COUNT> {
-    /// Returns a keyboard using ANSI US geometry and QWERTY US symbol placement.
-    pub fn qwerty_us() -> Self {
-        let geometry = Geometry::standard_us();
-        let modifier = Modifier::standard_us();
-        let layout = Layout::qwerty_us(&modifier);
-        Self::new(geometry, layout)
-    }
-}
-
 pub fn qwerty_us() -> KeyboardPreset<US_KEY_COUNT, US_PRESS_COUNT> {
     let geometry = Geometry::standard_us();
     let modifier = Modifier::standard_us();
@@ -44,26 +30,17 @@ pub fn qwerty_us() -> KeyboardPreset<US_KEY_COUNT, US_PRESS_COUNT> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::keyboard::model::{KeyPress, Keyboard};
+    use crate::keyboard::key_press::KeyPress;
 
     #[test]
     fn qwerty_us_composes_keyboard_and_corpus() {
         let preset = qwerty_us();
 
-        let keyboard = preset.keyboard();
         let corpus = preset.corpus_from_text("aA!").unwrap();
 
-        assert_eq!(keyboard.layout.key_of(b'a'), Some(26));
+        assert_eq!(preset.layout.key_of(b'a'), Some(26));
         assert!(corpus.index_of(KeyPress { base: b'a', shifted: false }).is_some());
         assert!(corpus.index_of(KeyPress { base: b'a', shifted: true }).is_some());
         assert!(corpus.index_of(KeyPress { base: b'1', shifted: true }).is_some());
-    }
-
-    #[test]
-    fn qwerty_preset_keyboard_matches_direct_keyboard_constructor() {
-        let preset_keyboard = qwerty_us().keyboard();
-        let direct_keyboard = Keyboard::qwerty_us();
-
-        assert_eq!(preset_keyboard.layout, direct_keyboard.layout);
     }
 }
