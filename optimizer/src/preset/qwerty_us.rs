@@ -1,10 +1,13 @@
 use super::constants::{US_KEY_COUNT, US_PRESS_COUNT};
 use crate::{
     keyboard::{
-        common::AsciiChar, geometry::Geometry, layout::Layout, model::Keyboard, modifier::Modifier,
+        common::AsciiChar, geometry::Geometry, layout::Layout, modifier::Modifier,
     },
     preset::keyboard_preset::KeyboardPreset,
 };
+
+#[cfg(test)]
+use crate::keyboard::model::Keyboard;
 
 #[rustfmt::skip]
 pub const QWERTY_US_SYMBOLS: [AsciiChar; US_KEY_COUNT] = [
@@ -21,6 +24,7 @@ impl Layout<US_KEY_COUNT> {
     }
 }
 
+#[cfg(test)]
 impl Keyboard<US_KEY_COUNT> {
     /// Returns a keyboard using ANSI US geometry and QWERTY US symbol placement.
     pub fn qwerty_us() -> Self {
