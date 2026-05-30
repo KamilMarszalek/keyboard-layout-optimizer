@@ -10,7 +10,7 @@ use crate::{
         cost::{MetricBreakdown, MetricWeights, WeightedCost},
         sa::{AnnealingConfig, simulated_annealing},
     },
-    keyboard::{layout::Layout, model::Keyboard},
+    keyboard::layout::Layout,
     preset::{
         constants::{US_KEY_COUNT, US_PRESS_COUNT},
         dvorak_us::dvorak_us,
@@ -134,14 +134,7 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
     let weights: MetricWeights = request.weights.try_into()?;
     let config: AnnealingConfig = request.annealing.try_into()?;
 
-    let cost = WeightedCost::<US_KEY_COUNT, US_PRESS_COUNT>::new(weights, corpus);
-
-    let geometry = preset.geometry.clone();
-
-    let cost_func = |layout: &Layout<US_KEY_COUNT>| {
-        let keyboard = Keyboard::new(geometry.clone(), layout.clone());
-        cost.evaluate(&keyboard)
-    };
+    let cost = WeightedCost::<US_KEY_COUNT, US_PRESS_COUNT>::new(weights, corpus, preset.geometry);
 
     let seed = request.seed.unwrap_or(42) as u64;
 
@@ -152,13 +145,14 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
         .enumerate()
         .map(|(index, initial_layout)| {
             let mut rng = rand::rngs::SmallRng::seed_from_u64(seed + index as u64);
-            simulated_annealing(initial_layout.clone(), &config, &mut rng, cost_func)
+            simulated_annealing(initial_layout.clone(), &config, &mut rng, |layout| {
+                cost.evaluate(layout)
+            })
         })
         .min_by(|a, b| a.best_cost.total_cmp(&b.best_cost))
         .ok_or_else(|| "No layouts available for optimization".to_string())?;
 
-    let best_keyboard = Keyboard::new(preset.geometry.clone(), result.best_layout.clone());
-    let metrics = cost.evaluate_breakdown(&best_keyboard);
+    let metrics = cost.evaluate_breakdown(&result.best_layout);
 
     Ok(OptimizeResultDto {
         best_layout: layout_to_dto(&result.best_layout),
