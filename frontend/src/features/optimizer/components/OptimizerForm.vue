@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod';
-import { useForm } from 'vee-validate';
 import {
-  AnnealingParams,
-  MetricWeights,
-  Seed,
+    AnnealingParams,
+    MetricWeights,
+    Seed,
 } from '@/features/config/components';
 import { defaultConfig } from '@/features/config/config.schema';
 import { Corpus } from '@/features/corpus/components';
 import { defaultCorpus } from '@/features/corpus/corpus.schema';
-import { optimizeRequestSchema } from '../optimizer.schema';
-import { useOptimizerStore } from '../optimizer.store';
+import { toTypedSchema } from '@vee-validate/zod';
+import { useForm } from 'vee-validate';
+import { optimizeRequestSchema } from '../optimizer.schema.ts';
+import { useOptimizerStore } from '../optimizer.store.ts';
 import Run from './Run.vue';
 
 const optimizer = useOptimizerStore();
