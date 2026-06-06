@@ -28,7 +28,7 @@ const charData = computed(() => ({
   labels: costHistory.value.map((_, i) => i + 1),
   datasets: [
     {
-      label: 'Recent cost history',
+      label: 'Cost history',
       data: costHistory.value.map((x) => Number(x.toFixed(4))),
       fill: false,
       borderColor: themeColor('--chart-1'),
