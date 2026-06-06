@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { storeToRefs } from 'pinia';
 
-import { useResultsStore } from '../results.store';
+import { useResultsStore } from '../store';
 
 const store = useResultsStore();
 const { result, costHistory } = storeToRefs(store);

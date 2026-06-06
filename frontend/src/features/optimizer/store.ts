@@ -1,11 +1,11 @@
-import { useResultsStore } from '@/features/results/results.store';
+import { useResultsStore } from '@/features/results/store';
 import { formatError } from '@/lib/error';
 import { disposeOptimizerWorker, optimizeInWorker } from '@/wasm/client';
 import { defineStore } from 'pinia';
 
 import { fromOptimizeResultDto } from '../results/mapper';
-import { toOptimizeRequestDto } from './optimizer.mapper';
-import type { OptimizeRequest } from './optimizer.schema';
+import { toOptimizeRequestDto } from './mapper';
+import type { OptimizeRequest } from './schema';
 
 export const useOptimizerStore = defineStore('optimizer', {
   state: () => ({

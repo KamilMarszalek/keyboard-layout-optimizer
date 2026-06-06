@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { annealingControls } from '../config.controls.ts';
+import { annealingControls } from '../controls.ts';
 import ConfigNumberField from './ConfigNumberField.vue';
 </script>
 

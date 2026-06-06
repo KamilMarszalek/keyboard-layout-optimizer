@@ -1,7 +1,7 @@
 import type { MetricBreakdownDto, OptimizeResultDto } from '@/wasm/dto';
 
 import { fromLayoutDto } from '../keyboard/mapper';
-import type { MetricBreakdown, OptimizeResult } from './results.types';
+import type { MetricBreakdown, OptimizeResult } from './types';
 
 export function fromMetricBreakdownDto(value: MetricBreakdownDto): MetricBreakdown {
   return {

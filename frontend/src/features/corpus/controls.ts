@@ -1,6 +1,6 @@
 import type { ControlField } from '@/lib/field';
 
-import type { Corpus } from './corpus.schema';
+import type { Corpus } from './schema';
 
 export const corpusTextControl: ControlField<Corpus> = {
   key: 'text',

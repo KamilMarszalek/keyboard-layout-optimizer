@@ -1,5 +1,5 @@
-import { configSchema } from '@/features/config/config.schema';
-import { corpusSchema } from '@/features/corpus/corpus.schema';
+import { configSchema } from '@/features/config/schema';
+import { corpusSchema } from '@/features/corpus/schema';
 import { z } from 'zod';
 
 export const optimizeRequestSchema = z.object({

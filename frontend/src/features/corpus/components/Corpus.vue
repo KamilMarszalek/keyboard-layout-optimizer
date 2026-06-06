@@ -6,8 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useField } from 'vee-validate';
 import { computed, watch } from 'vue';
 
-import { corpusTextControl as control } from '../corpus.controls';
-import { useCorpusStore } from '../corpus.store';
+import { corpusTextControl as control } from '../controls';
+import { useCorpusStore } from '../store';
 
 const { value, errorMessage } = useField<string>(control.key);
 const characterCount = computed(() => value.value?.trim().length ?? 0);

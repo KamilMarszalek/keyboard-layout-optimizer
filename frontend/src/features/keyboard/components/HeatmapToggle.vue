@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useCorpusStore } from '@/features/corpus/corpus.store';
+import { useCorpusStore } from '@/features/corpus/store';
 import { storeToRefs } from 'pinia';
 import { watch } from 'vue';
 
-import { useKeyboardStore } from '../keyboard.store';
+import { useKeyboardStore } from '../store';
 
 const keyboard = useKeyboardStore();
 const corpus = useCorpusStore();

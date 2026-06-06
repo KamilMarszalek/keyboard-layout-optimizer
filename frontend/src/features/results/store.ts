@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import type { OptimizeResult } from './results.types';
+import type { OptimizeResult } from './types';
 
 const RECENT_COST_HISTORY_SIZE = 8;
 
