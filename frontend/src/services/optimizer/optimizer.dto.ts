@@ -30,6 +30,15 @@ export interface MetricBreakdownDto {
   rowJumping: number;
 }
 
+export interface KeyMappingDto {
+  base: string;
+  shifted: string;
+}
+
+export interface Layout {
+  mappings: KeyMappingDto[];
+}
+
 export interface OptimizeResultDto {
   bestLayout: string[];
   bestCost: number;
