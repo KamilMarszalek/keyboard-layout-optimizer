@@ -5,9 +5,9 @@ import Key from './Key.vue';
 
 const props = defineProps<{
   mappings: KeyMapping[];
-  offsetClass?: string;
   freqMap: Map<string, number>;
   maxFreq: number;
+  offsetClass?: string;
 }>();
 </script>
 
