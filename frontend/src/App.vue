@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import Header from '@/components/common/Header.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCorpusStore } from '@/features/corpus/store';
 import { useEvaluatorStore } from '@/features/evaluator/store';
 import { KeyboardPreview } from '@/features/keyboard/components';
+import { useKeyboardStore } from '@/features/keyboard/store';
 import { useModeStore } from '@/features/mode/store';
 import { OptimizerForm } from '@/features/optimizer/components';
 import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
@@ -15,8 +17,19 @@ const { result } = storeToRefs(resultStore);
 const evaluatorStore = useEvaluatorStore();
 const { result: evaluateResult } = storeToRefs(evaluatorStore);
 
+const corpusStore = useCorpusStore();
+const keyboardStore = useKeyboardStore();
+
 const modeStore = useModeStore();
 const { mode } = storeToRefs(modeStore);
+
+function handleReEvaluate() {
+  if (!evaluatorStore.lastWeights) {
+    return;
+  }
+  const keys = keyboardStore.editableLayout.mappings.map((mapping) => mapping.base);
+  void evaluatorStore.evaluate(keys, corpusStore.text, evaluatorStore.lastWeights);
+}
 </script>
 
 <template>
@@ -24,7 +37,10 @@ const { mode } = storeToRefs(modeStore);
     <div class="mx-auto max-w-7xl space-y-6">
       <Header />
       <OptimizerForm />
-      <KeyboardPreview :editable="mode === 'evaluate'" />
+      <KeyboardPreview
+        :editable="mode === 'evaluate'"
+        :on-re-evaluate="mode === 'evaluate' ? handleReEvaluate : undefined"
+      />
 
       <section
         v-if="mode === 'optimize' && result"
