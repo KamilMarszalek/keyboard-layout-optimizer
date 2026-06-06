@@ -48,7 +48,7 @@ class OptimizerWorkerClient {
       return this.worker;
     }
 
-    this.worker = new Worker(new URL('./optimizer.worker.ts', import.meta.url), {
+    this.worker = new Worker(new URL('./worker.ts', import.meta.url), {
       type: 'module',
     });
     this.worker.addEventListener('message', this.handleWorkerMessage);
