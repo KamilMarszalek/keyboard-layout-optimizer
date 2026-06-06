@@ -5,11 +5,11 @@ import type { OptimizeResult } from './results.types';
 const RECENT_COST_HISTORY_SIZE = 8;
 
 interface ResultsState {
-  result?: OptimizeResult;
+  result: OptimizeResult | null;
 }
 
 export const useResultsStore = defineStore('results', {
-  state: (): ResultsState => ({ result: undefined }),
+  state: (): ResultsState => ({ result: null }),
   actions: {
     setResult(result: OptimizeResult) {
       this.result = result;

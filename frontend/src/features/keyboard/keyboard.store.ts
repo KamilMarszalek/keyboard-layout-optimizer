@@ -9,8 +9,8 @@ interface KeyboardState {
   standardQwertyLayout: Layout;
   isLoadingQwerty: boolean;
   showHeatmap: boolean;
-  layoutError?: string;
-  charFrequencies?: CharFrequency[];
+  charFrequencies: CharFrequency[];
+  layoutError: string | null;
 }
 
 export const useKeyboardStore = defineStore('keyboard', {
@@ -18,6 +18,8 @@ export const useKeyboardStore = defineStore('keyboard', {
     standardQwertyLayout: { mappings: [] },
     isLoadingQwerty: false,
     showHeatmap: false,
+    charFrequencies: [],
+    layoutError: null,
   }),
   actions: {
     async refreshCharFrequencies(text: string) {
