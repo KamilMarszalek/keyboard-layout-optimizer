@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useCorpusStore } from '@/features/corpus/store';
 import { storeToRefs } from 'pinia';
-import { watch } from 'vue';
+import { watchEffect } from 'vue';
 
 import { useKeyboardStore } from '../store';
 
@@ -9,18 +9,11 @@ const keyboard = useKeyboardStore();
 const corpus = useCorpusStore();
 const { showHeatmap } = storeToRefs(keyboard);
 
-watch(showHeatmap, (show) => {
-  void keyboard.refreshCharFrequencies(show ? corpus.text : '');
+watchEffect(() => {
+  if (showHeatmap.value) {
+    keyboard.refreshCharFrequencies(corpus.text);
+  }
 });
-
-watch(
-  () => corpus.text,
-  (text) => {
-    if (showHeatmap.value) {
-      void keyboard.refreshCharFrequencies(text);
-    }
-  },
-);
 </script>
 
 <template>
