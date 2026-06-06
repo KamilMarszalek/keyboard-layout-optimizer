@@ -23,9 +23,9 @@ export const useKeyboardStore = defineStore('keyboard', {
   }),
   actions: {
     async refreshCharFrequencies(text: string) {
-      if (text.trim()) {
-        this.charFrequencies = (await getCharFrequencies(text)).map(fromCharFrequencyDto);
-      }
+      this.charFrequencies = text.trim()
+        ? (await getCharFrequencies(text)).map(fromCharFrequencyDto)
+        : [];
     },
 
     async loadStandardQwertyLayout() {

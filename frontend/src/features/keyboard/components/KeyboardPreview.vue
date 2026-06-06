@@ -6,16 +6,17 @@ import { useResultsStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted } from 'vue';
 
-import { buildFrequencyMap, maxFrequency } from '../heatmap';
-import { useKeyboardStore } from '../store';
+import { buildFrequencyMap, keyHeatStyle, maxFrequency } from '../heatmap';
 import { EXPECTED_LAYOUT_LENGTH, KEYBOARD_ROW_OFFSETS, layoutToRows } from '../layout.ts';
+import { useKeyboardStore } from '../store';
 import HeatmapToggle from './HeatmapToggle.vue';
 import Row from './Row.vue';
 
 const store = useKeyboardStore();
 const resultsStore = useResultsStore();
 
-const { standardQwertyLayout, isLoadingQwerty, layoutError, charFrequencies } = storeToRefs(store);
+const { standardQwertyLayout, isLoadingQwerty, layoutError, charFrequencies, showHeatmap } =
+  storeToRefs(store);
 const { result } = storeToRefs(resultsStore);
 
 const layoutMetadata = computed(() => {
@@ -24,9 +25,23 @@ const layoutMetadata = computed(() => {
     : { layout: standardQwertyLayout.value, title: 'Standard QWERTY layout' };
 });
 
-const displayedLayoutRows = computed(() => layoutToRows(layoutMetadata.value.layout));
 const freqMap = computed(() => buildFrequencyMap(charFrequencies?.value));
 const maxFreq = computed(() => maxFrequency(charFrequencies?.value));
+
+const rows = computed(() =>
+  layoutToRows(layoutMetadata.value.layout).map((row) =>
+    row.map((key) => {
+      const freq = freqMap.value.get(key.base) ?? 0;
+      return {
+        mapping: key,
+        style:
+          showHeatmap.value && freq !== 0
+            ? keyHeatStyle(freq, maxFreq.value)
+            : { backgroundColor: 'transparent' },
+      };
+    }),
+  ),
+);
 
 onMounted(() => {
   void store.loadStandardQwertyLayout();
@@ -62,12 +77,10 @@ onMounted(() => {
       <div v-else class="overflow-x-auto pb-2">
         <div class="mx-auto w-max space-y-2 rounded-md bg-muted/40 p-4 ring-1 ring-border">
           <Row
-            v-for="(row, rowIndex) in displayedLayoutRows"
+            v-for="(rowView, rowIndex) in rows"
             :key="`layout-row-${rowIndex}`"
-            :mappings="row"
+            :views="rowView"
             :offset-class="KEYBOARD_ROW_OFFSETS[rowIndex]"
-            :freq-map="freqMap"
-            :max-freq="maxFreq"
           />
         </div>
       </div>
