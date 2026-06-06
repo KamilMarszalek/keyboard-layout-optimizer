@@ -18,6 +18,5 @@ export const useResultsStore = defineStore('results', {
   getters: {
     costHistory: (state) => state.result?.costHistory ?? [],
     recentCostHistory: (state) => state.result?.costHistory.slice(-RECENT_COST_HISTORY_SIZE) ?? [],
-    resultMetrics: (state) => state.result?.metrics,
   },
 });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { themeColor } from '@/lib/token';
+import type { MetricBreakdownDto } from '@/wasm/dto';
 import {
   BarElement,
   CategoryScale,
@@ -10,24 +11,23 @@ import {
   Title,
   Tooltip,
 } from 'chart.js';
-import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { Bar } from 'vue-chartjs';
 
 import { metricLabels } from '../controls';
-import { useResultsStore } from '../store';
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
-const store = useResultsStore();
-const { resultMetrics } = storeToRefs(store);
+const props = defineProps<{
+  metrics: MetricBreakdownDto;
+}>();
 
 const chartData = computed(() => ({
   labels: metricLabels.map((m) => m.label.split(' ')),
   datasets: [
     {
       label: 'Metric value',
-      data: metricLabels.map((m) => Number(resultMetrics.value?.[m.key] ?? 0)),
+      data: metricLabels.map((m) => Number(props.metrics?.[m.key] ?? 0)),
       backgroundColor: metricLabels.map((_, i) => themeColor(`--chart-${i + 1}`)),
       borderRadius: 4,
     },

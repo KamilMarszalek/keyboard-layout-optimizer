@@ -1,6 +1,13 @@
-import { get_char_freq, optimize_layout, qwerty_layout } from '@/pkg/optimizer';
+import { evaluate_layout, get_char_freq, optimize_layout, qwerty_layout } from '@/pkg/optimizer';
 
-import type { CharFrequencyDto, LayoutDto, OptimizeRequestDto, OptimizeResultDto } from './dto';
+import type {
+  CharFrequencyDto,
+  EvaluateRequestDto,
+  EvaluateResultDto,
+  LayoutDto,
+  OptimizeRequestDto,
+  OptimizeResultDto,
+} from './dto';
 import { initWasmCore, initWasmThreadpool, runWasm } from './engine';
 
 export async function optimizeLayout(request: OptimizeRequestDto): Promise<OptimizeResultDto> {
@@ -9,6 +16,11 @@ export async function optimizeLayout(request: OptimizeRequestDto): Promise<Optim
     await initWasmThreadpool();
   };
   return runWasm(init, () => optimize_layout(request));
+}
+
+export async function evaluateLayout(request: EvaluateRequestDto): Promise<EvaluateResultDto> {
+  const init = initWasmCore;
+  return runWasm(init, () => evaluate_layout(request));
 }
 
 export async function getQwertyLayout(): Promise<LayoutDto> {
