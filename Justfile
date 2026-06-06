@@ -72,7 +72,7 @@ setup: wasm-target frontend-install
 
 clean:
     cd optimizer && cargo clean
-    rm -rf frontend/dist frontend/src/wasm
+    rm -rf frontend/dist frontend/src/pkg
 
 docker-check:
     docker build -f Dockerfile.check -t keyboard-layout-optimizer-check .
