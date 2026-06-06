@@ -5,8 +5,8 @@ import { initWasmCore, initWasmThreadpool, runWasm } from './engine';
 
 export async function optimizeLayout(request: OptimizeRequestDto): Promise<OptimizeResultDto> {
   const init = async () => {
-    initWasmCore();
-    initWasmThreadpool();
+    await initWasmCore();
+    await initWasmThreadpool();
   };
   return runWasm(init, () => optimize_layout(request));
 }
