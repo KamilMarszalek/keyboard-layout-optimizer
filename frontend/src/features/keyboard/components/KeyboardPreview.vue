@@ -3,7 +3,9 @@ import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEvaluatorStore } from '@/features/evaluator/store';
 import { useResultsStore } from '@/features/results/store';
+import { RefreshCw } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted } from 'vue';
 
@@ -14,12 +16,14 @@ import { useKeyDragAndDrop } from '../useKeyDragAndDrop';
 import HeatmapToggle from './HeatmapToggle.vue';
 import Row from './Row.vue';
 
-const props = withDefaults(defineProps<{ editable?: boolean }>(), {
+const props = withDefaults(defineProps<{ editable?: boolean; onReEvaluate?: () => void }>(), {
   editable: false,
 });
 
 const store = useKeyboardStore();
 const resultsStore = useResultsStore();
+const evaluatorStore = useEvaluatorStore();
+const { layoutChanged } = storeToRefs(evaluatorStore);
 
 const {
   standardQwertyLayout,
@@ -85,6 +89,16 @@ onMounted(() => {
         </CardDescription>
       </div>
       <div class="flex items-center gap-3">
+        <Button
+          v-if="onReEvaluate && layoutChanged"
+          type="button"
+          variant="outline"
+          size="sm"
+          @click="onReEvaluate"
+        >
+          <RefreshCw />
+          Re-evaluate
+        </Button>
         <Button
           v-if="editable"
           type="button"
