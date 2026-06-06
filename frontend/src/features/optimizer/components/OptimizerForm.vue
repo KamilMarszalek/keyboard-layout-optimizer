@@ -4,7 +4,9 @@ import {
   defaultAnnealingParams,
   defaultSeed,
   defaultWeights,
+  type MetricsWeights,
 } from '@/features/config/schema';
+import { useWeightsStore } from '@/features/config/store.ts';
 import { Corpus } from '@/features/corpus/components';
 import { defaultText } from '@/features/corpus/schema';
 import { Evaluate } from '@/features/evaluator/components';
@@ -15,7 +17,7 @@ import { useModeStore } from '@/features/mode/store';
 import { toTypedSchema } from '@vee-validate/zod';
 import { storeToRefs } from 'pinia';
 import { useForm } from 'vee-validate';
-import { onBeforeUnmount } from 'vue';
+import { onBeforeUnmount, watch } from 'vue';
 
 import { optimizeRequestSchema } from '../schema.ts';
 import { useOptimizerStore } from '../store.ts';
@@ -24,10 +26,11 @@ import Run from './Run.vue';
 const optimizer = useOptimizerStore();
 const evaluator = useEvaluatorStore();
 const keyboard = useKeyboardStore();
+const weightsStore = useWeightsStore();
 const modeStore = useModeStore();
 const { mode } = storeToRefs(modeStore);
 
-const { handleSubmit } = useForm({
+const { handleSubmit, values } = useForm({
   validationSchema: toTypedSchema(optimizeRequestSchema),
   initialValues: {
     weights: defaultWeights,
@@ -36,6 +39,16 @@ const { handleSubmit } = useForm({
     text: defaultText,
   },
 });
+
+watch(
+  () => values.weights,
+  (weights) => {
+    if (weights) {
+      weightsStore.setWeights(weights as MetricsWeights);
+    }
+  },
+  { immediate: true, deep: true },
+);
 
 const onSubmit = handleSubmit((values) => {
   if (mode.value === 'evaluate') {

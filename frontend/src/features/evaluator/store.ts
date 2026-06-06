@@ -1,4 +1,6 @@
 import type { MetricsWeights } from '@/features/config/schema';
+import { useWeightsStore } from '@/features/config/store';
+import { useCorpusStore } from '@/features/corpus/store';
 import { useKeyboardStore } from '@/features/keyboard/store';
 import type { Layout } from '@/features/keyboard/types';
 import { formatError } from '@/lib/error';
@@ -15,9 +17,10 @@ export const useEvaluatorStore = defineStore('evaluator', {
     result: null as EvaluateResultDto | null,
     evaluatedLayout: null as Layout | null,
     lastWeights: null as MetricsWeights | null,
+    lastText: null as string | null,
   }),
   getters: {
-    layoutChanged(state): boolean {
+    needsReEvaluation(state): boolean {
       if (!state.evaluatedLayout) {
         return false;
       }
@@ -27,7 +30,13 @@ export const useEvaluatorStore = defineStore('evaluator', {
       if (evaluated.length !== current.length) {
         return true;
       }
-      return current.some((mapping, index) => mapping.base !== evaluated[index].base);
+      if (current.some((mapping, index) => mapping.base !== evaluated[index].base)) {
+        return true;
+      }
+      if (useCorpusStore().text !== state.lastText) {
+        return true;
+      }
+      return JSON.stringify(useWeightsStore().weights) !== JSON.stringify(state.lastWeights);
     },
   },
   actions: {
@@ -48,6 +57,7 @@ export const useEvaluatorStore = defineStore('evaluator', {
           mappings: keyboard.editableLayout.mappings.map((mapping) => ({ ...mapping })),
         };
         this.lastWeights = weights;
+        this.lastText = text;
       } catch (caught) {
         this.error = formatError(caught);
       } finally {
