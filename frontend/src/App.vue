@@ -2,7 +2,7 @@
 import Header from '@/components/common/Header.vue';
 import { KeyboardPreview } from '@/features/keyboard/components';
 import { OptimizerForm } from '@/features/optimizer/components';
-import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
+import { CostHistory, MetricsBreakdown } from '@/features/results/components';
 import { useResultsStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
 
@@ -16,12 +16,9 @@ const { result } = storeToRefs(resultStore);
       <Header />
       <OptimizerForm />
       <KeyboardPreview />
-      <section v-if="result" class="space-y-6">
-        <OptimizationResult />
-        <div class="grid gap-6 lg:grid-cols-2">
-          <MetricsBreakdown />
-          <CostHistory />
-        </div>
+      <section v-if="result" class="grid gap-6 lg:grid-cols-2">
+        <MetricsBreakdown />
+        <CostHistory />
       </section>
     </div>
   </main>
