@@ -16,7 +16,7 @@ export async function getQwertyLayout(): Promise<LayoutDto> {
   return runWasm(init, qwerty_layout);
 }
 
-export async function getCharFrequencies(text: string): Promise<CharFrequencyDto> {
+export async function getCharFrequencies(text: string): Promise<CharFrequencyDto[]> {
   const init = initWasmCore;
   return runWasm(init, () => get_char_freq(text));
 }
