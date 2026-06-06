@@ -9,7 +9,7 @@ import {
   type CharFrequencyDto,
   type OptimizeRequestDto,
   type OptimizeResultDto,
-} from './optimizer.dto';
+} from '../../wasm/optimizer.dtoimizer/optimizer.dto';
 
 let initPromise: Promise<void> | undefined;
 let threadPoolPromise: Promise<void> | undefined;

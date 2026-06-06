@@ -1,4 +1,7 @@
-import type { OptimizeRequestDto, OptimizeResultDto } from './optimizer.dto';
+import type {
+  OptimizeRequestDto,
+  OptimizeResultDto,
+} from '../services/optimizer/optimizer.dtomizer.dto';
 
 export type OptimizerWorkerRequest = {
   type: 'optimize';

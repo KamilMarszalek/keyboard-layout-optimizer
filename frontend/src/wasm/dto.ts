@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export interface MetricWeightsDto {
   sameFingerBigrams: number;
   fingerDistance: number;
