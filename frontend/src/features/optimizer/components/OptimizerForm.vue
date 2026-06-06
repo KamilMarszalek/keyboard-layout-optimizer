@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { AnnealingParams, MetricWeights, Seed } from '@/features/config/components';
 import {
+  type MetricsWeights,
   defaultAnnealingParams,
   defaultSeed,
   defaultWeights,
-  type MetricsWeights,
 } from '@/features/config/schema';
 import { useWeightsStore } from '@/features/config/store.ts';
 import { Corpus } from '@/features/corpus/components';

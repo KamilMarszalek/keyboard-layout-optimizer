@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { defaultWeights, type MetricsWeights } from './schema';
+import { type MetricsWeights, defaultWeights } from './schema';
 
 interface WeightsState {
   weights: MetricsWeights;
