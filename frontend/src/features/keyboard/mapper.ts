@@ -1,6 +1,6 @@
 import type { CharFrequencyDto, KeyMappingDto, LayoutDto } from '@/wasm/dto';
 
-import { EXPECTED_LAYOUT_LENGTH, hasExpectedLayoutLength } from './keyboardLayout';
+import { EXPECTED_LAYOUT_LENGTH, hasExpectedLayoutLength } from './layout';
 import type { CharFrequency, KeyMapping, Layout } from './types';
 
 export function fromKeyMappingDto(value: KeyMappingDto): KeyMapping {

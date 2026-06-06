@@ -1,7 +1,7 @@
 import type { NumberControlField } from '@/lib/field';
 
-import { METRIC_WEIGHT_MAX, METRIC_WEIGHT_MIN } from './config.constants';
-import type { AnnealingParams, Config, MetricsWeights } from './config.schema';
+import { METRIC_WEIGHT_MAX, METRIC_WEIGHT_MIN } from './constants';
+import type { AnnealingParams, Config, MetricsWeights } from './schema';
 
 export const metricControls: ReadonlyArray<NumberControlField<MetricsWeights>> = [
   {

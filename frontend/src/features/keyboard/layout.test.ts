@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { EXPECTED_LAYOUT_LENGTH, hasExpectedLayoutLength, layoutToRows } from './keyboardLayout';
+import { EXPECTED_LAYOUT_LENGTH, hasExpectedLayoutLength, layoutToRows } from './layout';
 import type { Layout } from './types';
 
 function makeLayout(length: number, base: (index: number) => string = String): Layout {

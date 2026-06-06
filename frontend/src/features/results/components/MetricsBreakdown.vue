@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 
-import { metricLabels } from '../results.controls';
-import { useResultsStore } from '../results.store';
+import { metricLabels } from '../controls';
+import { useResultsStore } from '../store';
 
 const store = useResultsStore();
 const { resultMetrics } = storeToRefs(store);

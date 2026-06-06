@@ -4,15 +4,15 @@ import {
   defaultAnnealingParams,
   defaultSeed,
   defaultWeights,
-} from '@/features/config/config.schema';
+} from '@/features/config/schema';
 import { Corpus } from '@/features/corpus/components';
-import { defaultText } from '@/features/corpus/corpus.schema';
+import { defaultText } from '@/features/corpus/schema';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useForm } from 'vee-validate';
 import { onBeforeUnmount } from 'vue';
 
-import { optimizeRequestSchema } from '../optimizer.schema.ts';
-import { useOptimizerStore } from '../optimizer.store.ts';
+import { optimizeRequestSchema } from '../schema.ts';
+import { useOptimizerStore } from '../store.ts';
 import Run from './Run.vue';
 
 const optimizer = useOptimizerStore();

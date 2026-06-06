@@ -3,7 +3,7 @@ import Header from '@/components/common/Header.vue';
 import { KeyboardPreview } from '@/features/keyboard/components';
 import { OptimizerForm } from '@/features/optimizer/components';
 import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
-import { useResultsStore } from '@/features/results/results.store';
+import { useResultsStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
 
 const resultStore = useResultsStore();

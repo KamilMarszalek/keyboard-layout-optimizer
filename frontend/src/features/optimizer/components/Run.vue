@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { storeToRefs } from 'pinia';
 
-import { useOptimizerStore } from '../optimizer.store';
+import { useOptimizerStore } from '../store';
 
 const store = useOptimizerStore();
 const { error, isOptimizing } = storeToRefs(store);

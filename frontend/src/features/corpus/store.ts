@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-import { defaultText } from './corpus.schema';
+import { defaultText } from './schema';
 
 interface CorpusState {
   text: string;

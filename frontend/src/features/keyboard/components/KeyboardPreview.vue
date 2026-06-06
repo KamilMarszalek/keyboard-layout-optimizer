@@ -2,13 +2,13 @@
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useResultsStore } from '@/features/results/results.store';
+import { useResultsStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted } from 'vue';
 
 import { buildFrequencyMap, maxFrequency } from '../heatmap';
-import { useKeyboardStore } from '../keyboard.store';
-import { EXPECTED_LAYOUT_LENGTH, KEYBOARD_ROW_OFFSETS, layoutToRows } from '../keyboardLayout';
+import { useKeyboardStore } from '../store';
+import { EXPECTED_LAYOUT_LENGTH, KEYBOARD_ROW_OFFSETS, layoutToRows } from '../layout.ts';
 import HeatmapToggle from './HeatmapToggle.vue';
 import Row from './Row.vue';
 

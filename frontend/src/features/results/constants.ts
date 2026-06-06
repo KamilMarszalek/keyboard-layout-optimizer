@@ -1,4 +1,4 @@
-import type { MetricBreakdown } from './results.types';
+import type { MetricBreakdown } from './types';
 
 type MetricLabel = {
   key: keyof MetricBreakdown;
