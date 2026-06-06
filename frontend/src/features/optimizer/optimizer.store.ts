@@ -3,7 +3,8 @@ import { formatError } from '@/lib/error';
 import { disposeOptimizerWorker, optimizeInWorker } from '@/wasm/client';
 import { defineStore } from 'pinia';
 
-import { fromOptimizeResultDto, toOptimizeRequestDto } from './optimizer.mapper';
+import { fromOptimizeResultDto } from '../results/mapper';
+import { toOptimizeRequestDto } from './optimizer.mapper';
 import type { OptimizeRequest } from './optimizer.schema';
 
 export const useOptimizerStore = defineStore('optimizer', {
