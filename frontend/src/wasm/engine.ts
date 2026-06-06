@@ -11,7 +11,7 @@ const ensureThreadpool = once(async () => {
       'WASM threads require cross-origin isolation. Serve the app with COOP/COEP headers enabled.',
     );
   }
-  const threads = Math.min(navigator.hardwareConcurrency, 2);
+  const threads = Math.min(navigator.hardwareConcurrency, 8);
   await initThreadPool(threads);
 });
 

@@ -33,7 +33,6 @@ pub struct KeyMappingDto {
 pub struct LayoutDto {
     pub mappings: Vec<KeyMappingDto>,
 }
-const WORKER_COUNT: usize = 8;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
