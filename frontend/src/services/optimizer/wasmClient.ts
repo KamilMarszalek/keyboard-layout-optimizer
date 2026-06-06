@@ -1,7 +1,10 @@
-import init, { initThreadPool, optimize_layout, qwerty_layout, get_char_freq } from '@/wasm/optimizer';
+import init, {
+  initThreadPool,
+  optimize_layout,
+  qwerty_layout,
+  get_char_freq,
+} from '@/wasm/optimizer';
 import {
-  charFrequenciesSchema,
-  optimizeResultSchema,
   type CharFrequencyDto,
   type OptimizeRequestDto,
   type OptimizeResultDto,
@@ -49,19 +52,14 @@ function initOptimizerWasm(): Promise<void> {
   return threadPoolPromise;
 }
 
-export async function optimizeLayout(
-  request: OptimizeRequestDto,
-): Promise<OptimizeResultDto> {
+export async function optimizeLayout(request: OptimizeRequestDto): Promise<OptimizeResultDto> {
   await initOptimizerWasm();
-
-  let raw: unknown;
   try {
-    raw = optimize_layout(request);
+    const raw = optimize_layout(request);
+    return raw as OptimizeResultDto;
   } catch (caught) {
     throw errorWithCause(`WASM optimization failed: ${String(caught)}`, caught);
   }
-
-  return optimizeResultSchema.parse(raw);
 }
 
 // Must call initOptimizerModule (bare WASM init), NOT initOptimizerWasm —
@@ -75,12 +73,10 @@ export async function getQwertyLayout(): Promise<string[]> {
 export async function getCharFrequencies(text: string): Promise<CharFrequencyDto[]> {
   await initOptimizerModule();
 
-  let raw: unknown;
   try {
-    raw = get_char_freq(text);
+    const raw = get_char_freq(text);
+    return raw as CharFrequencyDto[];
   } catch (caught) {
     throw errorWithCause(`WASM char frequency failed: ${String(caught)}`, caught);
   }
-
-  return charFrequenciesSchema.parse(raw);
 }
