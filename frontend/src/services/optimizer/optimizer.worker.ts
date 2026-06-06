@@ -1,7 +1,10 @@
-import { formatError } from '@/lib/format';
+import { formatError } from '@/lib/error';
 
-import type { OptimizerWorkerRequest, OptimizerWorkerResponse } from './optimizerWorkerTypes';
-import { optimizeLayout } from './wasmClient';
+import type {
+  OptimizerWorkerRequest,
+  OptimizerWorkerResponse,
+} from '../../wasm/optimizerWorkerTypesoptimizerWorkerTypes';
+import { optimizeLayout } from '../services/optimizer/wasmClientasmClient';
 
 function validateThreadSupport() {
   if (!globalThis.crossOriginIsolated) {

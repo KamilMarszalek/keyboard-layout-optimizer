@@ -1,13 +1,7 @@
 import { formatError } from '@/lib/error';
 
-import type {
-  OptimizerWorkerRequest,
-  OptimizerWorkerResponse,
-} from '../../wasm/optimizerWorkerTypesoptimizerWorkerTypes';
-import type {
-  OptimizeRequestDto,
-  OptimizeResultDto,
-} from '../services/optimizer/optimizer.dtomizer.dto';
+import type { OptimizeRequestDto, OptimizeResultDto } from './dto';
+import type { WorkerRequest, WorkerResponse } from './types';
 
 type ActiveOptimization = {
   id: number;
@@ -26,7 +20,7 @@ class OptimizerWorkerClient {
     }
 
     const id = ++this.nextOptimizationId;
-    const message: OptimizerWorkerRequest = { type: 'optimize', id, request };
+    const message: WorkerRequest = { type: 'optimize', id, request };
     const worker = this.getWorker();
 
     return new Promise((resolve, reject) => {
@@ -64,20 +58,21 @@ class OptimizerWorkerClient {
     return this.worker;
   }
 
-  private handleWorkerMessage = ({ data }: MessageEvent<OptimizerWorkerResponse>) => {
+  private handleWorkerMessage = ({ data }: MessageEvent<WorkerResponse>) => {
     if (!this.activeOptimization || data.id !== this.activeOptimization.id) {
       return;
     }
 
     const { resolve, reject } = this.activeOptimization;
     this.activeOptimization = undefined;
-
-    if (data.type === 'optimized') {
-      resolve(data.result);
-      return;
+    switch (data.type) {
+      case 'SUCCESS':
+        resolve(data.result);
+        return;
+      case 'ERROR':
+        reject(new Error(data.error));
+        return;
     }
-
-    reject(new Error(data.error));
   };
 
   private handleWorkerFailure = () => {
