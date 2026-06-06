@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { storeToRefs } from 'pinia';
 
 import { useResultsStore } from '../store';
@@ -9,21 +8,19 @@ const { result, costHistory } = storeToRefs(store);
 </script>
 
 <template>
-  <Card>
-    <CardHeader>
-      <CardTitle>Optimization result</CardTitle>
-    </CardHeader>
-    <CardContent class="grid gap-4 pt-5 sm:grid-cols-2">
-      <div class="p-4 text-center">
-        <p class="text-sm">Best cost</p>
-        <p class="mt-2 text-4xl font-bold">
+  <div>
+    <p class="text-sm font-medium">Optimization result</p>
+    <div class="mt-3 grid grid-cols-2 gap-4">
+      <div class="text-center">
+        <p class="text-xs text-muted-foreground">Best cost</p>
+        <p class="mt-1 text-2xl font-bold">
           {{ result?.bestCost.toFixed(4) ?? '-' }}
         </p>
       </div>
-      <div class="p-4 text-center">
-        <p class="text-sm">Cost history length</p>
-        <p class="mt-2 text-4xl font-bold">{{ costHistory.length }}</p>
+      <div class="text-center">
+        <p class="text-xs text-muted-foreground">Cost history length</p>
+        <p class="mt-1 text-2xl font-bold">{{ costHistory.length }}</p>
       </div>
-    </CardContent>
-  </Card>
+    </div>
+  </div>
 </template>
