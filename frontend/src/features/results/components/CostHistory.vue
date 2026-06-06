@@ -24,7 +24,7 @@ ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScal
 const store = useResultsStore();
 const { costHistory } = storeToRefs(store);
 
-const charData = computed(() => ({
+const chartData = computed(() => ({
   labels: costHistory.value.map((_, i) => i + 1),
   datasets: [
     {
@@ -85,7 +85,7 @@ const chartOptions = {
     </CardHeader>
     <CardContent class="pt-4">
       <div class="relative h-80">
-        <Line :data="charData" :options="chartOptions" />
+        <Line :data="chartData" :options="chartOptions" />
       </div>
     </CardContent>
   </Card>
