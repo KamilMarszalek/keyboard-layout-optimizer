@@ -14,15 +14,15 @@ const { result, costHistory } = storeToRefs(store);
       <CardTitle>Optimization result</CardTitle>
     </CardHeader>
     <CardContent class="grid gap-4 pt-5 sm:grid-cols-2">
-      <div class="p-4">
+      <div class="p-4 text-center">
         <p class="text-sm">Best cost</p>
-        <p class="mt-2 text-2xl">
+        <p class="mt-2 text-4xl font-bold">
           {{ result?.bestCost.toFixed(4) ?? '-' }}
         </p>
       </div>
-      <div class="p-4">
+      <div class="p-4 text-center">
         <p class="text-sm">Cost history length</p>
-        <p class="mt-2 text-2xl">{{ costHistory.length }}</p>
+        <p class="mt-2 text-4xl font-bold">{{ costHistory.length }}</p>
       </div>
     </CardContent>
   </Card>
