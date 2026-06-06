@@ -1,9 +1,6 @@
 import { useResultsStore } from '@/features/results/results.store';
 import { formatError } from '@/lib/error';
-import {
-  disposeOptimizerWorker,
-  optimizeInWorker,
-} from '@/services/optimizer/optimizerWorkerClient';
+import { disposeOptimizerWorker, optimizeInWorker } from '@/wasm/client';
 import { defineStore } from 'pinia';
 
 import { fromOptimizeResultDto, toOptimizeRequestDto } from './optimizer.mapper';

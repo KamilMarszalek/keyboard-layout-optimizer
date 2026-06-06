@@ -1,22 +1,25 @@
 import { formatError } from '@/lib/error';
-import { getQwertyLayout } from '@/services/optimizer/wasmClient';
+import { getQwertyLayout } from '@/wasm/queries';
 import { defineStore } from 'pinia';
 
+import { fromLayoutDto } from './mapper';
+import type { Layout } from './types';
+
 interface KeyboardState {
-  standardQwertyLayout: string[];
+  standardQwertyLayout: Layout;
   isLoadingQwerty: boolean;
   layoutError: string | null;
 }
 
 export const useKeyboardStore = defineStore('keyboard', {
   state: (): KeyboardState => ({
-    standardQwertyLayout: [],
+    standardQwertyLayout: { mappings: [] },
     isLoadingQwerty: false,
     layoutError: null,
   }),
   actions: {
     async loadStandardQwertyLayout() {
-      if (this.isLoadingQwerty || this.standardQwertyLayout.length > 0) {
+      if (this.isLoadingQwerty || this.standardQwertyLayout.mappings.length > 0) {
         return;
       }
 
@@ -24,7 +27,7 @@ export const useKeyboardStore = defineStore('keyboard', {
       this.layoutError = null;
 
       try {
-        this.standardQwertyLayout = await getQwertyLayout();
+        this.standardQwertyLayout = fromLayoutDto(await getQwertyLayout());
       } catch (caught) {
         this.layoutError = `Failed to load the standard keyboard layout from WASM. ${formatError(caught)}`;
       } finally {

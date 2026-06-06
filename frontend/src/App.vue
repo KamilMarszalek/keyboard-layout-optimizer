@@ -3,12 +3,13 @@ import Header from '@/components/common/Header.vue';
 import { useCorpusStore } from '@/features/corpus/corpus.store';
 import { KeyboardPreview } from '@/features/keyboard/components';
 import { useKeyboardStore } from '@/features/keyboard/keyboard.store';
+import { fromCharFrequencyDto } from '@/features/keyboard/mapper';
+import type { CharFrequency } from '@/features/keyboard/types';
 import { OptimizerForm } from '@/features/optimizer/components';
 import { useOptimizerStore } from '@/features/optimizer/optimizer.store';
 import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
 import { useResultsStore } from '@/features/results/results.store';
-import type { CharFrequencyDto } from '@/services/optimizer/optimizer.dto';
-import { getCharFrequencies } from '@/services/optimizer/wasmClient';
+import { getCharFrequencies } from '@/wasm/queries';
 import { storeToRefs } from 'pinia';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
@@ -19,10 +20,12 @@ const resultsStore = useResultsStore();
 const { result } = storeToRefs(resultsStore);
 
 const showHeatmap = ref(false);
-const charFrequencies = ref<CharFrequencyDto[] | undefined>(undefined);
+const charFrequencies = ref<CharFrequency[] | undefined>(undefined);
 
 async function refreshCharFrequencies(text: string) {
-  charFrequencies.value = text.trim() ? await getCharFrequencies(text) : undefined;
+  charFrequencies.value = text.trim()
+    ? (await getCharFrequencies(text)).map(fromCharFrequencyDto)
+    : undefined;
 }
 
 watch(showHeatmap, async (show) => {
