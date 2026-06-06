@@ -11,22 +11,24 @@ const { error, isOptimizing } = storeToRefs(store);
 </script>
 
 <template>
-  <Card>
+  <Card class="flex flex-col">
     <CardHeader>
       <CardTitle>Run</CardTitle>
-      <CardDescription class="mt-1">
+      <CardDescription>
         The optimizer compares QWERTY and Dvorak starts, then returns the best result.
       </CardDescription>
     </CardHeader>
 
-    <CardContent class="pt-5">
-      <Button type="submit" size="lg" class="w-full" :disabled="isOptimizing">
-        {{ isOptimizing ? 'Optimizing...' : 'Optimize layout' }}
-      </Button>
-
-      <Alert v-if="error" variant="destructive" class="mt-4">
+    <CardContent class="flex flex-1 flex-col pt-5">
+      <Alert v-if="error" variant="destructive" class="mb-4">
         {{ error }}
       </Alert>
+
+      <div class="mt-auto space-y-3">
+        <Button type="submit" size="lg" class="w-full" :disabled="isOptimizing">
+          {{ isOptimizing ? 'Optimizing...' : 'Optimize layout' }}
+        </Button>
+      </div>
     </CardContent>
   </Card>
 </template>
