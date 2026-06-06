@@ -15,7 +15,7 @@ import ConfigSliderField from './ConfigSliderField.vue';
       <ConfigSliderField
         v-for="control in metricControls"
         :key="control.key"
-        :name="`config.weights.${control.key}`"
+        :name="`weights.${control.key}`"
         :label="control.label"
         :description="control.description"
         :step="control.step"

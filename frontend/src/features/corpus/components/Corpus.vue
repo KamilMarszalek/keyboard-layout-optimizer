@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { corpusTextControl as control } from '../corpus.controls';
 import { useCorpusStore } from '../corpus.store';
 
-const { value, errorMessage } = useField<string>(`corpus.${control.key}`);
+const { value, errorMessage } = useField<string>(control.key);
 const characterCount = computed(() => value.value?.trim().length ?? 0);
 
 const corpusStore = useCorpusStore();

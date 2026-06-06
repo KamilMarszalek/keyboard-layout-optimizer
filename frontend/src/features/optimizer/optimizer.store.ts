@@ -6,7 +6,7 @@ import {
   optimizeInWorker,
 } from '@/services/optimizer/optimizerWorkerClient';
 import { useResultsStore } from '@/features/results/results.store';
-import { toOptimizeRequestDto } from './optimizer.mapper';
+import { fromOptimizeResultDto, toOptimizeRequestDto } from './optimizer.mapper';
 
 export const useOptimizerStore = defineStore('optimizer', {
   state: () => ({
@@ -24,8 +24,9 @@ export const useOptimizerStore = defineStore('optimizer', {
 
       try {
         const resultsStore = useResultsStore();
-        const result = await optimizeInWorker(toOptimizeRequestDto(request));
-        resultsStore.setResult(result);
+        const requestDto = toOptimizeRequestDto(request);
+        const result = await optimizeInWorker(requestDto);
+        resultsStore.setResult(fromOptimizeResultDto(result));
       } catch (caught) {
         this.error = formatError(caught);
       } finally {

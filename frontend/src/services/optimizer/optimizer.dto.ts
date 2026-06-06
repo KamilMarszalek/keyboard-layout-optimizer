@@ -19,7 +19,7 @@ export interface OptimizeRequestDto {
   text: string;
   weights: MetricWeightsDto;
   annealing: AnnealingConfigDto;
-  seed?: number;
+  seed: number | null;
 }
 
 export interface MetricBreakdownDto {
@@ -35,12 +35,12 @@ export interface KeyMappingDto {
   shifted: string;
 }
 
-export interface Layout {
+export interface LayoutDto {
   mappings: KeyMappingDto[];
 }
 
 export interface OptimizeResultDto {
-  bestLayout: string[];
+  bestLayout: LayoutDto;
   bestCost: number;
   costHistory: number[];
   metrics: MetricBreakdownDto;

@@ -3,8 +3,8 @@ import { configSchema } from '@/features/config/config.schema';
 import { corpusSchema } from '@/features/corpus/corpus.schema';
 
 export const optimizeRequestSchema = z.object({
-  config: configSchema,
-  corpus: corpusSchema,
+  ...configSchema.shape,
+  ...corpusSchema.shape,
 });
 
 export type OptimizeRequest = z.infer<typeof optimizeRequestSchema>;
