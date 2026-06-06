@@ -9,7 +9,7 @@ interface ResultsState {
 }
 
 export const useResultsStore = defineStore('results', {
-  state: (): ResultsState => ({}),
+  state: (): ResultsState => ({ result: undefined }),
   actions: {
     setResult(result: OptimizeResult) {
       this.result = result;
