@@ -1,5 +1,6 @@
 import type { CharFrequencyDto, KeyMappingDto, LayoutDto } from '@/wasm/dto';
 
+import { EXPECTED_LAYOUT_LENGTH, hasExpectedLayoutLength } from './keyboardLayout';
 import type { CharFrequency, KeyMapping, Layout } from './types';
 
 export function fromKeyMappingDto(value: KeyMappingDto): KeyMapping {
@@ -10,8 +11,13 @@ export function fromKeyMappingDto(value: KeyMappingDto): KeyMapping {
 }
 
 export function fromLayoutDto(value: LayoutDto): Layout {
+  if (!hasExpectedLayoutLength(value)) {
+    throw new Error(
+      `Layout is not in standard ANSI format; expected ${EXPECTED_LAYOUT_LENGTH} got ${value.mappings.length}`,
+    );
+  }
   return {
-    mappings: value.mappings.map(fromKeyMappingDto),
+    mappings: value.mappings,
   };
 }
 

@@ -9,6 +9,7 @@ import { Corpus } from '@/features/corpus/components';
 import { defaultText } from '@/features/corpus/corpus.schema';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useForm } from 'vee-validate';
+import { onBeforeUnmount } from 'vue';
 
 import { optimizeRequestSchema } from '../optimizer.schema.ts';
 import { useOptimizerStore } from '../optimizer.store.ts';
@@ -27,6 +28,8 @@ const { handleSubmit } = useForm({
 });
 
 const onSubmit = handleSubmit((values) => optimizer.run(values));
+
+onBeforeUnmount(() => optimizer.dispose());
 </script>
 
 <template>

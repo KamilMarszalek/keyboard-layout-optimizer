@@ -5,7 +5,8 @@ export const KEYBOARD_ROW_OFFSETS = ['pl-0', 'pl-8', 'pl-16', 'pl-24'] as const;
 export const EXPECTED_LAYOUT_LENGTH = KEYBOARD_ROW_SIZES.reduce((sum, size) => sum + size, 0);
 
 export function hasExpectedLayoutLength(layout: Layout): boolean {
-  return layout.mappings.length === EXPECTED_LAYOUT_LENGTH;
+  const count = layout.mappings.length;
+  return count > 0 && count === EXPECTED_LAYOUT_LENGTH;
 }
 
 export function layoutToRows(

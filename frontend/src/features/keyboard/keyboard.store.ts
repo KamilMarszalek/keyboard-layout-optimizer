@@ -1,30 +1,37 @@
 import { formatError } from '@/lib/error';
-import { getQwertyLayout } from '@/wasm/queries';
+import { getCharFrequencies, getQwertyLayout } from '@/wasm/queries';
 import { defineStore } from 'pinia';
 
-import { fromLayoutDto } from './mapper';
-import type { Layout } from './types';
+import { fromCharFrequencyDto, fromLayoutDto } from './mapper';
+import type { CharFrequency, Layout } from './types';
 
 interface KeyboardState {
   standardQwertyLayout: Layout;
   isLoadingQwerty: boolean;
-  layoutError: string | null;
+  showHeatmap: boolean;
+  layoutError?: string;
+  charFrequencies?: CharFrequency[];
 }
 
 export const useKeyboardStore = defineStore('keyboard', {
   state: (): KeyboardState => ({
     standardQwertyLayout: { mappings: [] },
     isLoadingQwerty: false,
-    layoutError: null,
+    showHeatmap: false,
   }),
   actions: {
+    async refreshCharFrequencies(text: string) {
+      if (text.trim()) {
+        this.charFrequencies = (await getCharFrequencies(text)).map(fromCharFrequencyDto);
+      }
+    },
+
     async loadStandardQwertyLayout() {
       if (this.isLoadingQwerty || this.standardQwertyLayout.mappings.length > 0) {
         return;
       }
 
       this.isLoadingQwerty = true;
-      this.layoutError = null;
 
       try {
         this.standardQwertyLayout = fromLayoutDto(await getQwertyLayout());
