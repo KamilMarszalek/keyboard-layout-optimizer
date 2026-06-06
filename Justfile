@@ -31,7 +31,7 @@ wasm-build:
     cd optimizer && cargo build --target wasm32-unknown-unknown --locked
 
 wasm-pack:
-    cd optimizer && wasm-pack build --target web --out-dir ../frontend/src/wasm
+    cd optimizer && wasm-pack build --target web --out-dir ../frontend/src/pkg
 
 rust-check: rust-fmt rust-clippy rust-test wasm-build
 
