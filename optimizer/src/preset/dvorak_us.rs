@@ -4,6 +4,7 @@ use crate::{
     preset::keyboard_preset::KeyboardPreset,
 };
 
+/// Base symbols in Dvorak US key order, row by row from the number row to the bottom row.
 #[rustfmt::skip]
 pub const DVORAK_US_SYMBOLS: [AsciiChar; US_KEY_COUNT] = [
     b'`', b'1', b'2', b'3', b'4', b'5', b'6', b'7', b'8', b'9', b'0', b'[', b']',
@@ -19,6 +20,7 @@ impl Layout<US_KEY_COUNT> {
     }
 }
 
+/// Returns a ready-to-use Dvorak US keyboard preset combining standard geometry, modifier, and layout.
 pub fn dvorak_us() -> KeyboardPreset<US_KEY_COUNT, US_PRESS_COUNT> {
     let geometry = Geometry::standard_us();
     let modifier = Modifier::standard_us();

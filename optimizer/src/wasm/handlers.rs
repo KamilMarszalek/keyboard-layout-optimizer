@@ -1,3 +1,6 @@
+//! Pure-Rust implementations behind the `#[wasm_bindgen]` entry points in
+//! [`super`]. Keeping these free of `JsValue` makes them directly unit-testable.
+
 use itertools::Itertools;
 use rand::{SeedableRng, rngs::SmallRng};
 
@@ -23,6 +26,9 @@ use super::dto::{
 };
 use super::validate::keys_to_symbols;
 
+/// Normalizes `input`, counts how often each base symbol is pressed, and
+/// returns each symbol's relative frequency. Returns an empty vector when the
+/// normalized input contains no countable presses.
 pub(super) fn get_char_freq_inner(input: &str) -> Vec<CharFrequencyDto> {
     let normalized = normalize_text(input);
     let mapper = Modifier::standard_us();
@@ -46,6 +52,9 @@ pub(super) fn get_char_freq_inner(input: &str) -> Vec<CharFrequencyDto> {
         .collect()
 }
 
+/// Builds a corpus from the request text and runs a multi-start simulated
+/// annealing search seeded with the QWERTY and Dvorak presets plus random
+/// layouts, returning the best layout found and its metric breakdown.
 pub(super) fn optimize_layout_inner(
     request: OptimizeRequestDto,
 ) -> Result<OptimizeResultDto, String> {
@@ -78,6 +87,9 @@ pub(super) fn optimize_layout_inner(
     })
 }
 
+/// Builds a layout from the request's key list and scores it against a corpus
+/// derived from the request text, returning the metric breakdown and total
+/// weighted cost without running optimization.
 pub(super) fn evaluate_layout_inner(
     request: EvaluateRequestDto,
 ) -> Result<EvaluateResultDto, String> {
@@ -99,6 +111,7 @@ pub(super) fn evaluate_layout_inner(
     })
 }
 
+/// Converts a domain [`Layout`] into its serializable [`LayoutDto`] form.
 pub(super) fn layout_to_dto(layout: &Layout<US_KEY_COUNT>) -> LayoutDto {
     LayoutDto {
         mappings: layout

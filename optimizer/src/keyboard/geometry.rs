@@ -5,15 +5,23 @@ use std::collections::HashMap;
 
 use super::common::KeyIndex;
 
+/// The row of a key on the physical keyboard, from top to bottom.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Row {
+    /// Number row — the topmost row, containing digit and symbol keys.
     Number,
+    /// Top row — the row with `q`, `w`, `e`, … on a QWERTY layout.
     Top,
+    /// Home row — the resting position row, containing `a`, `s`, `d`, … on QWERTY.
     Home,
+    /// Bottom row — the lowest row, containing `z`, `x`, `c`, … on QWERTY.
     Bottom,
 }
 
 impl Row {
+    /// Returns a numeric rank for the row, increasing from top (`Number = 0`) to bottom (`Bottom = 3`).
+    ///
+    /// Used to compute inter-row distance, e.g. to detect row-jumping bigrams.
     pub fn order(&self) -> usize {
         match self {
             Row::Number => 0,
@@ -24,6 +32,7 @@ impl Row {
     }
 }
 
+/// Which hand operates a key.
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum Hand {
     Left,
@@ -49,6 +58,7 @@ impl Hand {
     const COUNT: usize = 2;
 }
 
+/// One of the four fingers used for typing (thumb excluded).
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub enum Finger {
     Pinky,
@@ -78,6 +88,7 @@ impl Finger {
     const COUNT: usize = 4;
 }
 
+/// The specific finger on a specific hand assigned to press a key.
 #[derive(PartialEq, Eq, Clone, Copy, Debug, Hash)]
 pub struct FingerAssignment {
     pub hand: Hand,
@@ -85,6 +96,7 @@ pub struct FingerAssignment {
 }
 
 impl FingerAssignment {
+    /// Creates a finger assignment from a hand and finger.
     pub const fn new(hand: Hand, finger: Finger) -> Self {
         Self { hand, finger }
     }
@@ -102,6 +114,11 @@ impl fmt::Display for FingerAssignment {
 
 const N_FINGERS: usize = Hand::COUNT * Finger::COUNT;
 
+/// Describes how many consecutive keys in a row are assigned to one finger and where the resting key is.
+///
+/// Used when building a [`RowSpec`] to specify key allocations for each finger.
+/// `rest_at` is the zero-based index within this finger's keys that serves as the default resting position.
+/// Use the `fc!` macro as a shorthand constructor.
 #[derive(Clone, Copy, Debug)]
 pub struct FingerCount {
     pub finger: Finger,
@@ -109,6 +126,11 @@ pub struct FingerCount {
     pub rest_at: Option<usize>,
 }
 
+/// Constructs a [`FingerCount`] value.
+///
+/// Two forms are supported:
+/// - `fc!(finger, count)` — no resting key
+/// - `fc!(finger, count, rest_at)` — `rest_at` is the zero-based index of the resting key within this finger's allocation
 #[macro_export]
 macro_rules! fc {
     ( $finger:expr, $count:expr ) => {
@@ -124,6 +146,7 @@ macro_rules! fc {
     };
 }
 
+/// 2D position of a key on the physical keyboard surface, in key-width units.
 #[derive(Clone, Copy, Debug)]
 pub struct Coordinates {
     pub x: f64,
@@ -131,11 +154,13 @@ pub struct Coordinates {
 }
 
 impl Coordinates {
+    /// Returns the Euclidean distance between two key positions.
     pub fn euclidean_distance(a: Coordinates, b: Coordinates) -> f64 {
         ((a.x - b.x).powi(2) + (a.y - b.y).powi(2)).sqrt()
     }
 }
 
+/// A single physical key with its position, finger assignment, and resting-key status.
 #[derive(Debug, Clone)]
 pub struct Key {
     pub coords: Coordinates,
@@ -144,6 +169,11 @@ pub struct Key {
     pub is_resting_key: bool,
 }
 
+/// Declarative specification for one row of a keyboard.
+///
+/// `left` and `right` list finger allocations for each hand in order from the
+/// centre outward. Keys are generated left-to-right: all `left` keys first, then
+/// all `right` keys. `x_offset` shifts the entire row horizontally.
 pub struct RowSpec {
     left: Vec<FingerCount>,
     right: Vec<FingerCount>,
@@ -153,6 +183,11 @@ pub struct RowSpec {
 }
 
 impl RowSpec {
+    /// Creates a row specification.
+    ///
+    /// `left` and `right` are ordered finger allocations for each hand.
+    /// `x_offset` is the horizontal position of the first key, `y` the vertical position,
+    /// and `row` the logical row label.
     pub fn new(
         left: Vec<FingerCount>,
         right: Vec<FingerCount>,
@@ -211,11 +246,14 @@ pub struct Geometry<const N: usize> {
 }
 
 impl<const N: usize> Geometry<N> {
-    // Build a geometry keyboard from ordered row specifications.
-    //
+    /// Builds a keyboard geometry from ordered row specifications.
+    ///
     /// Each `RowSpec` expands into a contiguous row of keys. The resulting key array preserves the
     /// order of the provided rows, and the order of keys implied by each row's `left` and `right`
     /// finger definitions.
+    ///
+    /// Returns an error if the total number of keys across all specs does not equal `N`, if any
+    /// finger has more than one resting key, or if any finger used in the specs has no resting key.
     pub fn new<I>(specs: I) -> Result<Self, String>
     where
         I: IntoIterator<Item = RowSpec>,
@@ -267,6 +305,9 @@ impl<const N: usize> Geometry<N> {
         }
     }
 
+    /// Returns the maximum pairwise distance between any two keys assigned to the same finger.
+    ///
+    /// This value is used to normalise the finger-distance metric to `[0, 1]`.
     pub fn max_fingers_distance(&self) -> f64 {
         self.keys_by_fingers()
             .values()
@@ -274,10 +315,13 @@ impl<const N: usize> Geometry<N> {
             .fold(0.0, f64::max)
     }
 
+    /// Returns the key at position `idx`, or `None` if the index is out of bounds.
     pub fn key(&self, idx: KeyIndex) -> Option<&Key> {
         self.keys.get(idx)
     }
 
+    /// Returns the resting key for `assignment`, or `None` if that finger assignment
+    /// has no resting key defined in this geometry.
     pub fn default_key(&self, assignment: FingerAssignment) -> Option<&Key> {
         match self.default_placement[assignment.index()] {
             Some(i) => Some(&self.keys[i]),

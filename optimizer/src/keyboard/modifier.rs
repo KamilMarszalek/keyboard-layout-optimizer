@@ -3,19 +3,30 @@ use crate::keyboard::{common::AsciiChar, key_press::KeyPress};
 use core::fmt;
 use std::collections::HashMap;
 
+/// Errors returned when constructing a [`Modifier`].
 #[derive(Debug, PartialEq, Eq)]
 pub enum ModifierError {
+    /// The given character is not a base symbol in this modifier.
     UnsupportedBase(AsciiChar),
+    /// A base symbol appears more than once in the shift-pair list.
     DuplicateBase(AsciiChar),
+    /// A shifted symbol is claimed by more than one base symbol.
     DuplicateShifted(AsciiChar),
+    /// A symbol would serve as both a base and a shifted symbol, making
+    /// reverse lookup ambiguous.
     AmbiguousSymbol(AsciiChar),
 }
 
+/// Errors returned when building the supported-presses array from a [`Modifier`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SupportedPressesError {
+    /// The number of presses derived from the modifier does not match the compile-time constant `P`.
     InvalidSupportedPressCount { expected: usize, actual: usize },
+    /// The modifier has no key-press entry for the unshifted form of `base`.
     MissingBaseKeyPress { base: u8 },
+    /// The modifier cannot produce a shifted symbol for `base`.
     MissingShiftMapping { base: u8 },
+    /// The modifier has no key-press entry for the shifted form of `base`.
     MissingShiftedKeyPress { base: u8, shifted: u8 },
 }
 impl fmt::Display for ModifierError {
@@ -50,8 +61,17 @@ pub struct Modifier {
     symbols: Vec<AsciiChar>,
 }
 
+/// Converts symbols to logical key presses and produces the full supported-press array.
+///
+/// Implemented by [`Modifier`] and used by corpus-building code to decouple
+/// text processing from the concrete modifier type.
 pub trait KeyPressMapper {
+    /// Returns the array of all `P` key presses supported by this mapper, in the order
+    /// they were registered. Returns an error if `P` does not match the actual count.
     fn supported_presses<const P: usize>(&self) -> Result<[KeyPress; P], SupportedPressesError>;
+
+    /// Converts a symbol to the logical key press needed to produce it, or `None` if the
+    /// symbol is not supported.
     fn key_press_of(&self, symbol: AsciiChar) -> Option<KeyPress>;
 }
 
@@ -90,6 +110,8 @@ impl Modifier {
         Ok(Self { encode, decode, symbols })
     }
 
+    /// Returns the shifted form of `c`, or `ModifierError::UnsupportedBase` if `c`
+    /// is not a base symbol in this modifier.
     pub fn shift(&self, c: AsciiChar) -> Result<AsciiChar, ModifierError> {
         self.encode.get(&c).copied().ok_or(ModifierError::UnsupportedBase(c))
     }
@@ -108,6 +130,12 @@ impl Modifier {
         self.decode.get(&symbol).copied()
     }
 
+    /// Returns the array of all `P` key presses supported by this modifier.
+    ///
+    /// Presses are ordered to match the base-symbol registration order: for each base
+    /// symbol, the unshifted press comes first, followed by the shifted press.
+    /// Returns an error if `P` does not equal twice the number of base symbols, or if
+    /// any required press is missing.
     pub fn supported_presses<const P: usize>(
         &self,
     ) -> Result<[KeyPress; P], SupportedPressesError> {

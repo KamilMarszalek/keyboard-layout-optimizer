@@ -16,6 +16,9 @@ pub struct KeyboardPreset<const N: usize, const P: usize> {
 }
 
 impl<const N: usize, const P: usize> KeyboardPreset<N, P> {
+    /// Builds a [`Corpus`] from raw text using this preset's modifier.
+    ///
+    /// Text is normalized before counting — see [`normalize_text`](crate::text::pipeline::normalize_text).
     pub fn corpus_from_text(&self, input: &str) -> Result<Corpus<P>, CorpusError> {
         Corpus::from_text(input, &self.modifier)
     }
