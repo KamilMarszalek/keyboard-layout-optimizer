@@ -19,6 +19,19 @@ use crate::{
     text::pipeline::{map_normalized_text_to_key_presses, normalize_text},
 };
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct KeyMappingDto {
+    pub base: String,
+    pub shifted: String,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LayoutDto {
+    pub mappings: Vec<KeyMappingDto>,
+}
+
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OptimizeRequestDto {
@@ -50,7 +63,7 @@ pub struct AnnealingConfigDto {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct OptimizeResultDto {
-    pub best_layout: Vec<String>,
+    pub best_layout: LayoutDto,
     pub best_cost: f64,
     pub cost_history: Vec<f64>,
     pub metrics: MetricBreakdownDto,
@@ -153,8 +166,10 @@ pub fn optimize_layout(input: JsValue) -> Result<JsValue, JsValue> {
 }
 
 #[wasm_bindgen]
-pub fn qwerty_layout() -> Vec<String> {
-    layout_to_dto(&qwerty_us().layout)
+pub fn qwerty_layout() -> Result<JsValue, JsValue> {
+    let layout = layout_to_dto(&qwerty_us().layout);
+    serde_wasm_bindgen::to_value(&layout)
+        .map_err(|err| JsValue::from_str(&format!("Serialization failed: {err}")))
 }
 
 fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDto, String> {
@@ -184,8 +199,16 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
     })
 }
 
-fn layout_to_dto(layout: &Layout<US_KEY_COUNT>) -> Vec<String> {
-    layout.mappings_iter().map(|symbol| (symbol.base as char).to_string()).collect()
+fn layout_to_dto(layout: &Layout<US_KEY_COUNT>) -> LayoutDto {
+    LayoutDto {
+        mappings: layout
+            .mappings_iter()
+            .map(|symbol| KeyMappingDto {
+                base: symbol.base.to_string(),
+                shifted: symbol.shifted.to_string(),
+            })
+            .collect(),
+    }
 }
 
 fn ensure(condition: bool, message: impl Into<String>) -> Result<(), String> {
