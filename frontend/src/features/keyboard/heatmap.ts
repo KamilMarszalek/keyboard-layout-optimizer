@@ -20,12 +20,14 @@ export function keyHeatStyle(
   maxFreq: number,
 ): KeyHeatStyle {
   const freq = freqMap.get(base) ?? 0;
-  const ratio = maxFreq > 0 ? freq / maxFreq : 0;
+  if (freq == 0) {
+    return { backgroundColor: 'background-color' };
+  }
 
-  // Interpolate from light neutral (low/no freq) to amber (high freq)
-  const hue = 30;
-  const saturation = Math.round(15 + ratio * 75); // 15 % → 90 %
-  const lightness = Math.round(88 - ratio * 36); // 88 % → 52 %
+  const ratio = maxFreq > 0 ? freq / maxFreq : 0;
+  const hue = Math.round(120 * (1 - ratio));
+  const saturation = 70;
+  const lightness = Math.round(78 - ratio * 18);
 
   return { backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)` };
 }
