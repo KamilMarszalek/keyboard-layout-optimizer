@@ -1,45 +1,51 @@
 import { z } from 'zod';
 import { METRIC_WEIGHT_MAX, METRIC_WEIGHT_MIN } from './config.constants';
 
-export const configSchema = z.object({
-    weights: z.object({
-      sameFingerBigrams: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
-      fingerDistance: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
-      homeRowUsage: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
-      handAlternation: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
-      rowJumping: z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX),
-    }),
-    annealing: z.object({
-      tStart: z.number().gt(0),
-      tMin: z.number().gt(0),
-      alpha: z.number().min(0).lt(1),
-      iterationsPerTemp: z.number().min(1),
-    }),
-    seed: z.number().nullable().default(null),
+const weightSchema = z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX);
+
+export const weightsSchema = z.object({
+  sameFingerBigrams: weightSchema,
+  fingerDistance: weightSchema,
+  homeRowUsage: weightSchema,
+  handAlternation: weightSchema,
+  rowJumping: weightSchema,
+});
+
+export const annealingSchema = z
+  .object({
+    tStart: z.number().gt(0),
+    tMin: z.number().gt(0),
+    alpha: z.number().min(0).lt(1),
+    iterationsPerTemp: z.number().min(1).int(),
   })
-  .refine((config) => config.annealing.tStart > config.annealing.tMin, {
+  .refine((schema) => schema.tStart > schema.tMin, {
     path: ['annealing', 'tMin'],
     message: 'Minimum temperature must be lower than start temperature',
   });
 
-export type Config = z.infer<typeof configSchema>;
-export type MetricsWeights = Config['weights'];
-export type AnnealingParams = Config['annealing'];
-export type Seed = Config['seed'];
+export const configSchema = z.object({
+  weights: weightsSchema,
+  annealing: annealingSchema,
+  seed: z.number().nullable().default(null),
+});
 
-export const defaultConfig: Config = {
-  weights: {
-    sameFingerBigrams: 1.0,
-    fingerDistance: 1.0,
-    homeRowUsage: 1.0,
-    handAlternation: 1.0,
-    rowJumping: 1.0,
-  },
-  annealing: {
-    tStart: 1,
-    tMin: 0.001,
-    alpha: 0.995,
-    iterationsPerTemp: 100,
-  },
-  seed: 42,
+export type MetricsWeights = z.infer<typeof weightsSchema>;
+export type AnnealingParams = z.infer<typeof annealingSchema>;
+export type Config = z.infer<typeof configSchema>;
+
+export const defaultWeights: MetricsWeights = {
+  sameFingerBigrams: 1.0,
+  fingerDistance: 1.0,
+  homeRowUsage: 1.0,
+  handAlternation: 1.0,
+  rowJumping: 1.0,
 };
+
+export const defaultAnnealingParams: AnnealingParams = {
+  tStart: 1,
+  tMin: 0.001,
+  alpha: 0.995,
+  iterationsPerTemp: 100,
+};
+
+export const defaultSeed: number = 42;

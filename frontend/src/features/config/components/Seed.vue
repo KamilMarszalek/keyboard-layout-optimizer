@@ -12,7 +12,7 @@ import ConfigNumberField from './ConfigNumberField.vue';
     <CardContent class="pt-5">
       <ConfigNumberField
         :key="seedControl.key"
-        :name="`config.${seedControl.key}`"
+        :name="`${seedControl.key}`"
         :label="seedControl.label"
         :description="seedControl.description"
         :step="seedControl.step"

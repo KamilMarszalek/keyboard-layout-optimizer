@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import { AnnealingParams, MetricWeights, Seed } from '@/features/config/components';
 import {
-    AnnealingParams,
-    MetricWeights,
-    Seed,
-} from '@/features/config/components';
-import { defaultConfig } from '@/features/config/config.schema';
+  defaultAnnealingParams,
+  defaultSeed,
+  defaultWeights,
+} from '@/features/config/config.schema';
 import { Corpus } from '@/features/corpus/components';
-import { defaultCorpus } from '@/features/corpus/corpus.schema';
+import { defaultText } from '@/features/corpus/corpus.schema';
 import { toTypedSchema } from '@vee-validate/zod';
 import { useForm } from 'vee-validate';
 import { optimizeRequestSchema } from '../optimizer.schema.ts';
@@ -18,8 +18,10 @@ const optimizer = useOptimizerStore();
 const { handleSubmit } = useForm({
   validationSchema: toTypedSchema(optimizeRequestSchema),
   initialValues: {
-    config: defaultConfig,
-    corpus: defaultCorpus,
+    weights: defaultWeights,
+    annealing: defaultAnnealingParams,
+    seed: defaultSeed,
+    text: defaultText,
   },
 });
 

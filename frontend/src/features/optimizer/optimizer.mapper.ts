@@ -1,14 +1,21 @@
-import type { OptimizeRequestDto } from '@/services/optimizer/optimizer.dto';
+import type { OptimizeRequestDto, OptimizeResultDto } from '@/services/optimizer/optimizer.dto';
 import type { OptimizeRequest } from './optimizer.schema';
+import type { OptimizeResult } from '../results/results.types';
 
-export function toOptimizeRequestDto(values: OptimizeRequest): OptimizeRequestDto {
+export function toOptimizeRequestDto(value: OptimizeRequest): OptimizeRequestDto {
   return {
-    text: values.corpus.text,
-    weights: { ...values.config.weights },
-    annealing: {
-      ...values.config.annealing,
-      iterationsPerTemp: Math.max(1, Math.round(values.config.annealing.iterationsPerTemp)),
-    },
-    seed: values.config.seed ?? undefined,
+    weights: value.weights,
+    annealing: value.annealing,
+    seed: value.seed,
+    text: value.text,
+  };
+}
+
+export function fromOptimizeResultDto(value: OptimizeResultDto): OptimizeResult {
+  return {
+    bestLayout: value.bestLayout,
+    bestCost: value.bestCost,
+    costHistory: value.costHistory,
+    metrics: value.metrics,
   };
 }
