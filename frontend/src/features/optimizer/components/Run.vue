@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
 import { Alert } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { storeToRefs } from 'pinia';
+
 import { useOptimizerStore } from '../optimizer.store';
 
 const store = useOptimizerStore();

@@ -1,17 +1,18 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
-import { computed } from 'vue';
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { CharFrequencyDto } from '@/services/optimizer/optimizer.dto';
+import { storeToRefs } from 'pinia';
+import { computed } from 'vue';
+
+import { useKeyboardStore } from '../keyboard.store';
 import {
   EXPECTED_LAYOUT_LENGTH,
   KEYBOARD_ROW_OFFSETS,
   hasExpectedLayoutLength,
   layoutToRows,
 } from '../keyboardLayout';
-import type { CharFrequencyDto } from '@/services/optimizer/optimizer.dto';
-import { useKeyboardStore } from '../keyboard.store';
 
 const props = defineProps<{
   optimizedLayout?: string[];
@@ -73,7 +74,7 @@ function keyHeatStyle(keyLabel: string): { backgroundColor: string } | undefined
   // Interpolate from light neutral (low/no freq) to amber (high freq)
   const hue = 30;
   const saturation = Math.round(15 + ratio * 75); // 15 % → 90 %
-  const lightness = Math.round(88 - ratio * 36);  // 88 % → 52 %
+  const lightness = Math.round(88 - ratio * 36); // 88 % → 52 %
 
   return { backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)` };
 }

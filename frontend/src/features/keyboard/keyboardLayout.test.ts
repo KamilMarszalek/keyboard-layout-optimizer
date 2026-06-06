@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  EXPECTED_LAYOUT_LENGTH,
-  hasExpectedLayoutLength,
-  layoutToRows,
-} from './keyboardLayout';
+
+import { EXPECTED_LAYOUT_LENGTH, hasExpectedLayoutLength, layoutToRows } from './keyboardLayout';
 
 describe('keyboard layout helpers', () => {
   it('uses the expected physical layout length', () => {

@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { defineConfig, type UserConfig } from 'vite';
+import { type UserConfig, defineConfig } from 'vite';
 import type { InlineConfig } from 'vitest/node';
 
 const config = {

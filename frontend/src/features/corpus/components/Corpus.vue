@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { useField } from 'vee-validate';
-import { computed, watch } from 'vue';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useField } from 'vee-validate';
+import { computed, watch } from 'vue';
+
 import { corpusTextControl as control } from '../corpus.controls';
 import { useCorpusStore } from '../corpus.store';
 
@@ -12,7 +13,13 @@ const { value, errorMessage } = useField<string>(control.key);
 const characterCount = computed(() => value.value?.trim().length ?? 0);
 
 const corpusStore = useCorpusStore();
-watch(value, (text) => { corpusStore.setText(text ?? ''); }, { immediate: true });
+watch(
+  value,
+  (text) => {
+    corpusStore.setText(text ?? '');
+  },
+  { immediate: true },
+);
 </script>
 
 <template>

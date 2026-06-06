@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import Header from '@/components/common/Header.vue';
-import { OptimizerForm } from '@/features/optimizer/components';
-import { useOptimizerStore } from '@/features/optimizer/optimizer.store';
+import { useCorpusStore } from '@/features/corpus/corpus.store';
 import { KeyboardPreview } from '@/features/keyboard/components';
 import { useKeyboardStore } from '@/features/keyboard/keyboard.store';
-import { useCorpusStore } from '@/features/corpus/corpus.store';
+import { OptimizerForm } from '@/features/optimizer/components';
+import { useOptimizerStore } from '@/features/optimizer/optimizer.store';
+import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
 import { useResultsStore } from '@/features/results/results.store';
 import type { CharFrequencyDto } from '@/services/optimizer/optimizer.dto';
 import { getCharFrequencies } from '@/services/optimizer/wasmClient';
 import { storeToRefs } from 'pinia';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
 
 const optimizerStore = useOptimizerStore();
 const keyboardStore = useKeyboardStore();
@@ -22,9 +22,7 @@ const showHeatmap = ref(false);
 const charFrequencies = ref<CharFrequencyDto[] | undefined>(undefined);
 
 async function refreshCharFrequencies(text: string) {
-  charFrequencies.value = text.trim()
-    ? await getCharFrequencies(text)
-    : undefined;
+  charFrequencies.value = text.trim() ? await getCharFrequencies(text) : undefined;
 }
 
 watch(showHeatmap, async (show) => {
@@ -35,11 +33,14 @@ watch(showHeatmap, async (show) => {
   }
 });
 
-watch(() => corpusStore.text, async (text) => {
-  if (showHeatmap.value) {
-    await refreshCharFrequencies(text);
-  }
-});
+watch(
+  () => corpusStore.text,
+  async (text) => {
+    if (showHeatmap.value) {
+      await refreshCharFrequencies(text);
+    }
+  },
+);
 
 onMounted(() => {
   void keyboardStore.loadStandardQwertyLayout();
@@ -66,15 +67,9 @@ onBeforeUnmount(() => {
           Show heat map
         </label>
       </div>
-      <KeyboardPreview
-        :optimized-layout="result?.bestLayout"
-        :char-frequencies="charFrequencies"
-      />
+      <KeyboardPreview :optimized-layout="result?.bestLayout" :char-frequencies="charFrequencies" />
 
-      <section
-        v-if="result"
-        class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]"
-      >
+      <section v-if="result" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
         <OptimizationResult />
         <div class="space-y-6">
           <MetricsBreakdown />

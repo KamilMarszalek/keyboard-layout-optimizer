@@ -1,4 +1,5 @@
 import { formatError } from '@/lib/format';
+
 import type { OptimizeRequestDto, OptimizeResultDto } from './optimizer.dto';
 import type { OptimizerWorkerRequest, OptimizerWorkerResponse } from './optimizerWorkerTypes';
 
@@ -83,7 +84,6 @@ class OptimizerWorkerClient {
 
     this.worker?.terminate();
     this.worker = undefined;
-
   };
 }
 
