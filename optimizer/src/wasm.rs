@@ -7,6 +7,7 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 
 use crate::{
     annealing::{
+        WORKER_COUNT,
         cost::{MetricBreakdown, MetricWeights, WeightedCost},
         run_multi_start,
         sa::AnnealingConfig,
