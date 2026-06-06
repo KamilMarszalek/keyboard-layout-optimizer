@@ -1,4 +1,4 @@
-import { formatError } from '@/lib/format';
+import { formatError } from '@/lib/error';
 import { getQwertyLayout } from '@/services/optimizer/wasmClient';
 import { defineStore } from 'pinia';
 

@@ -1,5 +1,5 @@
 import { useResultsStore } from '@/features/results/results.store';
-import { formatError } from '@/lib/format';
+import { formatError } from '@/lib/error';
 import {
   disposeOptimizerWorker,
   optimizeInWorker,
