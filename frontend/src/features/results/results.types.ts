@@ -1,18 +1,11 @@
+import type { Layout } from '@/features/keyboard/types';
+
 export interface MetricBreakdown {
   sameFingerBigrams: number;
   fingerDistance: number;
   homeRowUsage: number;
   handAlternation: number;
   rowJumping: number;
-}
-
-export interface KeyMapping {
-  base: string;
-  shifted: string;
-}
-
-export interface Layout {
-  mappings: KeyMapping[];
 }
 
 export interface OptimizeResult {

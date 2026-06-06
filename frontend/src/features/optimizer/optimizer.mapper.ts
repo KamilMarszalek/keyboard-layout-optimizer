@@ -1,4 +1,5 @@
-import type { OptimizeRequestDto, OptimizeResultDto } from '@/services/optimizer/optimizer.dto';
+import { fromLayoutDto } from '@/features/keyboard/mapper';
+import type { OptimizeRequestDto, OptimizeResultDto } from '@/wasm/dto';
 
 import type { OptimizeResult } from '../results/results.types';
 import type { OptimizeRequest } from './optimizer.schema';
@@ -14,7 +15,7 @@ export function toOptimizeRequestDto(value: OptimizeRequest): OptimizeRequestDto
 
 export function fromOptimizeResultDto(value: OptimizeResultDto): OptimizeResult {
   return {
-    bestLayout: value.bestLayout,
+    bestLayout: fromLayoutDto(value.bestLayout),
     bestCost: value.bestCost,
     costHistory: value.costHistory,
     metrics: value.metrics,
