@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use rand::{SeedableRng, rngs::SmallRng};
 use serde::{Deserialize, Serialize};
 use wasm_bindgen::prelude::*;
 
@@ -31,6 +32,7 @@ pub struct KeyMappingDto {
 pub struct LayoutDto {
     pub mappings: Vec<KeyMappingDto>,
 }
+const WORKER_COUNT: usize = 8;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -180,11 +182,14 @@ fn optimize_layout_inner(request: OptimizeRequestDto) -> Result<OptimizeResultDt
 
     let weights: MetricWeights = request.weights.try_into()?;
     let config: AnnealingConfig = request.annealing.try_into()?;
-
     let cost = WeightedCost::<US_KEY_COUNT, US_PRESS_COUNT>::new(weights, corpus, preset.geometry);
-
     let seed = request.seed.unwrap_or(42) as u64;
-    let initial_layouts = [preset.layout, dvorak_us().layout];
+    let mut rng = SmallRng::seed_from_u64(seed);
+    let initial_layouts: [Layout<US_KEY_COUNT>; WORKER_COUNT] = std::array::from_fn(|i| match i {
+        0 => preset.layout.clone(),
+        1 => dvorak_us().layout,
+        _ => Layout::random(&preset.modifier, &mut rng),
+    });
 
     let result = run_multi_start(&initial_layouts, &config, seed, |layout| cost.evaluate(layout))
         .ok_or_else(|| "No layouts available for optimization".to_string())?;

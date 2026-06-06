@@ -1,5 +1,6 @@
 use super::common::{ASCII_COUNT, AsciiChar, KeyIndex};
 use super::modifier::Modifier;
+use rand::{Rng, seq::SliceRandom};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct KeySymbol {
@@ -37,6 +38,15 @@ impl<const N: usize> Layout<N> {
         }
 
         Ok(Self { mappings, symbol_to_key })
+    }
+
+    pub fn random(modifier: &Modifier, rng: &mut impl Rng) -> Self {
+        let mut symbols: [AsciiChar; N] = modifier
+            .base_symbols()
+            .try_into()
+            .expect("modifier base symbols length must match const generic N");
+        symbols.shuffle(rng);
+        Self::new(&symbols, modifier).expect("shuffled modifier symbols always form a valid layout")
     }
 
     /// Swaps two key positions in the layout.
@@ -87,6 +97,7 @@ mod tests {
     use crate::preset::constants::US_KEY_COUNT;
 
     use super::*;
+    use rand::{SeedableRng, rngs::SmallRng};
     use rstest::rstest;
 
     fn test_modifier() -> Modifier {
@@ -244,5 +255,47 @@ mod tests {
         #[case] expected_key: KeyIndex,
     ) {
         assert_eq!(layout.key_of(symbol), Some(expected_key));
+    }
+
+    #[test]
+    fn layout_random_uses_modifier_alphabet() {
+        let modifier = Modifier::standard_us();
+        let mut rng = SmallRng::seed_from_u64(42);
+        let layout = Layout::<US_KEY_COUNT>::random(&modifier, &mut rng);
+
+        let mut layout_symbols: Vec<AsciiChar> = layout.mappings_iter().map(|m| m.base).collect();
+        let mut modifier_symbols = modifier.base_symbols().to_vec();
+        layout_symbols.sort();
+        modifier_symbols.sort();
+
+        assert_eq!(layout_symbols, modifier_symbols);
+    }
+
+    #[test]
+    fn layout_random_is_reproducible_with_same_seed() {
+        let modifier = Modifier::standard_us();
+        let layout_a = Layout::<US_KEY_COUNT>::random(&modifier, &mut SmallRng::seed_from_u64(42));
+        let layout_b = Layout::<US_KEY_COUNT>::random(&modifier, &mut SmallRng::seed_from_u64(42));
+
+        assert_eq!(layout_a, layout_b);
+    }
+
+    #[test]
+    fn layout_random_differs_with_different_seeds() {
+        let modifier = Modifier::standard_us();
+        let layout_a = Layout::<US_KEY_COUNT>::random(&modifier, &mut SmallRng::seed_from_u64(42));
+        let layout_b = Layout::<US_KEY_COUNT>::random(&modifier, &mut SmallRng::seed_from_u64(43));
+
+        // Astronomically unlikely to be equal for N=47
+        assert_ne!(layout_a, layout_b);
+    }
+
+    #[test]
+    fn layout_random_differs_from_qwerty() {
+        let modifier = Modifier::standard_us();
+        let qwerty = Layout::qwerty_us(&modifier);
+        let random = Layout::<US_KEY_COUNT>::random(&modifier, &mut SmallRng::seed_from_u64(42));
+
+        assert_ne!(qwerty, random);
     }
 }
