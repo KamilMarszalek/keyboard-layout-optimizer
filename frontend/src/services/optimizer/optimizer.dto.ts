@@ -46,29 +46,7 @@ export interface OptimizeResultDto {
   metrics: MetricBreakdownDto;
 }
 
-const metricBreakdownSchema = z.object({
-  sameFingerBigrams: z.number(),
-  fingerDistance: z.number(),
-  homeRowUsage: z.number(),
-  handAlternation: z.number(),
-  rowJumping: z.number(),
-});
-
-export const optimizeResultSchema = z.object({
-  bestLayout: z.array(z.string()),
-  bestCost: z.number(),
-  costHistory: z.array(z.number()),
-  metrics: metricBreakdownSchema,
-});
-
 export interface CharFrequencyDto {
   key: string;
   frequency: number;
 }
-
-const charFrequencyDtoSchema = z.object({
-  key: z.string(),
-  frequency: z.number(),
-});
-
-export const charFrequenciesSchema = z.array(charFrequencyDtoSchema);
