@@ -1,21 +1,63 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { themeColor } from '@/lib/token';
+import {
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Title,
+  Tooltip,
+} from 'chart.js';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import { Bar } from 'vue-chartjs';
 
 import { metricLabels } from '../controls';
 import { useResultsStore } from '../store';
 
+ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
+
 const store = useResultsStore();
 const { resultMetrics } = storeToRefs(store);
 
-const labelledMetrics = computed(() =>
-  metricLabels.map((m) => ({
-    key: m.key,
-    label: m.label,
-    value: resultMetrics.value?.[m.key] ?? 0,
-  })),
-);
+const chartData = computed(() => ({
+  labels: metricLabels.map((m) => m.label.split(' ')),
+  datasets: [
+    {
+      label: 'Metric value',
+      data: metricLabels.map((m) => Number(resultMetrics.value?.[m.key] ?? 0)),
+      backgroundColor: metricLabels.map((_, i) => themeColor(`--chart-${i + 1}`)),
+      borderRadius: 4,
+    },
+  ],
+}));
+
+const chartOptions = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      display: false,
+    },
+  },
+  scales: {
+    x: {
+      ticks: {
+        maxRotation: 0,
+        minRotation: 0,
+        autoSkip: false,
+      },
+    },
+    y: {
+      title: {
+        display: true,
+        text: 'Cost contribution',
+      },
+    },
+  },
+};
 </script>
 
 <template>
@@ -24,16 +66,9 @@ const labelledMetrics = computed(() =>
       <CardTitle>Metrics breakdown</CardTitle>
     </CardHeader>
     <CardContent class="pt-4">
-      <dl class="space-y-3">
-        <div
-          v-for="metric in labelledMetrics"
-          :key="metric.key"
-          class="flex items-center justify-between gap-4 py-3"
-        >
-          <dt class="text-sm">{{ metric.label }}</dt>
-          <dd class="text-sm">{{ metric.value.toFixed(4) }}</dd>
-        </div>
-      </dl>
+      <div class="relative h-80">
+        <Bar :data="chartData" :options="chartOptions" />
+      </div>
     </CardContent>
   </Card>
 </template>

@@ -64,7 +64,7 @@ const chartOptions = {
       <CardTitle>Recent cost history</CardTitle>
     </CardHeader>
     <CardContent class="pt-4">
-      <div class="relative h-64">
+      <div class="relative h-80">
         <Line :data="charData" :options="chartOptions" />
       </div>
     </CardContent>

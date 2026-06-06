@@ -16,9 +16,9 @@ const { result } = storeToRefs(resultStore);
       <Header />
       <OptimizerForm />
       <KeyboardPreview />
-      <section v-if="result" class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
+      <section v-if="result" class="space-y-6">
         <OptimizationResult />
-        <div class="space-y-6">
+        <div class="grid gap-6 lg:grid-cols-2">
           <MetricsBreakdown />
           <CostHistory />
         </div>
