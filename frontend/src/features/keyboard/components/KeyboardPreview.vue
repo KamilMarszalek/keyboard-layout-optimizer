@@ -23,7 +23,7 @@ const props = withDefaults(defineProps<{ editable?: boolean; onReEvaluate?: () =
 const store = useKeyboardStore();
 const resultsStore = useResultsStore();
 const evaluatorStore = useEvaluatorStore();
-const { layoutChanged } = storeToRefs(evaluatorStore);
+const { needsReEvaluation } = storeToRefs(evaluatorStore);
 
 const {
   standardQwertyLayout,
@@ -90,7 +90,7 @@ onMounted(() => {
       </div>
       <div class="flex items-center gap-3">
         <Button
-          v-if="onReEvaluate && layoutChanged"
+          v-if="onReEvaluate && needsReEvaluation"
           type="button"
           variant="outline"
           size="sm"
