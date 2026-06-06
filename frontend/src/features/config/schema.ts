@@ -20,7 +20,7 @@ export const annealingSchema = z
     iterationsPerTemp: z.number().min(1).int(),
   })
   .refine((schema) => schema.tStart > schema.tMin, {
-    path: ['annealing', 'tMin'],
+    path: ['tMin'],
     message: 'Minimum temperature must be lower than start temperature',
   });
 
