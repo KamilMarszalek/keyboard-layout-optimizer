@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Alert } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useResultsStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
@@ -9,17 +10,33 @@ import { computed, onMounted } from 'vue';
 import { buildFrequencyMap, keyHeatStyle, maxFrequency } from '../heatmap';
 import { EXPECTED_LAYOUT_LENGTH, KEYBOARD_ROW_OFFSETS, layoutToRows } from '../layout.ts';
 import { useKeyboardStore } from '../store';
+import { useKeyDragAndDrop } from '../useKeyDragAndDrop';
 import HeatmapToggle from './HeatmapToggle.vue';
 import Row from './Row.vue';
+
+const props = withDefaults(defineProps<{ editable?: boolean }>(), {
+  editable: false,
+});
 
 const store = useKeyboardStore();
 const resultsStore = useResultsStore();
 
-const { standardQwertyLayout, isLoadingQwerty, layoutError, charFrequencies, showHeatmap } =
-  storeToRefs(store);
+const {
+  standardQwertyLayout,
+  editableLayout,
+  isLoadingQwerty,
+  layoutError,
+  charFrequencies,
+  showHeatmap,
+} = storeToRefs(store);
 const { result } = storeToRefs(resultsStore);
 
+const { onDragStart, onDragOver, onDrop } = useKeyDragAndDrop();
+
 const layoutMetadata = computed(() => {
+  if (props.editable) {
+    return { layout: editableLayout.value, title: 'Edit layout' };
+  }
   return result?.value?.bestLayout
     ? { layout: result.value.bestLayout, title: 'Optimized layout' }
     : { layout: standardQwertyLayout.value, title: 'Standard QWERTY layout' };
@@ -43,6 +60,16 @@ const rows = computed(() =>
   ),
 );
 
+const rowStartIndices = computed(() => {
+  const starts: number[] = [];
+  let offset = 0;
+  for (const row of rows.value) {
+    starts.push(offset);
+    offset += row.length;
+  }
+  return starts;
+});
+
 onMounted(() => {
   void store.loadStandardQwertyLayout();
 });
@@ -57,7 +84,18 @@ onMounted(() => {
           Keys are shown in fixed physical ANSI positions.
         </CardDescription>
       </div>
-      <Badge variant="secondary">{{ EXPECTED_LAYOUT_LENGTH }} keys</Badge>
+      <div class="flex items-center gap-3">
+        <Button
+          v-if="editable"
+          type="button"
+          variant="outline"
+          size="sm"
+          @click="store.resetEditableLayout()"
+        >
+          Reset to QWERTY
+        </Button>
+        <Badge variant="secondary">{{ EXPECTED_LAYOUT_LENGTH }} keys</Badge>
+      </div>
     </CardHeader>
 
     <CardContent class="pt-5">
@@ -81,6 +119,11 @@ onMounted(() => {
             :key="`layout-row-${rowIndex}`"
             :views="rowView"
             :offset-class="KEYBOARD_ROW_OFFSETS[rowIndex]"
+            :editable="editable"
+            :start-index="rowStartIndices[rowIndex]"
+            @dragstart="onDragStart"
+            @dragover="onDragOver"
+            @drop="onDrop"
           />
         </div>
       </div>

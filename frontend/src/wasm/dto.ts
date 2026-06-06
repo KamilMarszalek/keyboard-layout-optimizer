@@ -28,6 +28,17 @@ export interface MetricBreakdownDto {
   rowJumping: number;
 }
 
+export interface EvaluateRequestDto {
+  text: string;
+  weights: MetricWeightsDto;
+  keys: string[];
+}
+
+export interface EvaluateResultDto {
+  metrics: MetricBreakdownDto;
+  totalCost: number;
+}
+
 export interface KeyMappingDto {
   base: string;
   shifted: string;

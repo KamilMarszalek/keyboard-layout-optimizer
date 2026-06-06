@@ -7,6 +7,7 @@ import type { CharFrequency, Layout } from './types';
 
 interface KeyboardState {
   standardQwertyLayout: Layout;
+  editableLayout: Layout;
   isLoadingQwerty: boolean;
   showHeatmap: boolean;
   charFrequencies: CharFrequency[];
@@ -16,12 +17,27 @@ interface KeyboardState {
 export const useKeyboardStore = defineStore('keyboard', {
   state: (): KeyboardState => ({
     standardQwertyLayout: { mappings: [] },
+    editableLayout: { mappings: [] },
     isLoadingQwerty: false,
     showHeatmap: false,
     charFrequencies: [],
     layoutError: null,
   }),
   actions: {
+    reorderKey(from: number, to: number) {
+      const mappings = this.editableLayout.mappings;
+      if (from < 0 || to < 0 || from >= mappings.length || to >= mappings.length) {
+        return;
+      }
+      [mappings[from], mappings[to]] = [mappings[to], mappings[from]];
+    },
+
+    resetEditableLayout() {
+      this.editableLayout = {
+        mappings: this.standardQwertyLayout.mappings.map((mapping) => ({ ...mapping })),
+      };
+    },
+
     async refreshCharFrequencies(text: string) {
       this.charFrequencies = text.trim()
         ? (await getCharFrequencies(text)).map(fromCharFrequencyDto)
@@ -37,6 +53,7 @@ export const useKeyboardStore = defineStore('keyboard', {
 
       try {
         this.standardQwertyLayout = fromLayoutDto(await getQwertyLayout());
+        this.resetEditableLayout();
       } catch (caught) {
         this.layoutError = `Failed to load the standard keyboard layout from WASM. ${formatError(caught)}`;
       } finally {
