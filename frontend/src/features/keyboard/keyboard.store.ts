@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia';
 import { formatError } from '@/lib/format';
 import { getQwertyLayout } from '@/services/optimizer/wasmClient';
+import { defineStore } from 'pinia';
 
 interface KeyboardState {
   standardQwertyLayout: string[];

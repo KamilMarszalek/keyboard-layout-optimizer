@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { useField } from 'vee-validate';
 import { Badge } from '@/components/ui/badge';
 import { Slider } from '@/components/ui/slider';
+import { useField } from 'vee-validate';
+
 import ConfigField from './ConfigField.vue';
 
 const props = defineProps<{

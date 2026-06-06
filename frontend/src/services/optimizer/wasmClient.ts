@@ -1,9 +1,10 @@
 import init, {
+  get_char_freq,
   initThreadPool,
   optimize_layout,
   qwerty_layout,
-  get_char_freq,
 } from '@/wasm/optimizer';
+
 import {
   type CharFrequencyDto,
   type OptimizeRequestDto,

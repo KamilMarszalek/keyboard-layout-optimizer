@@ -1,6 +1,7 @@
 import type { NumberControlField } from '@/lib/field';
-import type { AnnealingParams, Config, MetricsWeights } from './config.schema';
+
 import { METRIC_WEIGHT_MAX, METRIC_WEIGHT_MIN } from './config.constants';
+import type { AnnealingParams, Config, MetricsWeights } from './config.schema';
 
 export const metricControls: ReadonlyArray<NumberControlField<MetricsWeights>> = [
   {
@@ -76,6 +77,7 @@ export const annealingControls: ReadonlyArray<NumberControlField<AnnealingParams
 export const seedControl: NumberControlField<Config> = {
   key: 'seed',
   label: 'Seed',
-  description: 'Fixed seed for reproducible runs. Leaving this blank uses seed 42; every unseeded run produces identical results.',
+  description:
+    'Fixed seed for reproducible runs. Leaving this blank uses seed 42; every unseeded run produces identical results.',
   step: 1,
 };

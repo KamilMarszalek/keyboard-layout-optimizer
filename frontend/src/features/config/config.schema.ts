@@ -1,4 +1,5 @@
 import { z } from 'zod';
+
 import { METRIC_WEIGHT_MAX, METRIC_WEIGHT_MIN } from './config.constants';
 
 const weightSchema = z.number().min(METRIC_WEIGHT_MIN).max(METRIC_WEIGHT_MAX);

@@ -1,4 +1,5 @@
 import type { ControlField } from '@/lib/field';
+
 import type { Corpus } from './corpus.schema';
 
 export const corpusTextControl: ControlField<Corpus> = {

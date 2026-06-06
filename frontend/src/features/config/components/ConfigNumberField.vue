@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { useField } from 'vee-validate';
-import ConfigField from './ConfigField.vue';
 import {
   NumberField,
   NumberFieldContent,
-  NumberFieldIncrement,
   NumberFieldDecrement,
+  NumberFieldIncrement,
   NumberFieldInput,
 } from '@/components/ui/number-field';
+import { useField } from 'vee-validate';
+
+import ConfigField from './ConfigField.vue';
 
 const props = defineProps<{
   name: string;

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { metricControls } from '../config.controls.ts';
 import ConfigSliderField from './ConfigSliderField.vue';
 </script>

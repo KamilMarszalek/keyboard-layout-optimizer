@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { storeToRefs } from 'pinia';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { storeToRefs } from 'pinia';
+
 import { useResultsStore } from '../results.store';
 
 const store = useResultsStore();

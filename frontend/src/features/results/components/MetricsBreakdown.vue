@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { metricLabels } from '../results.constants';
 import { useResultsStore } from '../results.store';
 
