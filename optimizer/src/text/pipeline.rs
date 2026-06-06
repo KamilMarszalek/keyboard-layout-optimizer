@@ -10,6 +10,11 @@ pub fn normalize_text(input: &str) -> String {
     any_ascii(input).chars().filter(|c| c.is_ascii_graphic()).collect()
 }
 
+/// Maps each byte of `normalized` text to a logical key press using `mapper`.
+///
+/// Yields `None` for bytes that the mapper does not recognise (e.g. unsupported
+/// punctuation). These `None` values act as chain-breakers for bigram counting
+/// in [`Corpus`](crate::text::corpus::Corpus).
 pub fn map_normalized_text_to_key_presses(
     normalized: &str,
     mapper: &impl KeyPressMapper,

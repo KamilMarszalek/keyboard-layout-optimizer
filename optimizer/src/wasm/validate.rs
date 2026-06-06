@@ -1,11 +1,20 @@
+//! Validation helpers for the request DTOs received from the frontend.
+//!
+//! Error messages use the `camelCase` field names so they can be surfaced
+//! directly in the JavaScript UI.
+
 use crate::{keyboard::common::AsciiChar, preset::constants::US_KEY_COUNT};
 
 use super::dto::{AnnealingConfigDto, MetricWeightsDto};
 
+/// Returns `Ok(())` when `condition` holds, otherwise `Err(message)`.
 fn ensure(condition: bool, message: impl Into<String>) -> Result<(), String> {
     if condition { Ok(()) } else { Err(message.into()) }
 }
 
+/// Checks that the annealing schedule is well-formed: all temperatures finite
+/// and positive, `tStart > tMin`, `alpha` in `(0, 1)`, and a positive iteration
+/// count.
 pub(super) fn ensure_valid_annealing_config(dto: &AnnealingConfigDto) -> Result<(), String> {
     ensure(dto.t_start.is_finite(), "tStart must be a finite number")?;
     ensure(dto.t_min.is_finite(), "tMin must be a finite number")?;
@@ -19,6 +28,7 @@ pub(super) fn ensure_valid_annealing_config(dto: &AnnealingConfigDto) -> Result<
     Ok(())
 }
 
+/// Checks that every metric weight is finite and non-negative.
 pub(super) fn ensure_valid_metric_weights(dto: &MetricWeightsDto) -> Result<(), String> {
     ensure_valid_weight("sameFingerBigrams", dto.same_finger_bigrams)?;
     ensure_valid_weight("fingerDistance", dto.finger_distance)?;
@@ -29,6 +39,7 @@ pub(super) fn ensure_valid_metric_weights(dto: &MetricWeightsDto) -> Result<(), 
     Ok(())
 }
 
+/// Checks that a single named weight is finite and non-negative.
 fn ensure_valid_weight(name: &str, value: f64) -> Result<(), String> {
     ensure(value.is_finite(), format!("{name} must be a finite number"))?;
     ensure(value >= 0.0, format!("{name} must be non-negative"))?;
@@ -36,6 +47,9 @@ fn ensure_valid_weight(name: &str, value: f64) -> Result<(), String> {
     Ok(())
 }
 
+/// Converts a frontend key list into a fixed-size array of ASCII symbols,
+/// requiring exactly [`US_KEY_COUNT`] entries that are each a single ASCII
+/// character.
 pub fn keys_to_symbols(keys: &[String]) -> Result<[AsciiChar; US_KEY_COUNT], String> {
     ensure(
         keys.len() == US_KEY_COUNT,

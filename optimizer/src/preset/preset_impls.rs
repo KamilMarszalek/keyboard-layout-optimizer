@@ -4,8 +4,8 @@ use crate::keyboard::geometry::{Finger, Geometry, Row, RowSpec};
 use crate::keyboard::modifier::Modifier;
 
 impl Geometry<US_KEY_COUNT> {
-    // Builds US ANSI-like geometry, containing `KEY_COUNT` keys that store visible ASCII symbols
-    // ordered in 4 rows.
+    /// Builds US ANSI-like geometry containing `US_KEY_COUNT` keys ordered in 4 rows
+    /// (number, top, home, bottom) from left to right.
     pub fn standard_us() -> Self {
         let specs = [
             RowSpec::new(

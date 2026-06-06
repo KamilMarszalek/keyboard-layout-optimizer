@@ -2,12 +2,18 @@ use super::common::{ASCII_COUNT, AsciiChar, KeyIndex};
 use super::modifier::Modifier;
 use rand::{Rng, seq::SliceRandom};
 
+/// The pair of symbols produced by a single key: one unshifted and one shifted.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub struct KeySymbol {
     pub base: AsciiChar,
     pub shifted: AsciiChar,
 }
 
+/// A symbol assignment for a keyboard with `N` keys.
+///
+/// Each key stores the pair of symbols it produces (base and shifted). The layout
+/// also maintains a reverse lookup from any symbol (base or shifted) to its key index,
+/// allowing `O(1)` key lookups.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Layout<const N: usize> {
     mappings: [KeySymbol; N],
@@ -69,10 +75,13 @@ impl<const N: usize> Layout<N> {
         self.symbol_to_key[second_symbol.shifted as usize] = Some(first);
     }
 
+    /// Returns the index of the key that produces `symbol` (either as base or shifted output),
+    /// or `None` if the symbol is not present in this layout.
     pub fn key_of(&self, symbol: AsciiChar) -> Option<KeyIndex> {
         self.symbol_to_key[symbol as usize]
     }
 
+    /// Returns an iterator over all key symbol pairs in key-index order.
     pub fn mappings_iter(&self) -> impl Iterator<Item = &KeySymbol> {
         self.mappings.iter()
     }

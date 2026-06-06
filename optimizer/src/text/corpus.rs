@@ -23,10 +23,14 @@ pub struct Corpus<const P: usize> {
     pub total_bigrams: usize,
 }
 
+/// Errors returned when building a [`Corpus`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum CorpusError {
+    /// The input contains a key press that is not in the supported-presses array.
     UnsupportedKeyPress(KeyPress),
+    /// The supported-presses array contains the same key press more than once.
     DuplicateSupportedKeyPress(KeyPress),
+    /// Building the supported-presses array from the modifier failed.
     SupportedPresses(SupportedPressesError),
 }
 
@@ -66,6 +70,7 @@ impl<const P: usize> Corpus<P> {
         Ok(result)
     }
 
+    /// Returns the index of `press` in the supported-presses array, or `None` if it is absent.
     pub fn index_of(&self, press: KeyPress) -> Option<usize> {
         self.supported_presses.iter().position(|&p| p == press)
     }
