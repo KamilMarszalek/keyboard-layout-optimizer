@@ -204,8 +204,8 @@ fn layout_to_dto(layout: &Layout<US_KEY_COUNT>) -> LayoutDto {
         mappings: layout
             .mappings_iter()
             .map(|symbol| KeyMappingDto {
-                base: symbol.base.to_string(),
-                shifted: symbol.shifted.to_string(),
+                base: (symbol.base as char).to_string(),
+                shifted: (symbol.shifted as char).to_string(),
             })
             .collect(),
     }
