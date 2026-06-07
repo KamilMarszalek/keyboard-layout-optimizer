@@ -8,13 +8,13 @@ use super::common::KeyIndex;
 /// The row of a key on the physical keyboard, from top to bottom.
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub enum Row {
-    /// Number row — the topmost row, containing digit and symbol keys.
+    /// Number row - the topmost row, containing digit and symbol keys.
     Number,
-    /// Top row — the row with `q`, `w`, `e`, … on a QWERTY layout.
+    /// Top row - the row with `q`, `w`, `e`, … on a QWERTY layout.
     Top,
-    /// Home row — the resting position row, containing `a`, `s`, `d`, … on QWERTY.
+    /// Home row - the resting position row, containing `a`, `s`, `d`, … on QWERTY.
     Home,
-    /// Bottom row — the lowest row, containing `z`, `x`, `c`, … on QWERTY.
+    /// Bottom row - the lowest row, containing `z`, `x`, `c`, … on QWERTY.
     Bottom,
 }
 
@@ -129,8 +129,8 @@ pub struct FingerCount {
 /// Constructs a [`FingerCount`] value.
 ///
 /// Two forms are supported:
-/// - `fc!(finger, count)` — no resting key
-/// - `fc!(finger, count, rest_at)` — `rest_at` is the zero-based index of the resting key within this finger's allocation
+/// - `fc!(finger, count)` - no resting key
+/// - `fc!(finger, count, rest_at)` - `rest_at` is the zero-based index of the resting key within this finger's allocation
 #[macro_export]
 macro_rules! fc {
     ( $finger:expr, $count:expr ) => {

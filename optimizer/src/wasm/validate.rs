@@ -7,7 +7,6 @@ use crate::{keyboard::common::AsciiChar, preset::constants::US_KEY_COUNT};
 
 use super::dto::{AnnealingConfigDto, MetricWeightsDto};
 
-/// Returns `Ok(())` when `condition` holds, otherwise `Err(message)`.
 fn ensure(condition: bool, message: impl Into<String>) -> Result<(), String> {
     if condition { Ok(()) } else { Err(message.into()) }
 }
@@ -39,7 +38,6 @@ pub(super) fn ensure_valid_metric_weights(dto: &MetricWeightsDto) -> Result<(), 
     Ok(())
 }
 
-/// Checks that a single named weight is finite and non-negative.
 fn ensure_valid_weight(name: &str, value: f64) -> Result<(), String> {
     ensure(value.is_finite(), format!("{name} must be a finite number"))?;
     ensure(value >= 0.0, format!("{name} must be non-negative"))?;
