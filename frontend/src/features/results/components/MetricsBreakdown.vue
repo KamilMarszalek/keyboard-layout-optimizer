@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { themeColor } from '@/lib/token';
-import type { MetricBreakdownDto } from '@/wasm/dto';
 import {
   BarElement,
   CategoryScale,
@@ -15,11 +14,12 @@ import { computed } from 'vue';
 import { Bar } from 'vue-chartjs';
 
 import { metricLabels } from '../controls';
+import type { MetricBreakdown } from '../types';
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
 const props = defineProps<{
-  metrics: MetricBreakdownDto;
+  metrics: MetricBreakdown;
 }>();
 
 const chartData = computed(() => ({
