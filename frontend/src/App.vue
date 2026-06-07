@@ -10,6 +10,7 @@ import { OptimizerForm } from '@/features/optimizer/components';
 import { ComparisonChart, CostHistory, MetricsBreakdown } from '@/features/results/components';
 import { useOptimizerResultStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
+import { ref, watch } from 'vue';
 
 const resultStore = useOptimizerResultStore();
 const { result } = storeToRefs(resultStore);
@@ -21,6 +22,8 @@ const modeStore = useModeStore();
 const { mode } = storeToRefs(modeStore);
 
 const { handleReEvaluate } = useReEvaluate();
+const scrollSignal = ref(0);
+watch([result, evaluateResult], () => scrollSignal.value++);
 </script>
 
 <template>
@@ -33,7 +36,7 @@ const { handleReEvaluate } = useReEvaluate();
         :on-re-evaluate="mode === 'evaluate' ? handleReEvaluate : undefined"
       />
 
-      <ScrollIntoView :trigger="mode === 'optimize' ? result : evaluateResult">
+      <ScrollIntoView :trigger="scrollSignal">
         <section v-if="mode === 'optimize' && result" class="grid gap-6 lg:grid-cols-2">
           <MetricsBreakdown :metrics="result.metrics" />
           <CostHistory />
