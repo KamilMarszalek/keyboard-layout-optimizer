@@ -14,7 +14,7 @@ use self::sa::{AnnealingConfig, AnnealingResult, simulated_annealing};
 use crate::keyboard::layout::Layout;
 
 /// Number of parallel SA runs launched by `optimize_layout_inner`.
-/// The Rayon thread-pool cap in `frontend/src/services/optimizer/wasmClient.ts`
+/// The Rayon thread-pool cap in `frontend/src/wasm/engine.ts`
 /// must be kept in sync with this value.
 pub const WORKER_COUNT: usize = 8;
 
