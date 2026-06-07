@@ -143,4 +143,4 @@ Generowany katalog `frontend/src/pkg` jest warunkiem działania frontendu, dlate
 Pokrycie testami jest mocne po stronie Rust, ale frontend ma tylko jeden plik testowy.
 
 ## Pomysły na rozszerzenia
-Obecnie w trybie `EVALUATE` layout użytkownika jest porównywany tylko z QWERTY. Można dodać możliwość porównania z Dvorakiem lub innymi presetami. Można też umożliwić użytkownikowi zapisanie układu i jego statystyk.
+Obecnie w trybie `EVALUATE` layout użytkownika jest porównywany tylko z QWERTY. Można dodać możliwość porównania z Dvorakiem lub innymi presetami. Można też umożliwić użytkownikowi zapisanie układu i jego statystyk. Dodatkowo, można dodać możliwość eksportu przeprowadzonych ewaluacji do pliku CSV, co pozwoliłoby użytkownikom na dalszą analizę danych w zewnętrznych narzędziach. Moglibyśmy też zbierać wyniki optymalizacji i ewaluacji od użytkowników i prezentować na stronie zestawienia najlepszych układów dla różnych korpusów, co stworzyłoby społecznościowy aspekt aplikacji.
