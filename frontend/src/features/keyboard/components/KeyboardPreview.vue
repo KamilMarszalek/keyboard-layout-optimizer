@@ -64,15 +64,11 @@ const rows = computed(() =>
   ),
 );
 
-const rowStartIndices = computed(() => {
-  const starts: number[] = [];
-  let offset = 0;
-  for (const row of rows.value) {
-    starts.push(offset);
-    offset += row.length;
-  }
-  return starts;
-});
+const rowStartIndices = computed(() =>
+  rows.value
+    .slice(0, -1)
+    .reduce<number[]>((acc, row) => [...acc, acc[acc.length - 1] + row.length], [0]),
+);
 
 onMounted(() => {
   void store.loadStandardQwertyLayout();
@@ -90,7 +86,7 @@ onMounted(() => {
       </div>
       <div class="flex items-center gap-3">
         <Button
-          v-if="onReEvaluate && needsReEvaluation"
+          v-if="onReEvaluate && needsReEvaluation(editableLayout)"
           type="button"
           variant="outline"
           size="sm"

@@ -5,9 +5,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { storeToRefs } from 'pinia';
 
 import { useEvaluatorStore } from '../store';
+import { useReEvaluate } from '../useReEvaluate';
 
 const store = useEvaluatorStore();
 const { error, isEvaluating } = storeToRefs(store);
+
+const { handleReEvaluate } = useReEvaluate();
 </script>
 
 <template>
@@ -25,7 +28,13 @@ const { error, isEvaluating } = storeToRefs(store);
       </Alert>
 
       <div class="mt-auto space-y-3">
-        <Button type="submit" size="lg" class="w-full" :disabled="isEvaluating">
+        <Button
+          type="button"
+          size="lg"
+          class="w-full"
+          :disabled="isEvaluating"
+          @click="handleReEvaluate"
+        >
           {{ isEvaluating ? 'Evaluating...' : 'Evaluate layout' }}
         </Button>
       </div>
