@@ -4,6 +4,9 @@
 - Kamil Marszałek
 - Michał Szwejk
 
+## Live demo:
+- `https://keyboard-layout-optimizer.pages.dev/`
+
 ## Repozytoria: 
 - `https://github.com/KamilMarszalek/keyboard-layout-optimizer`
 - `https://gitlab-stud.elka.pw.edu.pl/kmarsza1/keyboard-layout-optimizer`
