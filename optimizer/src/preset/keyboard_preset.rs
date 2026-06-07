@@ -5,7 +5,7 @@ use crate::{
 
 /// Composes the physical geometry, modifier mapping, and symbol placement for a keyboard.
 ///
-/// Presets are convenience values. The optimizer still operates on `Keyboard`, `Layout`, and
+/// Presets are convenience values. The optimizer still operates on `Layout`, and
 /// `Corpus` directly, while text ingestion only depends on the preset's modifier mapping.
 #[derive(Clone)]
 pub struct KeyboardPreset<const N: usize, const P: usize> {
