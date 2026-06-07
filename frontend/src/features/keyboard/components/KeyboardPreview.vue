@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvaluatorStore } from '@/features/evaluator/store';
 import { useOptimizerResultStore } from '@/features/results/store';
-import { themeColor } from '@/lib/token.ts';
 import { RefreshCw } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted } from 'vue';
@@ -56,10 +55,7 @@ const rows = computed(() =>
       const freq = freqMap.value.get(key.base) ?? 0;
       return {
         mapping: key,
-        style:
-          showHeatmap.value && freq !== 0
-            ? heatmapStyle(freq, maxFreq.value)
-            : { color: themeColor('--foreground'), backgroundColor: themeColor('--background') },
+        style: showHeatmap.value && freq !== 0 ? heatmapStyle(freq, maxFreq.value) : undefined,
       };
     }),
   ),
