@@ -58,7 +58,7 @@ just frontend-dev       # uruchamia Vite, zwykle http://localhost:5173
 just frontend-build     # buduje frontend
 just rust-build         # buduje crate Rust
 just check              # pełne sprawdzenie: Rust, WASM, frontend
-just test               # testy Rust i TypeScript
+just test               # testy
 just docs               # dokumentacja Rust
 just docker-check       # sprawdzenie projektu w Dockerze
 ```
@@ -101,8 +101,6 @@ Kluczowe decyzje techniczne:
 
 W Rust zostało napisanych 156 testów jednostkowych, które pokrywają reprezentację klawiatury, geometrię, korpus, metryki, symulowane wyżarzanie i walidację DTO WASM. Testy są inline w modułach, a `Justfile` zawiera komendy do uruchomienia wszystkich testów. Do przygotowania testów parametrycznych użyto crate'a `rstest`. Umożliwia on definiowanie testów z różnymi zestawami danych wejściowych poprzez makra, co jest szczególnie przydatne do testowania metryk i algorytmu optymalizacji na różnych układach i korpusach.
 
-W frontendzie znajduje się kilka testów jednostkowych, które sprawdzają logikę funkcji pomocniczych.
-
 Używamy `clippy` do analizy statycznej Rust, a `eslint` i `tsc` do TypeScript. Komendy do uruchomienia tych narzędzi są zorganizowane w `Justfile`.
 
 ## Dokumentacja wygenerowana z kodu
@@ -139,8 +137,6 @@ Widocznym ograniczeniem jest wymóg `crossOriginIsolated` dla wątków WASM. Apl
 Granica TypeScript-WASM wymaga utrzymania zgodności DTO i walidacji po obu stronach. To poprawia odporność na błędne dane, ale zwiększa koszt zmian pól formularza i wyników.
 
 Generowany katalog `frontend/src/pkg` jest warunkiem działania frontendu, dlatego lokalne uruchomienie wymaga wcześniejszego `just wasm-pack`. CI i Docker robią to jawnie.
-
-Pokrycie testami jest mocne po stronie Rust, ale frontend ma tylko jeden plik testowy.
 
 Użycie `wasm-bindgen-rayon` pozwoliło zrównoleglić obliczenia w module WASM, ale wymagało specyficznej konfiguracji kompilacji, w tym obsługi atomics oraz toolchainu `nightly`. Skutkuje to ostrzeżeniem kompilatora o niestabilnej fladze `-Ctarget-feature=atomics`. Ostrzeżenie nie uniemożliwia działania aplikacji, ale pokazuje, że wielowątkowość WASM w tej konfiguracji wiąże się z dodatkową złożonością środowiska budowania.
 
