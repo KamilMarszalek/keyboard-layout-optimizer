@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvaluatorStore } from '@/features/evaluator/store';
-import { useResultsStore } from '@/features/results/store';
+import { useOptimizerResultStore } from '@/features/results/store';
 import { RefreshCw } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted } from 'vue';
@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<{ editable?: boolean; onReEvaluate?: () =
 });
 
 const store = useKeyboardStore();
-const resultsStore = useResultsStore();
+const resultsStore = useOptimizerResultStore();
 const evaluatorStore = useEvaluatorStore();
 const { needsReEvaluation } = storeToRefs(evaluatorStore);
 

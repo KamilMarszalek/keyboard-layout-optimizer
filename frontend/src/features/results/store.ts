@@ -8,7 +8,7 @@ interface ResultsState {
   result: OptimizeResult | null;
 }
 
-export const useResultsStore = defineStore('results', {
+export const useOptimizerResultStore = defineStore('optimizerResults', {
   state: (): ResultsState => ({ result: null }),
   actions: {
     setResult(result: OptimizeResult) {

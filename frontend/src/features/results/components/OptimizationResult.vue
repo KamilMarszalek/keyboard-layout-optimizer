@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 
-import { useResultsStore } from '../store';
+import { useOptimizerResultStore } from '../store';
 
-const store = useResultsStore();
+const store = useOptimizerResultStore();
 const { result, costHistory } = storeToRefs(store);
 </script>
 

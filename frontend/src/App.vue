@@ -7,10 +7,10 @@ import { KeyboardPreview } from '@/features/keyboard/components';
 import { useModeStore } from '@/features/mode/store';
 import { OptimizerForm } from '@/features/optimizer/components';
 import { CostHistory, MetricsBreakdown } from '@/features/results/components';
-import { useResultsStore } from '@/features/results/store';
+import { useOptimizerResultStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
 
-const resultStore = useResultsStore();
+const resultStore = useOptimizerResultStore();
 const { result } = storeToRefs(resultStore);
 
 const evaluatorStore = useEvaluatorStore();

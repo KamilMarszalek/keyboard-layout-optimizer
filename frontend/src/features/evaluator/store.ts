@@ -3,16 +3,16 @@ import { useWeightsStore } from '@/features/config/store';
 import { useCorpusStore } from '@/features/corpus/store';
 import type { Layout } from '@/features/keyboard/types';
 import { formatError } from '@/lib/error';
-import type { EvaluateResultDto } from '@/wasm/dto';
 import { evaluateLayout } from '@/wasm/queries';
 import { defineStore } from 'pinia';
 
-import { toEvaluateRequestDto } from './mapper';
+import { fromEvaluateResultDto, toEvaluateRequestDto } from './mapper';
+import type { EvaluateResult } from './types';
 
 interface EvaluatorState {
   isEvaluating: boolean;
   error: string | null;
-  result: EvaluateResultDto | null;
+  result: EvaluateResult | null;
   evaluatedLayout: Layout | null;
   lastWeights: MetricsWeights | null;
   lastText: string | null;
@@ -59,7 +59,7 @@ export const useEvaluatorStore = defineStore('evaluator', {
 
       try {
         const requestDto = toEvaluateRequestDto(keys, text, weights);
-        this.result = await evaluateLayout(requestDto);
+        this.result = fromEvaluateResultDto(await evaluateLayout(requestDto));
 
         this.evaluatedLayout = {
           mappings: layoutSnapshot.mappings.map((mapping) => ({ ...mapping })),

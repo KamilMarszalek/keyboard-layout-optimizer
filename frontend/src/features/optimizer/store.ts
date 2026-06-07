@@ -1,4 +1,4 @@
-import { useResultsStore } from '@/features/results/store';
+import { useOptimizerResultStore } from '@/features/results/store';
 import { formatError } from '@/lib/error';
 import { disposeOptimizerWorker, optimizeInWorker } from '@/wasm/client';
 import { defineStore } from 'pinia';
@@ -22,7 +22,7 @@ export const useOptimizerStore = defineStore('optimizer', {
       this.error = null;
 
       try {
-        const resultsStore = useResultsStore();
+        const resultsStore = useOptimizerResultStore();
         const requestDto = toOptimizeRequestDto(request);
         const result = await optimizeInWorker(requestDto);
         resultsStore.setResult(fromOptimizeResultDto(result));

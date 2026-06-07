@@ -16,12 +16,12 @@ import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
 import { Line } from 'vue-chartjs';
 
-import { useResultsStore } from '../store';
+import { useOptimizerResultStore } from '../store';
 import OptimizationResult from './OptimizationResult.vue';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
 
-const store = useResultsStore();
+const store = useOptimizerResultStore();
 const { costHistory } = storeToRefs(store);
 
 const chartData = computed(() => ({
