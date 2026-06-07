@@ -9,7 +9,7 @@ export type KeyHeatStyle = {
 
 export type KeyView = {
   mapping: KeyMapping;
-  style: KeyHeatStyle;
+  style?: Partial<KeyHeatStyle>;
 };
 
 export function buildFrequencyMap(freqs?: CharFrequency[]): Map<string, number> {
