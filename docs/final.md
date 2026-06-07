@@ -117,7 +117,7 @@ Kluczowe decyzje techniczne:
 
 ## Testy i analiza statyczna
 
-W Rust zostało napisanych 156 testów jednostkowych, które pokrywają reprezentację klawiatury, geometrię, korpus, metryki, symulowane wyżarzanie i walidację DTO WASM. Testy są inline w modułach, a `Justfile` zawiera komendy do uruchomienia wszystkich testów. Do sporządzenia parametrycznych testów użyto crate'a `rstest`. Umożliwia on definiowanie testów z różnymi zestawami danych wejściowych poprzez makra, co jest szczególnie przydatne do testowania metryk i algorytmu optymalizacji na różnych układach i korpusach.
+W Rust zostało napisanych 156 testów jednostkowych, które pokrywają reprezentację klawiatury, geometrię, korpus, metryki, symulowane wyżarzanie i walidację DTO WASM. Testy są inline w modułach, a `Justfile` zawiera komendy do uruchomienia wszystkich testów. Do przygotowania testów parametrycznych użyto crate'a `rstest`. Umożliwia on definiowanie testów z różnymi zestawami danych wejściowych poprzez makra, co jest szczególnie przydatne do testowania metryk i algorytmu optymalizacji na różnych układach i korpusach.
 
 W frontendzie znajduje się kilka testów jednostkowych, które sprawdzają logikę funkcji pomocniczych.
 
