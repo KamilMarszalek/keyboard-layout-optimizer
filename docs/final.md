@@ -5,11 +5,11 @@
 - Michał Szwejk
 
 ## Live demo:
-- `https://keyboard-layout-optimizer.pages.dev/`
+- [Aplikacja](https://keyboard-layout-optimizer.pages.dev/)
 
-## Repozytoria: 
-- `https://github.com/KamilMarszalek/keyboard-layout-optimizer`
-- `https://gitlab-stud.elka.pw.edu.pl/kmarsza1/keyboard-layout-optimizer`
+## Repozytoria:
+- [GitHub](https://github.com/KamilMarszalek/keyboard-layout-optimizer)
+- [GitLab PW](https://gitlab-stud.elka.pw.edu.pl/kmarsza1/keyboard-layout-optimizer)
 
 ## Opis działania
 Aplikacja webowa do oceny i optymalizacji układu klawiatury dla podanego korpusu tekstu. Użytkownik może wpisać tekst oraz ustawić wagi metryk ergonomicznych. Całość może działać w dwóch trybach:
