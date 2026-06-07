@@ -28,23 +28,25 @@ export const useEvaluatorStore = defineStore('evaluator', {
     lastText: null,
   }),
   getters: {
-    needsReEvaluation: (state) => (currentLayout: Layout): boolean => {
-      if (!state.evaluatedLayout) {
-        return false;
-      }
-      const evaluated = state.evaluatedLayout.mappings;
-      const current = currentLayout.mappings;
-      if (evaluated.length !== current.length) {
-        return true;
-      }
-      if (current.some((mapping, index) => mapping.base !== evaluated[index].base)) {
-        return true;
-      }
-      if (useCorpusStore().text !== state.lastText) {
-        return true;
-      }
-      return JSON.stringify(useWeightsStore().weights) !== JSON.stringify(state.lastWeights);
-    },
+    needsReEvaluation:
+      (state) =>
+      (currentLayout: Layout): boolean => {
+        if (!state.evaluatedLayout) {
+          return false;
+        }
+        const evaluated = state.evaluatedLayout.mappings;
+        const current = currentLayout.mappings;
+        if (evaluated.length !== current.length) {
+          return true;
+        }
+        if (current.some((mapping, index) => mapping.base !== evaluated[index].base)) {
+          return true;
+        }
+        if (useCorpusStore().text !== state.lastText) {
+          return true;
+        }
+        return JSON.stringify(useWeightsStore().weights) !== JSON.stringify(state.lastWeights);
+      },
   },
   actions: {
     async evaluate(keys: string[], layoutSnapshot: Layout, text: string, weights: MetricsWeights) {

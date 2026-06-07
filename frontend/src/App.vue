@@ -32,19 +32,12 @@ const { handleReEvaluate } = useReEvaluate();
         :on-re-evaluate="mode === 'evaluate' ? handleReEvaluate : undefined"
       />
 
-      <section
-        v-if="mode === 'optimize' && result"
-        class="grid gap-6 lg:grid-cols-2"
-      >
-        
-          <MetricsBreakdown :metrics="result.metrics" />
-          <CostHistory />
+      <section v-if="mode === 'optimize' && result" class="grid gap-6 lg:grid-cols-2">
+        <MetricsBreakdown :metrics="result.metrics" />
+        <CostHistory />
       </section>
 
-      <section
-        v-if="mode === 'evaluate' && evaluateResult"
-        class="grid gap-6 lg:grid-cols-2"
-      >
+      <section v-if="mode === 'evaluate' && evaluateResult" class="grid gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
             <CardTitle>Evaluation result</CardTitle>
