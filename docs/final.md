@@ -135,7 +135,7 @@ Komenda generuje dokumentację na podstawie komentarzy dokumentacyjnych Rust. W 
 | Metryka | Wartość |
 |---|---:|
 | Liczba linii kodu Rust | 3453 |
-| Liczba linii kodu TypeScript/Vue | TODO |
+| Liczba linii kodu TypeScript/Vue | 3012 |
 | Liczba testów Rust | 156 |
 | Pokrycie testami | 90% |
 
