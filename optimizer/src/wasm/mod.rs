@@ -10,7 +10,7 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 
 use crate::preset::qwerty_us::qwerty_us;
 
-mod dto;
+pub mod dto;
 mod handlers;
 mod validate;
 
