@@ -68,7 +68,7 @@ const chartOptions = {
 <template>
   <Card>
     <CardHeader class="flex flex-row items-center justify-between space-y-0">
-      <CardTitle>Recent cost history</CardTitle>
+      <CardTitle>Cost history</CardTitle>
       <HoverCard :open-delay="100" :close-delay="100">
         <HoverCardTrigger
           as="button"

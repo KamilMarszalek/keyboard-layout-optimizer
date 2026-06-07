@@ -5,5 +5,5 @@ import type { Corpus } from './schema';
 export const corpusTextControl: ControlField<Corpus> = {
   key: 'text',
   label: 'Input text',
-  description: 'Paste representative text for the optimizer to evaluate.',
+  description: 'Paste representative text to score layouts against.',
 };

@@ -13,9 +13,9 @@ const { error, isOptimizing } = storeToRefs(store);
 <template>
   <Card class="flex flex-col">
     <CardHeader>
-      <CardTitle>Run</CardTitle>
+      <CardTitle>Optimize</CardTitle>
       <CardDescription>
-        The optimizer compares QWERTY and Dvorak starts, then returns the best result.
+        Runs simulated annealing from 8 random ANSI starting layouts and keeps the best result
       </CardDescription>
     </CardHeader>
 

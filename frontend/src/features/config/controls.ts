@@ -77,7 +77,6 @@ export const annealingControls: ReadonlyArray<NumberControlField<AnnealingParams
 export const seedControl: NumberControlField<Config> = {
   key: 'seed',
   label: 'Seed',
-  description:
-    'Fixed seed for reproducible runs. Leaving this blank uses seed 42; every unseeded run produces identical results.',
+  description: 'Fixed seed for reproducible runs. Leaving this blank uses seed 42.',
   step: 1,
 };
