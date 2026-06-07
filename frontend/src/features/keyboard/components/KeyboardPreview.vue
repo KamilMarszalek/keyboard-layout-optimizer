@@ -5,11 +5,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvaluatorStore } from '@/features/evaluator/store';
 import { useOptimizerResultStore } from '@/features/results/store';
+import { themeColor } from '@/lib/token.ts';
 import { RefreshCw } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted } from 'vue';
 
-import { buildFrequencyMap, keyHeatStyle, maxFrequency } from '../heatmap';
+import { type KeyHeatStyle, buildFrequencyMap, heatmapStyle, maxFrequency } from '../heatmap';
 import { EXPECTED_LAYOUT_LENGTH, KEYBOARD_ROW_OFFSETS, layoutToRows } from '../layout.ts';
 import { useKeyboardStore } from '../store';
 import { useKeyDragAndDrop } from '../useKeyDragAndDrop';
@@ -57,8 +58,8 @@ const rows = computed(() =>
         mapping: key,
         style:
           showHeatmap.value && freq !== 0
-            ? keyHeatStyle(freq, maxFreq.value)
-            : { backgroundColor: 'transparent' },
+            ? heatmapStyle(freq, maxFreq.value)
+            : { color: themeColor('--foreground'), backgroundColor: themeColor('--background') },
       };
     }),
   ),
@@ -125,7 +126,7 @@ onMounted(() => {
         Loading standard keyboard layout...
       </div>
 
-      <div v-else class="overflow-x-auto pb-2">
+      <div v-else class="overflow-x-auto py-2">
         <div class="mx-auto w-max space-y-2 rounded-md bg-muted/40 p-4 ring-1 ring-border">
           <Row
             v-for="(rowView, rowIndex) in rows"
