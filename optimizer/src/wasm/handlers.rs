@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use rand::{SeedableRng, rngs::SmallRng};
 
 use crate::{
@@ -7,19 +8,43 @@ use crate::{
         run_multi_start,
         sa::AnnealingConfig,
     },
-    keyboard::layout::Layout,
+    keyboard::{layout::Layout, modifier::Modifier},
     preset::{
         constants::{US_KEY_COUNT, US_PRESS_COUNT},
         dvorak_us::dvorak_us,
         qwerty_us::qwerty_us,
     },
+    text::pipeline::{map_normalized_text_to_key_presses, normalize_text},
 };
 
 use super::dto::{
-    EvaluateRequestDto, EvaluateResultDto, KeyMappingDto, LayoutDto, OptimizeRequestDto,
-    OptimizeResultDto,
+    CharFrequencyDto, EvaluateRequestDto, EvaluateResultDto, KeyMappingDto, LayoutDto,
+    OptimizeRequestDto, OptimizeResultDto,
 };
 use super::validate::keys_to_symbols;
+
+pub(super) fn get_char_freq_inner(input: &str) -> Vec<CharFrequencyDto> {
+    let normalized = normalize_text(input);
+    let mapper = Modifier::standard_us();
+
+    let counts = map_normalized_text_to_key_presses(&normalized, &mapper)
+        .flatten()
+        .counts_by(|press| press.base);
+
+    let total: usize = counts.values().sum();
+
+    if total == 0 {
+        return Vec::new();
+    }
+
+    counts
+        .into_iter()
+        .map(|(key, count)| CharFrequencyDto {
+            key: (key as char).to_string(),
+            frequency: count as f64 / total as f64,
+        })
+        .collect()
+}
 
 pub(super) fn optimize_layout_inner(
     request: OptimizeRequestDto,
@@ -132,5 +157,19 @@ mod tests {
         let err = evaluate_layout_inner(valid_evaluate_request(keys)).unwrap_err();
 
         assert_eq!(err, "Provided symbols do not match modifier's base symbols");
+    }
+
+    #[test]
+    fn get_char_freq_inner_returns_empty_for_empty_input() {
+        assert!(get_char_freq_inner("").is_empty());
+    }
+
+    #[test]
+    fn get_char_freq_inner_frequencies_sum_to_one() {
+        let freq = get_char_freq_inner("the quick brown fox");
+
+        assert!(!freq.is_empty());
+        let total: f64 = freq.iter().map(|entry| entry.frequency).sum();
+        assert!((total - 1.0).abs() < 1e-9, "frequencies summed to {total}");
     }
 }

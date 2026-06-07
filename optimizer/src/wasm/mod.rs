@@ -1,44 +1,19 @@
-use itertools::Itertools;
 use wasm_bindgen::prelude::*;
 
 pub use wasm_bindgen_rayon::init_thread_pool;
 
-use crate::{
-    keyboard::modifier::Modifier,
-    preset::qwerty_us::qwerty_us,
-    text::pipeline::{map_normalized_text_to_key_presses, normalize_text},
-};
+use crate::preset::qwerty_us::qwerty_us;
 
 mod dto;
 mod handlers;
 mod validate;
 
-use dto::{CharFrequencyDto, EvaluateRequestDto, OptimizeRequestDto};
-use handlers::{evaluate_layout_inner, layout_to_dto, optimize_layout_inner};
+use dto::{EvaluateRequestDto, OptimizeRequestDto};
+use handlers::{evaluate_layout_inner, get_char_freq_inner, layout_to_dto, optimize_layout_inner};
 
 #[wasm_bindgen]
 pub fn get_char_freq(input: &str) -> Result<JsValue, JsValue> {
-    let normalized = normalize_text(input);
-    let mapper = Modifier::standard_us();
-
-    let counts = map_normalized_text_to_key_presses(&normalized, &mapper)
-        .flatten()
-        .counts_by(|press| press.base);
-
-    let total: usize = counts.values().sum();
-
-    if total == 0 {
-        return serde_wasm_bindgen::to_value(&Vec::<CharFrequencyDto>::new())
-            .map_err(|err| JsValue::from_str(&format!("Serialization failed: {err}")));
-    }
-
-    let freq: Vec<CharFrequencyDto> = counts
-        .into_iter()
-        .map(|(key, count)| CharFrequencyDto {
-            key: (key as char).to_string(),
-            frequency: count as f64 / total as f64,
-        })
-        .collect();
+    let freq = get_char_freq_inner(input);
 
     serde_wasm_bindgen::to_value(&freq)
         .map_err(|err| JsValue::from_str(&format!("Serialization failed: {err}")))
