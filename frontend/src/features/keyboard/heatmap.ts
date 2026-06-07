@@ -1,6 +1,9 @@
+import { themeColor } from '@/lib/token';
+
 import type { CharFrequency, KeyMapping } from './types';
 
 export type KeyHeatStyle = {
+  color: string;
   backgroundColor: string;
 };
 
@@ -19,10 +22,13 @@ export function maxFrequency(freqs?: CharFrequency[]): number {
   return Math.max(...freqs.map((f) => f.frequency));
 }
 
-export function keyHeatStyle(freq: number, maxFreq: number): KeyHeatStyle {
+export function heatmapStyle(freq: number, maxFreq: number): KeyHeatStyle {
   const ratio = maxFreq > 0 ? freq / maxFreq : 0;
   const hue = Math.round(120 * (1 - ratio));
   const saturation = 70;
   const lightness = Math.round(78 - ratio * 18);
-  return { backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)` };
+  return {
+    color: themeColor('--background'),
+    backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
+  };
 }
