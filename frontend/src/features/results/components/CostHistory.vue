@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import { themeColor } from '@/lib/token';
 import {
   CategoryScale,
@@ -17,12 +16,13 @@ import { computed } from 'vue';
 import { Line } from 'vue-chartjs';
 
 import { useOptimizerResultStore } from '../store';
+import CostHoverMark from './CostHoverMark.vue';
 import OptimizationResult from './OptimizationResult.vue';
 
 ChartJS.register(Title, Tooltip, Legend, LineElement, PointElement, CategoryScale, LinearScale);
 
 const store = useOptimizerResultStore();
-const { costHistory } = storeToRefs(store);
+const { result, costHistory } = storeToRefs(store);
 
 const chartData = computed(() => ({
   labels: costHistory.value.map((_, i) => i + 1),
@@ -69,19 +69,9 @@ const chartOptions = {
   <Card>
     <CardHeader class="flex flex-row items-center justify-between space-y-0">
       <CardTitle>Cost history</CardTitle>
-      <HoverCard :open-delay="100" :close-delay="100">
-        <HoverCardTrigger
-          as="button"
-          type="button"
-          aria-label="Optimization result"
-          class="flex h-6 w-6 items-center justify-center rounded-full border border-border text-xs font-bold text-muted-foreground hover:bg-muted"
-        >
-          ?
-        </HoverCardTrigger>
-        <HoverCardContent align="end" class="w-72">
-          <OptimizationResult />
-        </HoverCardContent>
-      </HoverCard>
+      <CostHoverMark :value="result!!.bestCost">
+        <OptimizationResult />
+      </CostHoverMark>
     </CardHeader>
     <CardContent class="pt-4">
       <div class="relative h-80">

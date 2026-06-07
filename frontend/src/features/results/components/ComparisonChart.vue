@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
 import type { EvaluateResult } from '@/features/evaluator/types';
 import { themeColor } from '@/lib/token';
 import {
@@ -15,12 +14,14 @@ import {
 import { computed } from 'vue';
 import { Bar } from 'vue-chartjs';
 
+import { CostHoverMark } from '.';
 import { toComparisonRows } from '../comparison';
 
 ChartJS.register(Title, Tooltip, Legend, BarElement, CategoryScale, LinearScale);
 
-const GREEN = 'hsl(140, 90%, 45%)';
-const RED = 'hsl(0, 90%, 45%)';
+const GREEN_COLOR = 'hsl(140, 90%, 45%)';
+const RED_COLOR = 'hsl(0, 90%, 45%)';
+const DEFAULT_COLOR = themeColor('--muted-foreground');
 
 function barColor(
   userValue: number,
@@ -32,7 +33,7 @@ function barColor(
     return gray;
   }
   const userIsBetter = lowerIsBetter ? userValue < qwertyValue : userValue > qwertyValue;
-  return userIsBetter ? GREEN : RED;
+  return userIsBetter ? GREEN_COLOR : RED_COLOR;
 }
 
 const props = defineProps<{
@@ -52,16 +53,13 @@ const yBounds = computed(() => {
   };
 });
 
-const userTotalClass = computed(() => {
-  const { totalCost: userTotal } = props.userResult;
-  const { totalCost: qwertyTotal } = props.qwertyResult;
-  if (userTotal < qwertyTotal) {
-    return 'text-green-600';
+const userChartStyle = computed(() => {
+  const userTotal = props.userResult.totalCost;
+  const qwertyTotal = props.qwertyResult.totalCost;
+  if (userTotal === qwertyTotal) {
+    return { color: DEFAULT_COLOR };
   }
-  if (userTotal > qwertyTotal) {
-    return 'text-destructive';
-  }
-  return 'text-muted-foreground';
+  return { color: userTotal < qwertyTotal ? GREEN_COLOR : RED_COLOR };
 });
 
 const qwertyData = computed(() => ({
@@ -70,7 +68,7 @@ const qwertyData = computed(() => ({
     {
       label: 'QWERTY',
       data: rows.value.map((row) => row.qwertyValue),
-      backgroundColor: themeColor('--muted-foreground'),
+      backgroundColor: DEFAULT_COLOR,
       borderRadius: 4,
     },
   ],
@@ -83,12 +81,7 @@ const userData = computed(() => ({
       label: 'Your layout',
       data: rows.value.map((row) => row.userValue),
       backgroundColor: rows.value.map((row) =>
-        barColor(
-          row.userValue,
-          row.qwertyValue,
-          row.lowerIsBetter,
-          themeColor('--muted-foreground'),
-        ),
+        barColor(row.userValue, row.qwertyValue, row.lowerIsBetter, DEFAULT_COLOR),
       ),
       borderRadius: 4,
     },
@@ -128,22 +121,14 @@ const chartOptions = computed(() => ({
     <Card>
       <CardHeader class="flex flex-row items-center justify-between space-y-0">
         <CardTitle>QWERTY baseline</CardTitle>
-        <HoverCard :open-delay="100" :close-delay="100">
-          <HoverCardTrigger
-            as="button"
-            type="button"
-            aria-label="QWERTY total cost"
-            class="flex h-6 w-6 items-center justify-center rounded-full border border-border text-xs font-bold text-muted-foreground hover:bg-muted"
-          >
-            ?
-          </HoverCardTrigger>
-          <HoverCardContent align="end" class="w-72">
-            <div class="text-center">
-              <p class="text-sm font-medium">Total cost</p>
-              <p class="mt-1 text-2xl font-bold">{{ qwertyResult.totalCost.toFixed(4) }}</p>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
+        <CostHoverMark :value="qwertyResult.totalCost">
+          <div class="text-center">
+            <p class="text-sm font-medium">Total cost</p>
+            <p class="mt-1 text-2xl font-bold">
+              {{ qwertyResult.totalCost.toFixed(4) }}
+            </p>
+          </div>
+        </CostHoverMark>
       </CardHeader>
       <CardContent class="pt-4">
         <div class="relative h-80">
@@ -154,24 +139,14 @@ const chartOptions = computed(() => ({
     <Card>
       <CardHeader class="flex flex-row items-center justify-between space-y-0">
         <CardTitle>Your layout</CardTitle>
-        <HoverCard :open-delay="100" :close-delay="100">
-          <HoverCardTrigger
-            as="button"
-            type="button"
-            aria-label="Your layout total cost"
-            class="flex h-6 w-6 items-center justify-center rounded-full border border-border text-xs font-bold text-muted-foreground hover:bg-muted"
-          >
-            ?
-          </HoverCardTrigger>
-          <HoverCardContent align="end" class="w-72">
-            <div class="text-center">
-              <p class="text-sm font-medium">Total cost</p>
-              <p class="mt-1 text-2xl font-bold" :class="userTotalClass">
-                {{ userResult.totalCost.toFixed(4) }}
-              </p>
-            </div>
-          </HoverCardContent>
-        </HoverCard>
+        <CostHoverMark :value="userResult.totalCost">
+          <div class="text-center">
+            <p class="text-sm font-medium" :style="userChartStyle">Total cost</p>
+            <p class="mt-1 text-2xl font-bold" :style="userChartStyle">
+              {{ userResult.totalCost.toFixed(4) }}
+            </p>
+          </div>
+        </CostHoverMark>
       </CardHeader>
       <CardContent class="pt-4">
         <div class="relative h-80">
