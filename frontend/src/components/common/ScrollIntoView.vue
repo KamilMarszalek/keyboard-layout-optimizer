@@ -8,9 +8,9 @@ const element = ref<HTMLElement | null>(null);
 watch(
   () => props.trigger,
   async (value) => {
-    if (value == null) return;
+    if (value === null) return;
     await nextTick();
-    element.value?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    element.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   },
 );
 </script>
