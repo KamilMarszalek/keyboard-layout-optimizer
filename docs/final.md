@@ -9,7 +9,7 @@
 - `https://gitlab-stud.elka.pw.edu.pl/kmarsza1/keyboard-layout-optimizer`
 
 ## Opis działania
-Aplikacja webowa do oceny i optymalizacji układu klawiatury dla podanego korpusu tekstu. Użytkownik może wpisać tekst oraz ustawić wagi metryk ergonomicznych. Całość może działać w dwóch trybach::
+Aplikacja webowa do oceny i optymalizacji układu klawiatury dla podanego korpusu tekstu. Użytkownik może wpisać tekst oraz ustawić wagi metryk ergonomicznych. Całość może działać w dwóch trybach:
 - `OPTIMIZE`: użytkownik może ustawić odpowiednio dla swoich celów parametry symulowanego wyżarzania, po kliknięciu przycisku "Optimize layout" zostaje uruchomiona optymalizacja, a po jej zakończeniu wyświetlany jest najlepszy znaleziony układ wraz z rozbiciem kosztu na metryki i wykresem historii kosztu.
 - `EVALUATE`: użytkownik może ręcznie edytować układ klawiatury przez przeciąganie klawiszy, a następnie kliknąć "Evaluate layout" by zobaczyć jego koszt. Metryki, jak i sam koszt jest zestawiony ze standardowym układem QWERTY.
 
@@ -32,7 +32,7 @@ W obu trybach dostępna jest mapa ciepła prezentująca częstość użycia znak
 | Brak serwera pośredniczącego, komunikacja TypeScript-WASM | Zaimplementowano | Frontend importuje funkcje z pakietu WASM. |
 | Wizualizacja układu klawiatury | Zaimplementowano |  Układ jest renderowany w stałych pozycjach ANSI. |
 | Mapa ciepła użycia znaków | Zaimplementowano | Kolory są liczone z częstości znaków w korpusie. |
-| Załadowanie własnego układu i statystyki | Zaimplementowano | Można ręcznie edytować układ przez przeciąganie klawiszy i ocenić go i porównać względem QWERTY |
+| Załadowanie własnego układu i statystyki | Zaimplementowano | Można ręcznie edytować układ przez przeciąganie klawiszy i ocenić go oraz porównać z układem QWERTY |
 | Wykresy i statystyki wyników | Zaimplementowano | Dla historii kosztu renderowany jest wykres liniowy, a dla metryk - wykres słupkowy |
 | Web Workers dla zrównoleglenia/ciężkich obliczeń | Zaimplementowano | Optymalizacja działa w Workerze, a Rust używa Rayon i puli wątków WASM. |
 | Zebranie komend do `just` | Zaimplementowano | Komendy są zorganizowane w pliku `Justfile`. |
@@ -63,7 +63,30 @@ just docker-check       # sprawdzenie projektu w Dockerze
 ## Architektura
 
 Projekt jest aplikacją frontendową bez bazy danych i bez serwera backendowego. Rustowy moduł optymalizacyjny jest kompilowany do WebAssembly i ładowany przez frontend TypeScript. Dane przechodzą przez jawne DTO: po stronie Rust w `optimizer/src/wasm/dto.rs`, po stronie TypeScript w `frontend/src/wasm/dto.ts`.
-# TODO: diagram architektury
+```mermaid
+flowchart LR
+    User[Użytkownik] --> UI[Vue 3 UI]
+    UI --> Stores[Pinia / stan aplikacji]
+    Stores --> Worker[Web Worker]
+    Stores --> WasmQueries[frontend/src/wasm/queries.ts]
+
+    Worker --> WasmEngine[frontend/src/wasm/engine.ts]
+    WasmQueries --> WasmPkg[frontend/src/pkg - wygenerowany pakiet WASM]
+    WasmEngine --> WasmPkg
+
+    WasmPkg --> WasmBoundary[wasm-bindgen + serde_wasm_bindgen]
+    WasmBoundary --> RustWasm[optimizer/src/wasm]
+    RustWasm --> RustCore[Moduły domenowe Rust]
+    RustCore --> Keyboard[keyboard / preset / text]
+    RustCore --> Annealing[annealing]
+    RustCore --> Metrics[metrics / cost]
+
+    Annealing --> Result[Wynik optymalizacji]
+    Metrics --> Result
+    Result --> UI
+```
+
+Frontend odpowiada za interakcję z użytkownikiem, walidację formularzy, wizualizację układu klawiatury, mapę ciepła oraz prezentację wyników. Ciężkie obliczenia są delegowane do Web Workera, aby nie blokować głównego wątku interfejsu. Moduł Rust zawiera właściwą logikę domenową: reprezentację układu, geometrię klawiatury, przetwarzanie korpusu, metryki ergonomiczne oraz algorytm symulowanego wyżarzania. Granica między TypeScriptem a Rustem jest jawna i oparta na DTO serializowanych przez `serde_wasm_bindgen`.
 Granica technologiczna jest w `frontend/src/wasm/queries.ts` i `optimizer/src/wasm/mod.rs`. Funkcje `optimize_layout`, `evaluate_layout`, `qwerty_layout` i `get_char_freq` przyjmują albo zwracają wartości serializowane przez `serde_wasm_bindgen`. Optymalizacja wymaga inicjalizacji puli wątków WASM (`initThreadPool`) i środowiska `crossOriginIsolated`, co jest sprawdzane w `frontend/src/wasm/engine.ts`. Do tego wymagana jest konfiguracja serwera z odpowiednimi nagłówkami COOP/COEP, co jest realizowane w `Dockerfile.app`
 
 
@@ -74,7 +97,7 @@ Najważniejsze moduły Rust:
 - `keyboard`: typy domenowe wraz z odpowiednimi operacjami: `Layout` - reprezentacja układu klawiatury, `Geometry` - geometria klawiatury, `Modifier` - zamiana symboli shifted na bazowe oraz odwrotnie.
 - `preset`: gotowe presety QWERTY US i Dvorak US oraz standardowa geometria ANSI.
 - `text`: transliteracja przez `any_ascii`, mapowanie tekstu na naciśnięcia i budowa struktury `Corpus`, która jest używana do obliczania metryk.
-- `annealing`: symulowane wyżarzanie, funkcja kosztu i wybór najlepszego wyniku spośród wielu uruchomienień.
+- `annealing`: symulowane wyżarzanie, funkcja kosztu i wybór najlepszego wyniku spośród wielu uruchomień.
 - `wasm`: interfejs WebAssembly, DTO i walidacja danych przychodzących z frontendu.
 
 Najważniejsze moduły frontendu:
@@ -93,19 +116,31 @@ Kluczowe decyzje techniczne:
 
 ## Testy i analiza statyczna
 
-W Rust zostało napisanych 156 testów jednostkowych, które pokrywają reprezentację klawiatury, geometrię, korpus, metryki, symulowane wyżarzanie i walidację DTO WASM. Testy są inline w modułach, a `Justfile` zawiera komendy do uruchomienia wszystkich testów. Do sporządzenie parametrycznych testów użyto crate `rstest`. Umożliwia on definiowanie testów z różnymi zestawami danych wejściowych poprzez makra, co jest szczególnie przydatne do testowania metryk i algorytmu optymalizacji na różnych układach i korpusach.
+W Rust zostało napisanych 156 testów jednostkowych, które pokrywają reprezentację klawiatury, geometrię, korpus, metryki, symulowane wyżarzanie i walidację DTO WASM. Testy są inline w modułach, a `Justfile` zawiera komendy do uruchomienia wszystkich testów. Do sporządzenia parametrycznych testów użyto crate'a `rstest`. Umożliwia on definiowanie testów z różnymi zestawami danych wejściowych poprzez makra, co jest szczególnie przydatne do testowania metryk i algorytmu optymalizacji na różnych układach i korpusach.
 
 W frontendzie znajduje się kilka testów jednostkowych, które sprawdzają logikę funkcji pomocniczych.
 
 Używamy `clippy` do analizy statycznej Rust, a `eslint` i `tsc` do TypeScript. Komendy do uruchomienia tych narzędzi są zorganizowane w `Justfile`.
 
-## Metryki projektu
+## Dokumentacja wygenerowana z kodu
 
+Dokumentacja kodu Rust może zostać wygenerowana poleceniem:
+
+```bash
+just docs
+```
+Komenda generuje dokumentację na podstawie komentarzy dokumentacyjnych Rust. W typowej konfiguracji cargo doc wynik znajduje się w katalogu target/doc. Projekt nie ma osobno skonfigurowanej dokumentacji TypeScript, dlatego dokumentacja wygenerowana automatycznie dotyczy przede wszystkim części Rust.
+
+## Metryki projektu
 | Metryka | Wartość |
 |---|---:|
 | Liczba linii kodu Rust | 3453 |
-| Liczba linii kodu TypeScript i Vue | TODO |
+| Liczba linii kodu TypeScript/Vue | TODO |
+| Liczba testów Rust | 156 |
+| Liczba testów TypeScript | TODO |
+| Łączna liczba testów | TODO |
 | Pokrycie testami | Nie skonfigurowano automatycznego pomiaru |
+| Liczba godzin pracy | TODO |
 
 
 ## Różnice względem planu początkowego
