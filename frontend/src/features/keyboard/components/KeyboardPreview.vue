@@ -80,7 +80,10 @@ onMounted(() => {
     <CardHeader class="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <CardTitle>{{ layoutMetadata.title }}</CardTitle>
-        <CardDescription class="mt-1">
+        <CardDescription v-if="editable" class="mt-1">
+          Drag and drop keys to rearrange characters on the fixed ANSI layout.
+        </CardDescription>
+        <CardDescription v-else class="mt-1">
           Keys are shown in fixed physical ANSI positions.
         </CardDescription>
       </div>
