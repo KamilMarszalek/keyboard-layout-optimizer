@@ -11,8 +11,8 @@ pub use wasm_bindgen_rayon::init_thread_pool;
 use crate::preset::qwerty_us::qwerty_us;
 
 pub mod dto;
-mod handlers;
-mod validate;
+pub mod handlers;
+pub mod validate;
 
 use dto::{EvaluateRequestDto, OptimizeRequestDto};
 use handlers::{evaluate_layout_inner, get_char_freq_inner, layout_to_dto, optimize_layout_inner};
