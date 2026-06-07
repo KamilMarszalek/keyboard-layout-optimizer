@@ -1,5 +1,3 @@
-import { themeColor } from '@/lib/token';
-
 import type { CharFrequency, KeyMapping } from './types';
 
 export type KeyHeatStyle = {
@@ -28,7 +26,7 @@ export function heatmapStyle(freq: number, maxFreq: number): KeyHeatStyle {
   const saturation = 70;
   const lightness = Math.round(78 - ratio * 18);
   return {
-    color: themeColor('--background'),
+    color: 'black',
     backgroundColor: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
   };
 }
