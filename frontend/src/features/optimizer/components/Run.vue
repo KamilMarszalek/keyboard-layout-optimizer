@@ -15,7 +15,7 @@ const { error, isOptimizing } = storeToRefs(store);
     <CardHeader>
       <CardTitle>Optimize</CardTitle>
       <CardDescription>
-        Runs simulated annealing from 8 random ANSI starting layouts and keeps the best result
+        Runs simulated annealing from 8 random ANSI starting layouts and keeps the best result.
       </CardDescription>
     </CardHeader>
 
