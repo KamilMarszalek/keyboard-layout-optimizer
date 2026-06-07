@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import Header from '@/components/common/Header.vue';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useWeightsStore } from '@/features/config/store';
-import { useCorpusStore } from '@/features/corpus/store';
 import { useEvaluatorStore } from '@/features/evaluator/store';
+import { useReEvaluate } from '@/features/evaluator/useReEvaluate';
 import { KeyboardPreview } from '@/features/keyboard/components';
-import { useKeyboardStore } from '@/features/keyboard/store';
 import { useModeStore } from '@/features/mode/store';
 import { OptimizerForm } from '@/features/optimizer/components';
 import { CostHistory, MetricsBreakdown } from '@/features/results/components';
@@ -18,17 +16,10 @@ const { result } = storeToRefs(resultStore);
 const evaluatorStore = useEvaluatorStore();
 const { result: evaluateResult } = storeToRefs(evaluatorStore);
 
-const corpusStore = useCorpusStore();
-const keyboardStore = useKeyboardStore();
-const weightsStore = useWeightsStore();
-
 const modeStore = useModeStore();
 const { mode } = storeToRefs(modeStore);
 
-function handleReEvaluate() {
-  const keys = keyboardStore.editableLayout.mappings.map((mapping) => mapping.base);
-  void evaluatorStore.evaluate(keys, corpusStore.text, weightsStore.weights);
-}
+const { handleReEvaluate } = useReEvaluate();
 </script>
 
 <template>

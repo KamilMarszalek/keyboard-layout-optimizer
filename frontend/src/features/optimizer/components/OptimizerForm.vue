@@ -10,8 +10,6 @@ import { useWeightsStore } from '@/features/config/store.ts';
 import { Corpus } from '@/features/corpus/components';
 import { defaultText } from '@/features/corpus/schema';
 import { Evaluate } from '@/features/evaluator/components';
-import { useEvaluatorStore } from '@/features/evaluator/store';
-import { useKeyboardStore } from '@/features/keyboard/store';
 import { ModeToggle } from '@/features/mode/components';
 import { useModeStore } from '@/features/mode/store';
 import { toTypedSchema } from '@vee-validate/zod';
@@ -24,8 +22,6 @@ import { useOptimizerStore } from '../store.ts';
 import Run from './Run.vue';
 
 const optimizer = useOptimizerStore();
-const evaluator = useEvaluatorStore();
-const keyboard = useKeyboardStore();
 const weightsStore = useWeightsStore();
 const modeStore = useModeStore();
 const { mode } = storeToRefs(modeStore);
@@ -50,13 +46,7 @@ watch(
   { immediate: true, deep: true },
 );
 
-const onSubmit = handleSubmit((values) => {
-  if (mode.value === 'evaluate') {
-    const keys = keyboard.editableLayout.mappings.map((mapping) => mapping.base);
-    return evaluator.evaluate(keys, values.text, values.weights);
-  }
-  return optimizer.run(values);
-});
+const onSubmit = handleSubmit((values) => optimizer.run(values));
 
 onBeforeUnmount(() => optimizer.dispose());
 </script>

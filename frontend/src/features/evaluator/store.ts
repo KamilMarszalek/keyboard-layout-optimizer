@@ -1,7 +1,6 @@
 import type { MetricsWeights } from '@/features/config/schema';
 import { useWeightsStore } from '@/features/config/store';
 import { useCorpusStore } from '@/features/corpus/store';
-import { useKeyboardStore } from '@/features/keyboard/store';
 import type { Layout } from '@/features/keyboard/types';
 import { formatError } from '@/lib/error';
 import type { EvaluateResultDto } from '@/wasm/dto';
@@ -10,23 +9,31 @@ import { defineStore } from 'pinia';
 
 import { toEvaluateRequestDto } from './mapper';
 
+interface EvaluatorState {
+  isEvaluating: boolean;
+  error: string | null;
+  result: EvaluateResultDto | null;
+  evaluatedLayout: Layout | null;
+  lastWeights: MetricsWeights | null;
+  lastText: string | null;
+}
+
 export const useEvaluatorStore = defineStore('evaluator', {
-  state: () => ({
+  state: (): EvaluatorState => ({
     isEvaluating: false,
-    error: null as string | null,
-    result: null as EvaluateResultDto | null,
-    evaluatedLayout: null as Layout | null,
-    lastWeights: null as MetricsWeights | null,
-    lastText: null as string | null,
+    error: null,
+    result: null,
+    evaluatedLayout: null,
+    lastWeights: null,
+    lastText: null,
   }),
   getters: {
-    needsReEvaluation(state): boolean {
+    needsReEvaluation: (state) => (currentLayout: Layout): boolean => {
       if (!state.evaluatedLayout) {
         return false;
       }
-      const keyboard = useKeyboardStore();
       const evaluated = state.evaluatedLayout.mappings;
-      const current = keyboard.editableLayout.mappings;
+      const current = currentLayout.mappings;
       if (evaluated.length !== current.length) {
         return true;
       }
@@ -40,7 +47,7 @@ export const useEvaluatorStore = defineStore('evaluator', {
     },
   },
   actions: {
-    async evaluate(keys: string[], text: string, weights: MetricsWeights) {
+    async evaluate(keys: string[], layoutSnapshot: Layout, text: string, weights: MetricsWeights) {
       if (this.isEvaluating) {
         return;
       }
@@ -52,9 +59,8 @@ export const useEvaluatorStore = defineStore('evaluator', {
         const requestDto = toEvaluateRequestDto(keys, text, weights);
         this.result = await evaluateLayout(requestDto);
 
-        const keyboard = useKeyboardStore();
         this.evaluatedLayout = {
-          mappings: keyboard.editableLayout.mappings.map((mapping) => ({ ...mapping })),
+          mappings: layoutSnapshot.mappings.map((mapping) => ({ ...mapping })),
         };
         this.lastWeights = weights;
         this.lastText = text;
