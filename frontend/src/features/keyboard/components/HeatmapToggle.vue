@@ -22,7 +22,7 @@ watchEffect(() => {
       id="show-heatmap"
       v-model="showHeatmap"
       type="checkbox"
-      class="h-4 w-4 cursor-pointer rounded border-border accent-amber-500"
+      class="h-4 w-4 cursor-pointer rounded border-border"
     />
     <label for="show-heatmap" class="cursor-pointer select-none text-sm text-muted-foreground">
       Show heat map
