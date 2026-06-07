@@ -18,7 +18,7 @@ use dto::{EvaluateRequestDto, OptimizeRequestDto};
 use handlers::{evaluate_layout_inner, get_char_freq_inner, layout_to_dto, optimize_layout_inner};
 
 /// Computes the relative frequency of each base symbol in `input` and returns
-/// it as a serialized array of [`dto::CharFrequencyDto`].
+/// it as a serialized array of `CharFrequencyDto`.
 #[wasm_bindgen]
 pub fn get_char_freq(input: &str) -> Result<JsValue, JsValue> {
     let freq = get_char_freq_inner(input);
@@ -40,7 +40,7 @@ pub fn optimize_layout(input: JsValue) -> Result<JsValue, JsValue> {
         .map_err(|err| JsValue::from_str(&format!("Serialization failed: {err}")))
 }
 
-/// Returns the standard US QWERTY layout as a serialized [`dto::LayoutDto`],
+/// Returns the standard US QWERTY layout as a serialized `LayoutDto`,
 /// for use as a reference layout in the frontend.
 #[wasm_bindgen]
 pub fn qwerty_layout() -> Result<JsValue, JsValue> {

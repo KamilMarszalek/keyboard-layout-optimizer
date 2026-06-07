@@ -4,7 +4,7 @@
 optimizer/target
 frontend/node_modules
 frontend/dist
-frontend/src/wasm
+frontend/src/pkg
 
 .DS_Store
 *.log
