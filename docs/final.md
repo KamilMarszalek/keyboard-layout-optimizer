@@ -22,21 +22,21 @@ W obu trybach dostępna jest mapa ciepła prezentująca częstość użycia znak
 
 | Wymaganie z dokumentacji wstępnej | Status | Komentarz |
 |---|---|---|
-| Aplikacja z graficznym interfejsem, preferowana webowa | Zaimplementowano |  Interfejs jest aplikacją webową |
+| Aplikacja z graficznym interfejsem, preferowana webowa | Zaimplementowano |  Interfejs jest aplikacją webową. |
 | Optymalizacja układu za pomocą metaheurystyki | Zaimplementowano | Użyto symulowanego wyżarzania. |
 | Moduł optymalizacyjny w języku niskopoziomowym | Zaimplementowano |  Logika kosztu, klawiatury, korpusu i SA jest w Rust, eksportowana do WASM. |
 | Kompilacja Rust do WebAssembly przez `wasm-pack` | Zaimplementowano | Bindings są generowane do `frontend/src/pkg`. |
 | Reprezentacja klawiatury i fizyczna geometria | Zaimplementowano wariant rozszerzony |  Model obejmuje 47 głównych klawiszy ANSI US - litery, cyfry i symbole oraz Shift jest obsługiwany. |
 | Zmiana wyłącznie przypisań symboli do klawiszy, stała geometria | Zaimplementowano | Optymalizacja permutuje przypisania, nie geometrię. |
-| Metryki: SFB, FD, HRU, HA, RJ | Zaimplementowano | Metryki zostały zaimplementowane wraz z odpowiednimi testami |
+| Metryki: SFB, FD, HRU, HA, RJ | Zaimplementowano | Metryki zostały zaimplementowane wraz z odpowiednimi testami. |
 | Parametryzacja wag przez użytkownika | Zaimplementowano | Walidacja jest po stronie TypeScript i Rust. |
-| Sąsiedztwo SA jako zamiana dwóch losowych klawiszy | Zaimplementowano | Kandydat powstaje przez zamianę pary klawiszy |
+| Sąsiedztwo SA jako zamiana dwóch losowych klawiszy | Zaimplementowano | Kandydat powstaje przez zamianę pary klawiszy. |
 | Transliteracja tekstu wejściowego przez `any_ascii` | Zaimplementowano | Kod transliteruje do ASCII i usuwa znaki niegraficzne, zachowuje wielkość liter oraz obsługuje cyfry czy symbole. |
 | Brak serwera pośredniczącego, komunikacja TypeScript-WASM | Zaimplementowano | Frontend importuje funkcje z pakietu WASM. |
 | Wizualizacja układu klawiatury | Zaimplementowano |  Układ jest renderowany w stałych pozycjach ANSI. |
 | Mapa ciepła użycia znaków | Zaimplementowano | Kolory są liczone z częstości znaków w korpusie. |
-| Załadowanie własnego układu i statystyki | Zaimplementowano połowicznie | Układ klawiatury może zostać ustawiony wyłącznie przez ręczne przestawianie klawiszy (drag and drop). Nie istnieje żaden wygodniejszy format do importowania układu.  Z kolei ocenianie działa bezbłędnie - zdefiniowany układ można porównać z QWERTY |
-| Wykresy i statystyki wyników | Zaimplementowano | Dla historii kosztu renderowany jest wykres liniowy, a dla metryk - wykres słupkowy |
+| Załadowanie własnego układu i statystyki | Zaimplementowano połowicznie | Układ klawiatury może zostać ustawiony wyłącznie przez ręczne przestawianie klawiszy (drag and drop). Nie istnieje żaden wygodniejszy format do importowania układu.  Z kolei ocenianie działa bezbłędnie - zdefiniowany układ można porównać z QWERTY. |
+| Wykresy i statystyki wyników | Zaimplementowano | Dla historii kosztu renderowany jest wykres liniowy, a dla metryk - wykres słupkowy. |
 | Web Workers dla zrównoleglenia/ciężkich obliczeń | Zaimplementowano | Optymalizacja działa w Workerze, a Rust używa Rayon i puli wątków WASM. |
 | Zebranie komend do `just` | Zaimplementowano | Komendy są zorganizowane w pliku `Justfile`. |
 | CI | Zaimplementowano poprzez GitHub Actions | Workflow CI uruchamia testy i sprawdzenia formatu, lintowania i typów. |
