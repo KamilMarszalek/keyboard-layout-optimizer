@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import Footer from '@/components/common/Footer.vue';
 import Header from '@/components/common/Header.vue';
+import ScrollIntoView from '@/components/common/ScrollIntoView.vue';
 import { useEvaluatorStore } from '@/features/evaluator/store';
 import { useReEvaluate } from '@/features/evaluator/useReEvaluate';
 import { KeyboardPreview } from '@/features/keyboard/components';
@@ -32,14 +33,16 @@ const { handleReEvaluate } = useReEvaluate();
         :on-re-evaluate="mode === 'evaluate' ? handleReEvaluate : undefined"
       />
 
-      <section v-if="mode === 'optimize' && result" class="grid gap-6 lg:grid-cols-2">
-        <MetricsBreakdown :metrics="result.metrics" />
-        <CostHistory />
-      </section>
+      <ScrollIntoView :trigger="mode === 'optimize' ? result : evaluateResult">
+        <section v-if="mode === 'optimize' && result" class="grid gap-6 lg:grid-cols-2">
+          <MetricsBreakdown :metrics="result.metrics" />
+          <CostHistory />
+        </section>
 
-      <section v-if="mode === 'evaluate' && evaluateResult && qwertyResult">
-        <ComparisonChart :user-result="evaluateResult" :qwerty-result="qwertyResult" />
-      </section>
+        <section v-if="mode === 'evaluate' && evaluateResult && qwertyResult">
+          <ComparisonChart :user-result="evaluateResult" :qwerty-result="qwertyResult" />
+        </section>
+      </ScrollIntoView>
 
       <Footer />
     </div>
