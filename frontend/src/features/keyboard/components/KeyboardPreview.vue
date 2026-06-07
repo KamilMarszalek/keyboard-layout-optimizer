@@ -10,7 +10,7 @@ import { RefreshCw } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 import { computed, onMounted } from 'vue';
 
-import { type KeyHeatStyle, buildFrequencyMap, heatmapStyle, maxFrequency } from '../heatmap';
+import { buildFrequencyMap, heatmapStyle, maxFrequency } from '../heatmap';
 import { EXPECTED_LAYOUT_LENGTH, KEYBOARD_ROW_OFFSETS, layoutToRows } from '../layout.ts';
 import { useKeyboardStore } from '../store';
 import { useKeyDragAndDrop } from '../useKeyDragAndDrop';
