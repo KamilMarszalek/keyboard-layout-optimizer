@@ -87,7 +87,7 @@ flowchart LR
 ```
 
 Frontend odpowiada za interakcję z użytkownikiem, walidację formularzy, wizualizację układu klawiatury, mapę ciepła oraz prezentację wyników. Ciężkie obliczenia są delegowane do Web Workera, aby nie blokować głównego wątku interfejsu. Moduł Rust zawiera właściwą logikę domenową: reprezentację układu, geometrię klawiatury, przetwarzanie korpusu, metryki ergonomiczne oraz algorytm symulowanego wyżarzania. Granica między TypeScriptem a Rustem jest jawna i oparta na DTO serializowanych przez `serde_wasm_bindgen`.
-Granica technologiczna jest w `frontend/src/wasm/queries.ts` i `optimizer/src/wasm/mod.rs`. Funkcje `optimize_layout`, `evaluate_layout`, `qwerty_layout` i `get_char_freq` przyjmują albo zwracają wartości serializowane przez `serde_wasm_bindgen`. Optymalizacja wymaga inicjalizacji puli wątków WASM (`initThreadPool`) i środowiska `crossOriginIsolated`, co jest sprawdzane w `frontend/src/wasm/engine.ts`. Do tego wymagana jest konfiguracja serwera z odpowiednimi nagłówkami COOP/COEP, co jest realizowane w `Dockerfile.app`
+Granica technologiczna jest w `frontend/src/wasm/queries.ts` i `optimizer/src/wasm/mod.rs`. Funkcje `optimize_layout`, `evaluate_layout`, `qwerty_layout` i `get_char_freq` przyjmują albo zwracają wartości serializowane przez `serde_wasm_bindgen`. Optymalizacja wymaga inicjalizacji puli wątków WASM (`initThreadPool`) i środowiska `crossOriginIsolated`, co jest sprawdzane w `frontend/src/wasm/engine.ts`. Do tego wymagana jest konfiguracja serwera z odpowiednimi nagłówkami COOP/COEP, co jest realizowane w `Dockerfile.app`.
 
 
 ## Szczegóły implementacyjne
@@ -112,7 +112,8 @@ Najważniejsze moduły frontendu:
 Kluczowe decyzje techniczne:
 - koszt jest rozbity na metryki i dopiero potem ważony. 
 - `Corpus` przechowuje tablicę unigramów i macierz bigramów dla obsługiwanych naciśnięć, co umożliwia szybkie i łatwe obliczanie metryk.
-- optymalizacja startuje równolegle z QWERTY, Dvoraka i kilku losowych układów; ciężka optymalizacja jest odseparowana od głównego wątku UI przez Web Worker, dzięki czemu strona reaguje na interakcje użytkownika.
+- optymalizacja uruchamiana jest równolegle z kilku punktów początkowych: układu QWERTY, układu Dvoraka oraz losowych układów
+- ciężka optymalizacja jest odseparowana od głównego wątku UI przez Web Worker, dzięki czemu strona reaguje na interakcje użytkownika.
 
 ## Testy i analiza statyczna
 
@@ -129,7 +130,7 @@ Dokumentacja kodu Rust może zostać wygenerowana poleceniem:
 ```bash
 just docs
 ```
-Komenda generuje dokumentację na podstawie komentarzy dokumentacyjnych Rust. W typowej konfiguracji cargo doc wynik znajduje się w katalogu target/doc. Projekt nie ma osobno skonfigurowanej dokumentacji TypeScript, dlatego dokumentacja wygenerowana automatycznie dotyczy przede wszystkim części Rust.
+Komenda generuje dokumentację na podstawie komentarzy dokumentacyjnych Rust. W typowej konfiguracji `cargo doc` wynik znajduje się w katalogu target/doc. Projekt nie ma osobno skonfigurowanej dokumentacji TypeScript, dlatego dokumentacja wygenerowana automatycznie dotyczy przede wszystkim części Rust.
 
 ## Metryki projektu
 | Metryka | Wartość |
