@@ -35,7 +35,7 @@ W obu trybach dostępna jest mapa ciepła prezentująca częstość użycia znak
 | Brak serwera pośredniczącego, komunikacja TypeScript-WASM | Zaimplementowano | Frontend importuje funkcje z pakietu WASM. |
 | Wizualizacja układu klawiatury | Zaimplementowano |  Układ jest renderowany w stałych pozycjach ANSI. |
 | Mapa ciepła użycia znaków | Zaimplementowano | Kolory są liczone z częstości znaków w korpusie. |
-| Załadowanie własnego układu i statystyki | Zaimplementowano | Można ręcznie edytować układ przez przeciąganie klawiszy i ocenić go oraz porównać z układem QWERTY |
+| Załadowanie własnego układu i statystyki | Zaimplementowano połowicznie | Układ klawiatury może zostać ustawiony wyłącznie przez ręczne przestawianie klawiszy (drag and drop). Nie istnieje żaden wygodniejszy format do importowania układu.  Z kolei ocenianie działa bezbłędnie - zdefiniowany układ można porównać z QWERTY |
 | Wykresy i statystyki wyników | Zaimplementowano | Dla historii kosztu renderowany jest wykres liniowy, a dla metryk - wykres słupkowy |
 | Web Workers dla zrównoleglenia/ciężkich obliczeń | Zaimplementowano | Optymalizacja działa w Workerze, a Rust używa Rayon i puli wątków WASM. |
 | Zebranie komend do `just` | Zaimplementowano | Komendy są zorganizowane w pliku `Justfile`. |
