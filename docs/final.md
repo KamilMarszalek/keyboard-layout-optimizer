@@ -66,28 +66,7 @@ just docker-check       # sprawdzenie projektu w Dockerze
 ## Architektura
 
 Projekt jest aplikacją frontendową bez bazy danych i bez serwera backendowego. Rustowy moduł optymalizacyjny jest kompilowany do WebAssembly i ładowany przez frontend TypeScript. Dane przechodzą przez jawne DTO: po stronie Rust w `optimizer/src/wasm/dto.rs`, po stronie TypeScript w `frontend/src/wasm/dto.ts`.
-```mermaid
-flowchart LR
-    User[Użytkownik] --> UI[Vue 3 UI]
-    UI --> Stores[Pinia / stan aplikacji]
-    Stores --> Worker[Web Worker]
-    Stores --> WasmQueries[frontend/src/wasm/queries.ts]
-
-    Worker --> WasmEngine[frontend/src/wasm/engine.ts]
-    WasmQueries --> WasmPkg[frontend/src/pkg - wygenerowany pakiet WASM]
-    WasmEngine --> WasmPkg
-
-    WasmPkg --> WasmBoundary[wasm-bindgen + serde_wasm_bindgen]
-    WasmBoundary --> RustWasm[optimizer/src/wasm]
-    RustWasm --> RustCore[Moduły domenowe Rust]
-    RustCore --> Keyboard[keyboard / preset / text]
-    RustCore --> Annealing[annealing]
-    RustCore --> Metrics[metrics / cost]
-
-    Annealing --> Result[Wynik optymalizacji]
-    Metrics --> Result
-    Result --> UI
-```
+![Architektura](./architecture-diagram.png)
 
 Frontend odpowiada za interakcję z użytkownikiem, walidację formularzy, wizualizację układu klawiatury, mapę ciepła oraz prezentację wyników. Ciężkie obliczenia są delegowane do Web Workera, aby nie blokować głównego wątku interfejsu. Moduł Rust zawiera właściwą logikę domenową: reprezentację układu, geometrię klawiatury, przetwarzanie korpusu, metryki ergonomiczne oraz algorytm symulowanego wyżarzania. Granica między TypeScriptem a Rustem jest jawna i oparta na DTO serializowanych przez `serde_wasm_bindgen`.
 Granica technologiczna jest w `frontend/src/wasm/queries.ts` i `optimizer/src/wasm/mod.rs`. Funkcje `optimize_layout`, `evaluate_layout`, `qwerty_layout` i `get_char_freq` przyjmują albo zwracają wartości serializowane przez `serde_wasm_bindgen`. Optymalizacja wymaga inicjalizacji puli wątków WASM (`initThreadPool`) i środowiska `crossOriginIsolated`, co jest sprawdzane w `frontend/src/wasm/engine.ts`. Do tego wymagana jest konfiguracja serwera z odpowiednimi nagłówkami COOP/COEP, co jest realizowane w `Dockerfile.app`.
