@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import Header from '@/components/common/Header.vue';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvaluatorStore } from '@/features/evaluator/store';
 import { useReEvaluate } from '@/features/evaluator/useReEvaluate';
 import { KeyboardPreview } from '@/features/keyboard/components';
 import { useModeStore } from '@/features/mode/store';
 import { OptimizerForm } from '@/features/optimizer/components';
-import { CostHistory, MetricsBreakdown } from '@/features/results/components';
+import { ComparisonChart, CostHistory, MetricsBreakdown } from '@/features/results/components';
 import { useOptimizerResultStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
 
@@ -14,7 +13,7 @@ const resultStore = useOptimizerResultStore();
 const { result } = storeToRefs(resultStore);
 
 const evaluatorStore = useEvaluatorStore();
-const { result: evaluateResult } = storeToRefs(evaluatorStore);
+const { result: evaluateResult, qwertyResult } = storeToRefs(evaluatorStore);
 
 const modeStore = useModeStore();
 const { mode } = storeToRefs(modeStore);
@@ -37,19 +36,8 @@ const { handleReEvaluate } = useReEvaluate();
         <CostHistory />
       </section>
 
-      <section v-if="mode === 'evaluate' && evaluateResult" class="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Evaluation result</CardTitle>
-          </CardHeader>
-          <CardContent class="pt-5">
-            <p class="text-sm">Total cost</p>
-            <p class="mt-2 text-2xl">{{ evaluateResult.totalCost.toFixed(4) }}</p>
-          </CardContent>
-        </Card>
-        <div class="space-y-6">
-          <MetricsBreakdown :metrics="evaluateResult.metrics" />
-        </div>
+      <section v-if="mode === 'evaluate' && evaluateResult && qwertyResult">
+        <ComparisonChart :user-result="evaluateResult" :qwerty-result="qwertyResult" />
       </section>
     </div>
   </main>

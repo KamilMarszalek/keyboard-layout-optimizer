@@ -13,6 +13,7 @@ interface EvaluatorState {
   isEvaluating: boolean;
   error: string | null;
   result: EvaluateResult | null;
+  qwertyResult: EvaluateResult | null;
   evaluatedLayout: Layout | null;
   lastWeights: MetricsWeights | null;
   lastText: string | null;
@@ -23,6 +24,7 @@ export const useEvaluatorStore = defineStore('evaluator', {
     isEvaluating: false,
     error: null,
     result: null,
+    qwertyResult: null,
     evaluatedLayout: null,
     lastWeights: null,
     lastText: null,
@@ -49,7 +51,13 @@ export const useEvaluatorStore = defineStore('evaluator', {
       },
   },
   actions: {
-    async evaluate(keys: string[], layoutSnapshot: Layout, text: string, weights: MetricsWeights) {
+    async evaluate(
+      keys: string[],
+      layoutSnapshot: Layout,
+      text: string,
+      weights: MetricsWeights,
+      qwertyKeys: string[],
+    ) {
       if (this.isEvaluating) {
         return;
       }
@@ -58,8 +66,12 @@ export const useEvaluatorStore = defineStore('evaluator', {
       this.error = null;
 
       try {
-        const requestDto = toEvaluateRequestDto(keys, text, weights);
-        this.result = fromEvaluateResultDto(await evaluateLayout(requestDto));
+        const [userResult, qwertyResult] = await Promise.all([
+          evaluateLayout(toEvaluateRequestDto(keys, text, weights)),
+          evaluateLayout(toEvaluateRequestDto(qwertyKeys, text, weights)),
+        ]);
+        this.result = fromEvaluateResultDto(userResult);
+        this.qwertyResult = fromEvaluateResultDto(qwertyResult);
 
         this.evaluatedLayout = {
           mappings: layoutSnapshot.mappings.map((mapping) => ({ ...mapping })),

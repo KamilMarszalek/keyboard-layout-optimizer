@@ -14,7 +14,8 @@ export function useReEvaluate() {
   function handleReEvaluate() {
     const layout = keyboardStore.editableLayout;
     const keys = layout.mappings.map((mapping) => mapping.base);
-    void evaluatorStore.evaluate(keys, layout, corpusStore.text, weightsStore.weights);
+    const qwertyKeys = keyboardStore.standardQwertyLayout.mappings.map((mapping) => mapping.base);
+    void evaluatorStore.evaluate(keys, layout, corpusStore.text, weightsStore.weights, qwertyKeys);
   }
 
   const needsReEvaluation = computed(() =>
