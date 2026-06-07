@@ -56,13 +56,23 @@ onBeforeUnmount(() => optimizer.dispose());
     <Corpus />
     <ModeToggle />
     <div class="grid gap-6 lg:grid-cols-2">
-      <div :class="mode === 'evaluate' ? 'opacity-50 pointer-events-none select-none' : ''">
+      <div
+        :class="[
+          'h-full [&>*]:h-full',
+          mode === 'evaluate' ? 'opacity-50 pointer-events-none select-none' : '',
+        ]"
+      >
         <AnnealingParams />
       </div>
       <MetricWeights />
     </div>
     <div class="grid gap-6 lg:grid-cols-2">
-      <div :class="mode === 'evaluate' ? 'opacity-50 pointer-events-none select-none' : ''">
+      <div
+        :class="[
+          '[&>*]:h-full',
+          mode === 'evaluate' ? 'opacity-50 pointer-events-none select-none' : '',
+        ]"
+      >
         <Seed />
       </div>
       <Run v-if="mode === 'optimize'" />
