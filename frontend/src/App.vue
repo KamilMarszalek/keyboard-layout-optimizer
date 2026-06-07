@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Footer from '@/components/common/Footer.vue';
 import Header from '@/components/common/Header.vue';
 import { useEvaluatorStore } from '@/features/evaluator/store';
 import { useReEvaluate } from '@/features/evaluator/useReEvaluate';
@@ -39,6 +40,8 @@ const { handleReEvaluate } = useReEvaluate();
       <section v-if="mode === 'evaluate' && evaluateResult && qwertyResult">
         <ComparisonChart :user-result="evaluateResult" :qwerty-result="qwertyResult" />
       </section>
+
+      <Footer />
     </div>
   </main>
 </template>
