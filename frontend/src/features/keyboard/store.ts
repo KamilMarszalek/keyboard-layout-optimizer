@@ -26,9 +26,6 @@ export const useKeyboardStore = defineStore('keyboard', {
   actions: {
     reorderKey(from: number, to: number) {
       const mappings = this.editableLayout.mappings;
-      if (from < 0 || to < 0 || from >= mappings.length || to >= mappings.length) {
-        return;
-      }
       [mappings[from], mappings[to]] = [mappings[to], mappings[from]];
     },
 
