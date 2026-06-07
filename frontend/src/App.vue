@@ -8,7 +8,7 @@ import { KeyboardPreview } from '@/features/keyboard/components';
 import { useKeyboardStore } from '@/features/keyboard/store';
 import { useModeStore } from '@/features/mode/store';
 import { OptimizerForm } from '@/features/optimizer/components';
-import { CostHistory, MetricsBreakdown, OptimizationResult } from '@/features/results/components';
+import { CostHistory, MetricsBreakdown } from '@/features/results/components';
 import { useResultsStore } from '@/features/results/store';
 import { storeToRefs } from 'pinia';
 
@@ -43,18 +43,16 @@ function handleReEvaluate() {
 
       <section
         v-if="mode === 'optimize' && result"
-        class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]"
+        class="grid gap-6 lg:grid-cols-2"
       >
-        <OptimizationResult />
-        <div class="space-y-6">
+        
           <MetricsBreakdown :metrics="result.metrics" />
           <CostHistory />
-        </div>
       </section>
 
       <section
         v-if="mode === 'evaluate' && evaluateResult"
-        class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]"
+        class="grid gap-6 lg:grid-cols-2"
       >
         <Card>
           <CardHeader>
