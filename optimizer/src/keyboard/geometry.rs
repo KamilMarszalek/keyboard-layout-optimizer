@@ -41,12 +41,12 @@ pub enum Hand {
 
 impl fmt::Display for Hand {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
 impl Hand {
-    fn index(&self) -> usize {
+    fn index(self) -> usize {
         match self {
             Hand::Right => 0,
             Hand::Left => 1,
@@ -69,12 +69,12 @@ pub enum Finger {
 
 impl fmt::Display for Finger {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
 
 impl Finger {
-    fn index(&self) -> usize {
+    fn index(self) -> usize {
         match self {
             Finger::Pinky => 0,
             Finger::Ring => 1,
@@ -259,7 +259,7 @@ impl<const N: usize> Geometry<N> {
         I: IntoIterator<Item = RowSpec>,
     {
         let collected: Vec<RowSpec> = specs.into_iter().collect();
-        let n_fingers = collected.iter().flat_map(|f| f.used_fingers()).unique().count();
+        let n_fingers = collected.iter().flat_map(RowSpec::used_fingers).unique().count();
 
         let keys = Self::build_keys(&collected)?;
         let default_placement = Self::extract_default_placements(&keys, n_fingers)?;
@@ -276,9 +276,10 @@ impl<const N: usize> Geometry<N> {
             keys_vec.extend(spec.build_row());
         }
 
-        match total == N {
-            true => Ok(keys_vec.try_into().unwrap()),
-            false => Err(format!("Specs must define exactly {} keys", N)),
+        if total == N {
+            Ok(keys_vec.try_into().unwrap())
+        } else {
+            Err(format!("Specs must define exactly {N} keys"))
         }
     }
 
@@ -296,12 +297,10 @@ impl<const N: usize> Geometry<N> {
         }
 
         let filled = default_placement.iter().filter(|&k| k.is_some()).count();
-        match filled == n_fingers {
-            true => Ok(default_placement),
-            false => Err(format!(
-                "Only {} of {} possible key-finger assignments filled",
-                filled, n_fingers
-            )),
+        if filled == n_fingers {
+            Ok(default_placement)
+        } else {
+            Err(format!("Only {filled} of {n_fingers} possible key-finger assignments filled"))
         }
     }
 
@@ -311,7 +310,7 @@ impl<const N: usize> Geometry<N> {
     pub fn max_fingers_distance(&self) -> f64 {
         self.keys_by_fingers()
             .values()
-            .map(|keys| self.max_pairwise_distance(keys))
+            .map(|keys| Self::max_pairwise_distance(keys))
             .fold(0.0, f64::max)
     }
 
@@ -331,13 +330,13 @@ impl<const N: usize> Geometry<N> {
 
     fn keys_by_fingers(&self) -> HashMap<FingerAssignment, Vec<&Key>> {
         let mut buckets: HashMap<FingerAssignment, Vec<&Key>> = HashMap::new();
-        for key in self.keys.iter() {
+        for key in &self.keys {
             buckets.entry(key.finger_assignment).or_default().push(key);
         }
         buckets
     }
 
-    fn max_pairwise_distance(&self, keys: &[&Key]) -> f64 {
+    fn max_pairwise_distance(keys: &[&Key]) -> f64 {
         keys.iter()
             .combinations(2)
             .map(|pair| Coordinates::euclidean_distance(pair[0].coords, pair[1].coords))
@@ -402,7 +401,7 @@ mod tests {
     fn spec_build_row_repeat_finger_count() {
         let spec = RowSpec { left: vec![fc!(Finger::Pinky, 5)], ..test_row_spec() };
         let keys = spec.build_row();
-        for key in keys.iter() {
+        for key in &keys {
             assert_eq!(key.finger_assignment.finger, Finger::Pinky);
         }
     }
@@ -434,7 +433,7 @@ mod tests {
     fn spec_build_row_setups_y() {
         let spec = RowSpec { left: vec![fc!(Finger::Pinky, 5)], y: 1.0, ..test_row_spec() };
         let keys = spec.build_row();
-        for key in keys.iter() {
+        for key in &keys {
             assert_eq!(key.coords.y, 1.0);
         }
     }
@@ -444,7 +443,7 @@ mod tests {
         let spec =
             RowSpec { left: vec![fc!(Finger::Pinky, 5)], row: Row::Bottom, ..test_row_spec() };
         let keys = spec.build_row();
-        for key in keys.iter() {
+        for key in &keys {
             assert_eq!(key.row, Row::Bottom);
         }
     }
@@ -669,9 +668,9 @@ mod tests {
         let pinky_assignment = FingerAssignment { hand: Hand::Left, finger: Finger::Pinky };
         let index_assignment = FingerAssignment { hand: Hand::Left, finger: Finger::Index };
         let pinky_distance =
-            geometry.max_pairwise_distance(buckets.get(&pinky_assignment).unwrap());
+            Geometry::<5>::max_pairwise_distance(buckets.get(&pinky_assignment).unwrap());
         let index_distance =
-            geometry.max_pairwise_distance(buckets.get(&index_assignment).unwrap());
+            Geometry::<5>::max_pairwise_distance(buckets.get(&index_assignment).unwrap());
         assert!(pinky_distance > index_distance);
     }
 }

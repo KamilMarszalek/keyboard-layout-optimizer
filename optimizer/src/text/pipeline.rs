@@ -7,7 +7,7 @@ use crate::keyboard::{key_press::KeyPress, modifier::KeyPressMapper};
 /// It transliterates non-ASCII characters to their ASCII equivalents
 /// and removes non-graphical characters.
 pub fn normalize_text(input: &str) -> String {
-    any_ascii(input).chars().filter(|c| c.is_ascii_graphic()).collect()
+    any_ascii(input).chars().filter(char::is_ascii_graphic).collect()
 }
 
 /// Maps each byte of `normalized` text to a logical key press using `mapper`.

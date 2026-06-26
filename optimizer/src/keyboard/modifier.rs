@@ -210,7 +210,7 @@ mod tests {
     fn base_symbols() {
         let modifier = Modifier::new([(b'a', b'A'), (b'1', b'!')]).unwrap();
         let mut symbols: Vec<AsciiChar> = modifier.base_symbols().to_vec();
-        symbols.sort();
+        symbols.sort_unstable();
         assert_eq!(symbols, [b'1', b'a']);
     }
 
