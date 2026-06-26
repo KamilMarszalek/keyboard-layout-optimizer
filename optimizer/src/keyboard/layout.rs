@@ -135,7 +135,7 @@ mod tests {
     fn layout_new_succeeds() {
         let modifier = test_modifier();
         let layout = Layout::new(b"ab", &modifier);
-        assert!(layout.is_ok())
+        assert!(layout.is_ok());
     }
 
     #[test]
@@ -232,8 +232,8 @@ mod tests {
         let mut layout_symbols: Vec<AsciiChar> =
             layout.mappings.iter().map(|mapping| mapping.base).collect();
         let mut modifier_symbols = modifier.base_symbols().to_vec();
-        layout_symbols.sort();
-        modifier_symbols.sort();
+        layout_symbols.sort_unstable();
+        modifier_symbols.sort_unstable();
 
         assert_eq!(layout_symbols, modifier_symbols);
     }
@@ -246,8 +246,8 @@ mod tests {
         let mut layout_symbols: Vec<AsciiChar> =
             layout.mappings.iter().map(|mapping| mapping.base).collect();
         let mut modifier_symbols = modifier.base_symbols().to_vec();
-        layout_symbols.sort();
-        modifier_symbols.sort();
+        layout_symbols.sort_unstable();
+        modifier_symbols.sort_unstable();
 
         assert_eq!(layout_symbols, modifier_symbols);
     }
@@ -274,8 +274,8 @@ mod tests {
 
         let mut layout_symbols: Vec<AsciiChar> = layout.mappings_iter().map(|m| m.base).collect();
         let mut modifier_symbols = modifier.base_symbols().to_vec();
-        layout_symbols.sort();
-        modifier_symbols.sort();
+        layout_symbols.sort_unstable();
+        modifier_symbols.sort_unstable();
 
         assert_eq!(layout_symbols, modifier_symbols);
     }

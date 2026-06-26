@@ -127,7 +127,7 @@ mod tests {
     fn standard_us() {
         let modifier = Modifier::standard_us();
         assert_eq!(modifier.base_symbols().len(), US_KEY_COUNT);
-        for &symbol in modifier.base_symbols().iter() {
+        for &symbol in modifier.base_symbols() {
             modifier.shift(symbol).unwrap();
         }
     }

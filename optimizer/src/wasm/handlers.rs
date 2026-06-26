@@ -66,7 +66,7 @@ pub(super) fn optimize_layout_inner(
     let weights: MetricWeights = request.weights.try_into()?;
     let config: AnnealingConfig = request.annealing.try_into()?;
     let cost = WeightedCost::<US_KEY_COUNT, US_PRESS_COUNT>::new(weights, corpus, preset.geometry);
-    let seed = request.seed.unwrap_or(42) as u64;
+    let seed = u64::from(request.seed.unwrap_or(42));
     let mut rng = SmallRng::seed_from_u64(seed);
     let initial_layouts: [Layout<US_KEY_COUNT>; WORKER_COUNT] = std::array::from_fn(|i| match i {
         0 => preset.layout.clone(),
